@@ -1,7 +1,7 @@
 /* Saliohjelma – service worker.
    Sovellus toimii ilman verkkoa ensimmäisen latauksen jälkeen.
    Versionumeroa nostamalla vanha välimuisti korvautuu. */
-const CACHE = 'saliohjelma-v5.5.0';
+const CACHE = 'saliohjelma-v5.5.1';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-180.png'];
 
 self.addEventListener('install', function(e){
