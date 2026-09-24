@@ -23,7 +23,7 @@
 </style>
 </head>
 <body>
-<title>Saliohjelma 5.5</title>
+<title>Saliohjelma 5.6</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Josefin+Sans:wght@400;600;700&family=Poiret+One&display=swap">
@@ -306,9 +306,47 @@
     font-family:var(--font-m);font-size:12px;font-weight:600;color:var(--ink-2);padding:0 5px;
   }
   .rirbtn[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-  .prline{font-size:12px;font-weight:600;color:var(--ok);margin-top:4px}
-  .prbox{background:var(--ok-soft);border-radius:11px;padding:10px 12px;margin-bottom:14px;font-size:13px;color:var(--ok)}
-  .prbox b{display:block;font-family:var(--font-d);margin-bottom:3px}
+  /* ennätysmerkintä liikkeen kohdalla */
+  .prbadge{
+    display:flex;align-items:center;gap:11px;margin-top:9px;padding:9px 12px;
+    background:var(--ok-soft);border:1px solid color-mix(in srgb, var(--ok) 42%, transparent);
+    border-radius:13px;box-shadow:0 6px 18px -14px var(--ok);
+  }
+  .prmedal{
+    width:30px;height:30px;border-radius:50%;flex:none;display:grid;place-items:center;
+    background:var(--ok);color:var(--bg);font-size:15px;line-height:1;
+  }
+  .prtext{display:flex;flex-direction:column;min-width:0;gap:1px}
+  .prlabel{
+    font-family:var(--font-d);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ok);
+  }
+  .prval{font-size:19px;font-weight:600;line-height:1.15;letter-spacing:-.01em;color:var(--ink)}
+  .prprev{font-size:11px;color:var(--ink-3)}
+  .prbadge.pop{animation:prpop .5s cubic-bezier(.2,1.3,.4,1)}
+  @keyframes prpop{
+    0%{transform:scale(.94);opacity:0}
+    60%{transform:scale(1.02);opacity:1}
+    100%{transform:scale(1)}
+  }
+  @media (prefers-reduced-motion: reduce){.prbadge.pop{animation:none}}
+  body[data-skin="neon"] .prbadge{box-shadow:0 0 26px -12px var(--ok)}
+  body[data-skin="deco"] .prbadge{border-radius:4px}
+  body[data-skin="deco"] .prmedal{border-radius:2px}
+
+  /* ennätykset yhteenvedossa */
+  .prbox{
+    background:var(--ok-soft);border:1px solid color-mix(in srgb, var(--ok) 35%, transparent);
+    border-radius:13px;padding:12px 14px;margin-bottom:16px;
+  }
+  .prbox-h{
+    display:block;font-family:var(--font-d);font-size:11px;font-weight:700;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--ok);margin-bottom:8px;
+  }
+  .prbox-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:5px 0}
+  .prbox-row + .prbox-row{border-top:1px solid color-mix(in srgb, var(--ok) 20%, transparent)}
+  .prbox-name{font-size:13.5px;font-weight:600;min-width:0}
+  .prbox-name small{display:block;font-weight:400;font-size:11px;color:var(--ink-3);margin-top:1px}
+  .prbox-row b{font-size:17px;font-weight:600;white-space:nowrap;color:var(--ink)}
   .setrow .sn{font-family:var(--font-m);font-size:12px;color:var(--ink-3);text-align:center}
   .kgfield{display:flex;align-items:center;background:var(--surface-2);border:1px solid var(--line);border-radius:10px;overflow:hidden}
   .kgfield button{border:0;background:transparent;width:32px;height:38px;color:var(--ink-3);font-size:17px;font-weight:600;flex:none}
@@ -1669,7 +1707,7 @@ function renderProgram(pid){
             ? '<span class="chip pair">' + esc(partnerName) + ': ' + esc(partnerAt[idx].name.split(',')[0]) + '</span>'
             : '')) +
       '<span class="advice hold" data-adv></span></div>' +
-      '<div class="prline" data-pr hidden></div></div>' +
+      '<div class="prbadge" data-pr hidden></div></div>' +
       (def.tip ? '<button class="infobtn" type="button" aria-label="Tekniikkavinkki">i</button>' : '');
     card.appendChild(hd);
 
@@ -1835,14 +1873,33 @@ function renderProgram(pid){
       const kg = num(s.kg), reps = num(s.reps);
       if(reps <= 0) return;
       const best = bestSet(person, pid, def.key);
-      let msg = '';
-      if(best && kg > best.kg && kg > 0) msg = 'Uusi ennätys – ' + fmtKg(kg) + ' kg × ' + reps;
-      else if(best && kg === best.kg && reps > best.reps) msg = 'Enemmän toistoja samalla painolla – ' + fmtKg(kg) + ' kg × ' + reps;
-      if(!msg) return;
+      if(!best) return;
+      let pr = null;
+      if(kg > best.kg && kg > 0) pr = {type:'kg', kg:kg, reps:reps, pkg:best.kg, preps:best.reps};
+      else if(kg === best.kg && reps > best.reps) pr = {type:'reps', kg:kg, reps:reps, pkg:best.kg, preps:best.reps};
+      if(!pr) return;
+      const prev = a.prs && a.prs[def.key];
+      if(prev && prev.kg >= pr.kg && prev.reps >= pr.reps) return;
       if(!a.prs) a.prs = {};
-      a.prs[def.key] = msg;
+      a.prs[def.key] = pr;
+      paintPr(def, pr, true);
+    }
+    function paintPr(def, pr, animate){
       const el = hd.querySelector('[data-pr]');
-      if(el){ el.textContent = '★ ' + msg; el.hidden = false; }
+      if(!el || !pr) return;
+      el.innerHTML =
+        '<span class="prmedal" aria-hidden="true">★</span>' +
+        '<span class="prtext">' +
+          '<span class="prlabel">' + (pr.type === 'kg' ? 'Uusi ennätyspaino' : 'Ennätys toistoissa') + '</span>' +
+          '<b class="prval mono">' + fmtKg(pr.kg) + ' kg × ' + pr.reps + '</b>' +
+          '<span class="prprev mono">aiempi ennätys ' + fmtKg(pr.pkg) + ' kg × ' + pr.preps + '</span>' +
+        '</span>';
+      el.hidden = false;
+      if(animate){
+        el.classList.remove('pop');
+        void el.offsetWidth;
+        el.classList.add('pop');
+      }
     }
     function touch(){ updateAdvice(); updateFinishState(); save(person); }
     function updateAdvice(){
@@ -1856,6 +1913,7 @@ function renderProgram(pid){
 
     drawSets();
     updateAdvice();
+    if(a.prs && a.prs[def.key]) paintPr(def, a.prs[def.key], false);
     nodes[def.key] = {card:card, update:updateAdvice, draw:drawSets};
     list.appendChild(card);
   });
@@ -3038,11 +3096,17 @@ function showSummary(p, rows, stats){
     '<div class="stat"><b class="mono">' + stats.improved + '</b><span>liikettä parani</span></div>' +
     '</div>';
   if(prs.length){
-    h += '<div class="prbox"><b>★ Ennätykset</b>';
-    prs.forEach(function(r){ h += '<div>' + esc(r.pr) + '</div>'; });
+    h += '<div class="prbox"><span class="prbox-h">★ ' +
+      (prs.length === 1 ? 'Uusi ennätys' : prs.length + ' uutta ennätystä') + '</span>';
+    prs.forEach(function(r){
+      h += '<div class="prbox-row"><span class="prbox-name">' + esc(r.name.split(',')[0]) +
+        '<small>' + (r.pr.type === 'kg' ? 'ennätyspaino' : 'toistoennätys') +
+        ' · aiempi ' + fmtKg(r.pr.pkg) + ' kg × ' + r.pr.preps + '</small></span>' +
+        '<b class="mono">' + fmtKg(r.pr.kg) + ' kg × ' + r.pr.reps + '</b></div>';
+    });
     h += '</div>';
   }
-  h += '<p>' + (stats.prev ? 'Verrattuna edelliseen samaan treeniin ' + fmtDate(stats.prev.end) + '. ' : '') +
+  h += '<p>' + (stats.prev ? 'Verrattuna edelliseen samaan treeniin ' + fmtDate(stats.prev.end) + ' ' : '') +
        'Painot kantautuvat seuraavaan kertaan:</p>';
   h += '<div class="sumlist">';
   rows.forEach(function(r){
