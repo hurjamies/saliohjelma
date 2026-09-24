@@ -23,7 +23,7 @@
 </style>
 </head>
 <body>
-<title>Saliohjelma 5.6</title>
+<title>Saliohjelma 5.7</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Josefin+Sans:wght@400;600;700&family=Poiret+One&display=swap">
@@ -306,19 +306,26 @@
     font-family:var(--font-m);font-size:12px;font-weight:600;color:var(--ink-2);padding:0 5px;
   }
   .rirbtn[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
-  /* ennätysmerkintä liikkeen kohdalla */
+  /* ennätysmerkintä liikkeen kohdalla – aina kultainen */
+  :root{--gold-1:#E7C867;--gold-2:#C9A227;--gold-3:#8C6D14}
   .prbadge{
-    display:flex;align-items:center;gap:11px;margin-top:9px;padding:9px 12px;
-    background:var(--ok-soft);border:1px solid color-mix(in srgb, var(--ok) 42%, transparent);
-    border-radius:13px;box-shadow:0 6px 18px -14px var(--ok);
+    display:flex;align-items:center;gap:12px;margin-top:9px;padding:10px 13px;
+    background:linear-gradient(135deg, rgba(201,162,39,.20), rgba(201,162,39,.07));
+    border:1px solid rgba(201,162,39,.60);
+    border-radius:13px;box-shadow:0 6px 20px -14px rgba(201,162,39,.9), inset 0 1px 0 rgba(255,255,255,.18);
   }
-  .prmedal{
-    width:30px;height:30px;border-radius:50%;flex:none;display:grid;place-items:center;
-    background:var(--ok);color:var(--bg);font-size:15px;line-height:1;
+  .prstars{display:flex;align-items:center;gap:2px;flex:none;line-height:1}
+  .prstars i{
+    font-style:normal;font-size:14px;
+    background:linear-gradient(180deg,var(--gold-1),var(--gold-2) 55%,var(--gold-3));
+    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
+    filter:drop-shadow(0 1px 1px rgba(90,70,10,.35));
   }
+  .prstars i.mid{font-size:20px;margin-top:-3px}
   .prtext{display:flex;flex-direction:column;min-width:0;gap:1px}
   .prlabel{
-    font-family:var(--font-d);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ok);
+    font-family:var(--font-d);font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--gold-3);
   }
   .prval{font-size:19px;font-weight:600;line-height:1.15;letter-spacing:-.01em;color:var(--ink)}
   .prprev{font-size:11px;color:var(--ink-3)}
@@ -329,21 +336,35 @@
     100%{transform:scale(1)}
   }
   @media (prefers-reduced-motion: reduce){.prbadge.pop{animation:none}}
-  body[data-skin="neon"] .prbadge{box-shadow:0 0 26px -12px var(--ok)}
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]) .prlabel,
+    :root:not([data-theme="light"]) .prbox-h{color:var(--gold-1)}
+  }
+  :root[data-theme="dark"] .prlabel, :root[data-theme="dark"] .prbox-h{color:var(--gold-1)}
+  body[data-skin="dark"] .prlabel, body[data-skin="dark"] .prbox-h,
+  body[data-skin="neon"] .prlabel, body[data-skin="neon"] .prbox-h{color:var(--gold-1)}
+  body[data-skin="light"] .prlabel, body[data-skin="light"] .prbox-h,
+  body[data-skin="deco"] .prlabel, body[data-skin="deco"] .prbox-h,
+  body[data-skin="nature"] .prlabel, body[data-skin="nature"] .prbox-h,
+  body[data-skin="mono"] .prlabel, body[data-skin="mono"] .prbox-h{color:var(--gold-3)}
+  body[data-skin="neon"] .prbadge{box-shadow:0 0 30px -14px rgba(231,200,103,.9)}
   body[data-skin="deco"] .prbadge{border-radius:4px}
   body[data-skin="deco"] .prmedal{border-radius:2px}
 
   /* ennätykset yhteenvedossa */
   .prbox{
-    background:var(--ok-soft);border:1px solid color-mix(in srgb, var(--ok) 35%, transparent);
+    background:linear-gradient(135deg, rgba(201,162,39,.20), rgba(201,162,39,.07));
+    border:1px solid rgba(201,162,39,.55);
     border-radius:13px;padding:12px 14px;margin-bottom:16px;
   }
   .prbox-h{
-    display:block;font-family:var(--font-d);font-size:11px;font-weight:700;letter-spacing:.14em;
-    text-transform:uppercase;color:var(--ok);margin-bottom:8px;
+    display:flex;align-items:center;gap:7px;font-family:var(--font-d);font-size:11px;font-weight:700;
+    letter-spacing:.14em;text-transform:uppercase;color:var(--gold-3);margin-bottom:8px;
   }
+  .prbox-h .prstars i{font-size:13px}
+  .prbox-h .prstars i.mid{font-size:17px}
   .prbox-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:5px 0}
-  .prbox-row + .prbox-row{border-top:1px solid color-mix(in srgb, var(--ok) 20%, transparent)}
+  .prbox-row + .prbox-row{border-top:1px solid rgba(201,162,39,.30)}
   .prbox-name{font-size:13.5px;font-weight:600;min-width:0}
   .prbox-name small{display:block;font-weight:400;font-size:11px;color:var(--ink-3);margin-top:1px}
   .prbox-row b{font-size:17px;font-weight:600;white-space:nowrap;color:var(--ink)}
@@ -1888,7 +1909,7 @@ function renderProgram(pid){
       const el = hd.querySelector('[data-pr]');
       if(!el || !pr) return;
       el.innerHTML =
-        '<span class="prmedal" aria-hidden="true">★</span>' +
+        '<span class="prstars" aria-hidden="true"><i>★</i><i class="mid">★</i><i>★</i></span>' +
         '<span class="prtext">' +
           '<span class="prlabel">' + (pr.type === 'kg' ? 'Uusi ennätyspaino' : 'Ennätys toistoissa') + '</span>' +
           '<b class="prval mono">' + fmtKg(pr.kg) + ' kg × ' + pr.reps + '</b>' +
@@ -2537,7 +2558,7 @@ function entryTag(s){
   if(k === 'cardio') return {k:k, t:'C'};
   if(k === 'rest') return {k:k, t:'L'};
   const p = progById(s.pid);
-  if(!p) return null;
+  if(!p) return {k:'rest', t:'?'};
   return {k:k, t:(p.type === 'ala' ? 'A' : 'Y') + p.name.slice(-1)};
 }
 const KIND_ORDER = ['gym','cardio','rest'];
@@ -2788,18 +2809,26 @@ function applyImport(txt){
       '<div class="sticky-cta"><button class="btn primary" data-close="1">Sulje</button></div></div></div>';
     return;
   }
-  let added = 0;
+  let added = 0, skipped = 0;
   PERSONS.forEach(function(pn){
     const inc = d[pn];
     if(!inc || !Array.isArray(inc.sessions)) return;
+    const clean = inc.sessions.filter(function(x){
+      if(!x || typeof x !== 'object' || !x.id || !x.end) return false;
+      if(isNaN(new Date(x.end).getTime())) return false;
+      if(x.pid !== 'cardio' && x.pid !== 'rest' && !progById(x.pid)) return false;
+      return true;
+    });
+    skipped += inc.sessions.length - clean.length;
     const before = store[pn].sessions.length;
-    store[pn].sessions = mergeSessions(store[pn].sessions, inc.sessions);
+    store[pn].sessions = mergeSessions(store[pn].sessions, clean);
     added += store[pn].sessions.length - before;
     writeLocal(pn);
     save(pn);
   });
   overlayEl.innerHTML = '<div class="ov"><div class="sheet" role="dialog" aria-label="Tuonti valmis">' +
-    '<h3>Tiedot tuotu</h3><p>Uusia kirjauksia lisättiin ' + added + ' kpl. Olemassa olevat säilyivät.</p>' +
+    '<h3>Tiedot tuotu</h3><p>Uusia kirjauksia lisättiin ' + added + ' kpl. Olemassa olevat säilyivät.' +
+    (skipped ? ' ' + skipped + ' vioittunutta tai tuntematonta kirjausta ohitettiin.' : '') + '</p>' +
     '<div class="sticky-cta"><button class="btn primary" data-close="1">Valmis</button></div></div></div>';
   progDom = null;
 }
@@ -3036,6 +3065,25 @@ function finishSession(){
       .map(function(s){ return {kg:num(s.kg), reps:num(s.reps), rir:s.rir || ''}; });
     if(kept.length) entries[k] = kept;
   }
+  /* ennätykset ennen tallennusta, jotta ne tunnistetaan vaikka sarjaa ei merkitty tehdyksi */
+  const prMap = {};
+  p.ex.forEach(function(def){
+    const arr = entries[def.key];
+    if(!arr || !arr.length) return;
+    const best = bestSet(person, a.pid, def.key);
+    if(!best) return;
+    let top = null;
+    arr.forEach(function(x){
+      const kg = num(x.kg), reps = num(x.reps);
+      if(reps <= 0) return;
+      if(kg > best.kg || (kg === best.kg && reps > best.reps)){
+        if(!top || kg > top.kg || (kg === top.kg && reps > top.reps)) top = {kg:kg, reps:reps};
+      }
+    });
+    if(top) prMap[def.key] = {type: top.kg > best.kg ? 'kg' : 'reps',
+                              kg:top.kg, reps:top.reps, pkg:best.kg, preps:best.reps};
+  });
+
   const endIso = a.forceEnd || new Date().toISOString();
   if(a.editId){
     let found = false;
@@ -3073,7 +3121,8 @@ function finishSession(){
       }
     }
     if(better) improved++;
-    rows.push({name:def.name, sum:setsSummary(arr), ad:ad, better:better, pr:(a.prs && a.prs[def.key]) || ''});
+    rows.push({name:def.name, sum:setsSummary(arr), ad:ad, better:better,
+               pr: prMap[def.key] || (a.prs && a.prs[def.key]) || ''});
   });
   const startMs = a.start ? new Date(a.start).getTime() : 0;
   const mins = startMs ? Math.max(1, Math.round((new Date(endIso).getTime() - startMs) / 60000)) : 0;
@@ -3096,7 +3145,8 @@ function showSummary(p, rows, stats){
     '<div class="stat"><b class="mono">' + stats.improved + '</b><span>liikettä parani</span></div>' +
     '</div>';
   if(prs.length){
-    h += '<div class="prbox"><span class="prbox-h">★ ' +
+    h += '<div class="prbox"><span class="prbox-h">' +
+      '<span class="prstars" aria-hidden="true"><i>★</i><i class="mid">★</i><i>★</i></span>' +
       (prs.length === 1 ? 'Uusi ennätys' : prs.length + ' uutta ennätystä') + '</span>';
     prs.forEach(function(r){
       h += '<div class="prbox-row"><span class="prbox-name">' + esc(r.name.split(',')[0]) +
