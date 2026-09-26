@@ -23,7 +23,7 @@
 </style>
 </head>
 <body>
-<title>Saliohjelma 6.2</title>
+<title>Saliohjelma 6.3</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Josefin+Sans:wght@400;600;700&family=Poiret+One&display=swap">
@@ -321,6 +321,7 @@
   }
   .prbadge.silver{--m1:var(--silver-1);--m2:var(--silver-2);--m3:var(--silver-3);--mrgb:150,162,173}
   .prbadge.bronze{--m1:var(--bronze-1);--m2:var(--bronze-2);--m3:var(--bronze-3);--mrgb:192,130,79}
+  .prbadge.none{--m1:var(--line-2);--m2:var(--ink-3);--m3:var(--ink-3);--mrgb:140,148,158}
   .prstars{display:flex;align-items:center;gap:2px;flex:none;line-height:1}
   .prstars i{
     font-style:normal;font-size:14px;
@@ -1326,7 +1327,22 @@ function totalsOf(sets){
   return {vol:vol, reps:reps, n:n};
 }
 /* final = treeni tallennetaan: arvioidaan vaikka kaikkia sarjoja ei olisi kirjattu */
-function medalFor(person, pid, def, sets, prevSets, final){
+function prevForMedal(person, pid, key, skipId){
+  const same = prevSameProgram(person, pid, key, skipId);
+  if(same) return {sets:same, cross:false, pid:pid};
+  const list = strengthSessions(person);
+  for(let i = 0; i < list.length; i++){
+    const s = list[i];
+    if(skipId && s.id === skipId) continue;
+    if(!progById(s.pid)) continue;
+    const arr = s.entries && s.entries[key];
+    if(arr && arr.length && arr.some(function(x){ return num(x.reps) > 0; }))
+      return {sets:arr, cross:true, pid:s.pid};
+  }
+  return null;
+}
+function medalFor(person, pid, def, sets, prevInfo, final){
+  const prevSets = prevInfo ? prevInfo.sets : null;
   const top = topOf(sets);
   if(!top) return null;
   const kg = num(top.kg), reps = num(top.reps);
@@ -1338,11 +1354,14 @@ function medalFor(person, pid, def, sets, prevSets, final){
   const doneCount = sets.filter(function(s){ return num(s.reps) > 0; }).length;
   if(!final && doneCount < def.sets) return null;
   const prev = prevSets ? topOf(prevSets) : null;
-  if(!prev) return null;
+  if(!prev) return {tier:'none', mode:'first', kg:kg, reps:reps};
   const pkg = num(prev.kg), preps = num(prev.reps);
   const tn = totalsOf(sets), tp = totalsOf(prevSets);
+  const cross = prevInfo && prevInfo.cross;
+  const cday = cross ? (progById(prevInfo.pid) ? progById(prevInfo.pid).day.slice(0,2) : '') : '';
   const base = {kg:kg, reps:reps, pkg:pkg, preps:preps,
                 nreps:tn.reps, preps_tot:tp.reps, nsets:tn.n, psets:tp.n,
+                cross:cross, cday:cday,
                 bkg: best ? best.kg : 0, breps: best ? best.reps : 0};
   if(kg > pkg || (kg === pkg && reps > preps))
     return Object.assign({tier:'silver', mode:'up'}, base);
@@ -1356,17 +1375,21 @@ function medalFor(person, pid, def, sets, prevSets, final){
 function medalText(m){
   const val = fmtKg(m.kg) + ' kg × ' + m.reps;
   const prev = fmtKg(m.pkg) + ' kg × ' + m.preps;
+  const cross = m.cross ? ' · verrattu ' + m.cday + '-päivään (eri liikejärjestys)' : '';
+  if(m.tier === 'none') return {
+    stars:0, label:'Ei vertailukohtaa', val: val,
+    note:'tämä on ensimmäinen kirjaus tästä liikkeestä – siitä tulee vertailukohta ensi kerralle'};
   if(m.tier === 'gold') return {
     stars:3,
     label: m.mode === 'kg' ? 'Uusi ennätyspaino' : 'Ennätys toistoissa',
     val: val, note: 'aiempi ennätys ' + (m.blabel || prev)};
   if(m.mode === 'volup') return {
     stars:2, label:'Enemmän työtä kuin viimeksi', val: val,
-    note: 'sama paras sarja, mutta toistoja yhteensä ' + m.preps_tot + ' → ' + m.nreps};
+    note: 'sama paras sarja, mutta toistoja yhteensä ' + m.preps_tot + ' → ' + m.nreps + cross};
   if(m.mode === 'voldown') return {
     stars:1, label:'Kevyempi kerta', val: val,
     note: (m.nsets < m.psets ? 'sarjoja ' + m.psets + ' → ' + m.nsets + ', ' : '') +
-          'toistoja yhteensä ' + m.preps_tot + ' → ' + m.nreps + ' – sama paino ensi kerralla'};
+          'toistoja yhteensä ' + m.preps_tot + ' → ' + m.nreps + ' – sama paino ensi kerralla' + cross};
   if(m.tier === 'silver' && m.mode === 'up'){
     const dkg = m.kg - m.pkg;
     const delta = dkg > 0 ? '+' + fmtKg(dkg) + ' kg' : '+' + (m.reps - m.preps) + ' toistoa';
@@ -1377,16 +1400,16 @@ function medalText(m){
         ? ' – ennätykseen ' + fmtKg(m.bkg) + ' kg matkaa ' + fmtKg(gap) + ' kg'
         : ' – ennätys ' + fmtKg(m.bkg) + ' kg × ' + m.breps + ' vielä edellä';
     }
-    return {stars:2, label:'Nousua edelliseen', val: val, note: note};
+    return {stars:2, label:'Nousua edelliseen', val: val, note: note + cross};
   }
   if(m.tier === 'silver') return {
     stars:2, label:'Sama taso', val: val,
-    note: 'tason pitäminen on edistystä – toistot nousevat seuraavaksi'};
+    note: 'tason pitäminen on edistystä – toistot nousevat seuraavaksi' + cross};
   return {
     stars:1, label:'Kevyempi kerta', val: val,
     note: 'edellinen kerta ' + prev +
           (m.nsets < m.psets ? ' (sarjoja ' + m.psets + ' → ' + m.nsets + ')' : '') +
-          ' – uni ja ruoka ratkaisevat, sama paino ensi kerralla'};
+          ' – uni ja ruoka ratkaisevat, sama paino ensi kerralla' + cross};
 }
 
 /* sarjakohtainen "viimeksi / tavoite" */
@@ -2011,8 +2034,8 @@ function renderProgram(pid){
       }, 60);
     }
     function updateMedal(def, animate){
-      const prevSame = prevSameProgram(person, pid, def.key, a.editId);
-      const m = medalFor(person, pid, def, a.entries[def.key], prevSame);
+      const prevInfo = prevForMedal(person, pid, def.key, a.editId);
+      const m = medalFor(person, pid, def, a.entries[def.key], prevInfo);
       const el = hd.querySelector('[data-pr]');
       if(!a.medals) a.medals = {};
       const before = a.medals[def.key] ? a.medals[def.key].tier : '';
@@ -2027,7 +2050,8 @@ function renderProgram(pid){
       let stars = '';
       if(t.stars === 3) stars = '<i>★</i><i class="mid">★</i><i>★</i>';
       else if(t.stars === 2) stars = '<i>★</i><i class="mid">★</i>';
-      else stars = '<i class="mid">★</i>';
+      else if(t.stars === 1) stars = '<i class="mid">★</i>';
+      else stars = '<i class="mid">☆</i>';
       el.className = 'prbadge ' + m.tier;
       el.innerHTML =
         '<span class="prstars" aria-hidden="true">' + stars + '</span>' +
@@ -3208,8 +3232,8 @@ function finishSession(){
   p.ex.forEach(function(def){
     const arr = entries[def.key];
     if(!arr || !arr.length) return;
-    const prevArr = prevSameProgram(person, a.pid, def.key, a.editId);
-    const m = medalFor(person, a.pid, def, arr, prevArr, true);
+    const prevInfo = prevForMedal(person, a.pid, def.key, a.editId);
+    const m = medalFor(person, a.pid, def, arr, prevInfo, true);
     if(m) medalMap[def.key] = m;
   });
 
