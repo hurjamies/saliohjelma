@@ -23,7 +23,7 @@
 </style>
 </head>
 <body>
-<title>Saliohjelma 6.4</title>
+<title>Saliohjelma 6.5</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Josefin+Sans:wght@400;600;700&family=Poiret+One&display=swap">
@@ -208,6 +208,19 @@
     100%{box-shadow:0 0 0 0 color-mix(in srgb, var(--warn) 0%, transparent)}
   }
   @media (prefers-reduced-motion: reduce){.resume .live{animation:none}}
+
+  .lastbtn{
+    display:flex;align-items:center;gap:11px;width:100%;text-align:left;margin-top:12px;
+    background:var(--surface);border:1px solid var(--line-2);border-radius:13px;padding:11px 12px;
+    color:var(--ink);box-shadow:var(--shadow);cursor:pointer;
+    transition:border-color .12s ease, transform .12s ease;
+  }
+  .lastbtn:active{transform:scale(.995)}
+  .lastbtn b{font-family:var(--font-d);font-size:14px;font-weight:700;display:block;letter-spacing:-.005em}
+  .lastbtn small{display:block;font-size:12px;line-height:1.35;color:var(--ink-2);margin-top:2px}
+  .lastbtn .chev{margin-left:auto;color:var(--ink-3);font-size:20px;font-weight:700;line-height:1;flex:none}
+  .lastbtn .mdot{width:12px;height:12px}
+  body[data-skin="deco"] .lastbtn{border-radius:4px}
 
   /* ---------- week strip ---------- */
   .week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:14px}
@@ -1653,6 +1666,37 @@ function renderAll(){
 
 /* ---------------- YLEISNÄKYMÄ ---------------- */
 
+/* etusivun pikakuvake viimeisimpään tallennettuun salitreeniin */
+function lastSessionButton(person){
+  const last = strengthSessions(person)[0];
+  if(!last) return '';
+  const p = progById(last.pid);
+  if(!p) return '';
+  const endMs = endMsOf(last);
+  let sets = 0, golds = 0, medal = '';
+  let bestTier = 3;
+  const RANK = {gold:0, silver:1, bronze:2, none:3};
+  p.ex.forEach(function(def){
+    const arr = last.entries && last.entries[def.key];
+    if(!arr || !arr.length) return;
+    sets += arr.length;
+    const m = medalFor(person, last.pid, def, arr,
+                       prevBefore(person, last.pid, def.key, endMs, last.id), true,
+                       bestSetBefore(person, def.key, endMs, last.id));
+    if(!m) return;
+    if(m.tier === 'gold') golds++;
+    if(RANK[m.tier] < bestTier){ bestTier = RANK[m.tier]; medal = m.tier; }
+  });
+  const bits = [fmtDate(last.end) + ' · ' + agoText(last.end), sets + (sets === 1 ? ' sarja' : ' sarjaa')];
+  if(golds) bits.push(golds === 1 ? '1 ennätys' : golds + ' ennätystä');
+  if(last.note) bits.push('muistiinpano');
+  return '<button type="button" class="lastbtn" data-session="' + last.id + '">' +
+    (medal ? '<i class="mdot ' + medal + '" aria-hidden="true"></i>' : '') +
+    '<span style="min-width:0"><b>Viimeisin treeni · ' + esc(p.name) + '</b>' +
+    '<small>' + esc(bits.join(' · ')) + '</small></span>' +
+    '<span class="chev" aria-hidden="true">›</span></button>';
+}
+
 function renderHome(){
   const person = state.person;
   const rec = recommend(person);
@@ -1709,6 +1753,9 @@ function renderHome(){
   }
   if(restToday) h += '<span class="chip">Lepopäivä kirjattu</span>';
   h += '</div></section>';
+
+  /* viimeisin treeni */
+  h += lastSessionButton(person);
 
   /* viikkorytmi */
   const awk = adaptiveWeek(person);
