@@ -23,7 +23,7 @@
 </style>
 </head>
 <body>
-<title>Saliohjelma 5.9</title>
+<title>Saliohjelma 6.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Josefin+Sans:wght@400;600;700&family=Poiret+One&display=swap">
@@ -413,6 +413,11 @@
   .ex-f{display:flex;gap:8px;padding:0 14px 12px;align-items:center;flex-wrap:wrap}
   .minibtn{border:1px solid var(--line);background:transparent;border-radius:9px;padding:5px 10px;font-size:12.5px;font-weight:600;color:var(--ink-2)}
   .lastchip{border:1px dashed var(--line-2);background:transparent;border-radius:999px;padding:3px 10px;font-size:12px;color:var(--ink-2);font-family:var(--font-m)}
+  .bestchip{
+    display:inline-flex;align-items:center;border-radius:999px;padding:3px 10px;font-size:11.5px;
+    background:linear-gradient(135deg, rgba(201,162,39,.18), rgba(201,162,39,.07));
+    border:1px solid rgba(201,162,39,.45);color:var(--ink-2);
+  }
   .advice{font-size:12.5px;font-weight:600;display:inline-flex;align-items:center;gap:5px}
   .advice.up{color:var(--ok)}
   .advice.down{color:var(--warn)}
@@ -1031,6 +1036,10 @@ const GUIDE = {
       'Jos alaraja ei onnistu samalla tekniikalla, kevennä. Jos ylärajan jälkeen onnistuisi vielä 4–5 toistoa, lisää painoa.',
       'Toistot saavat vähentyä sarjojen edetessä: 15, 12 ja 10 sopii alueelle 10–15.',
       'Failurea ei tarvitse tavoitella. Lopeta viimeistään, kun liikerata ei enää säily.']},
+    {h:'Ennätykset ja vertailu',items:[
+      'Ennätys lasketaan liikkeen kaikista kirjauksista: A- ja B-päivät lasketaan yhteen, koska ennätys on ennätys riippumatta päivästä.',
+      'Kulta = uusi ennätys. Hopea = sama tai parempi kuin viime kerralla samassa ohjelmassa. Pronssi = kevyempi kerta.',
+      'Tavoitteet, esitäytetyt painot ja hopea/pronssi vertaavat aina saman päivän (A tai B) edelliseen kertaan, koska liikejärjestys vaikuttaa painoihin.']},
     {h:'Sarjojen intensiteetti',items:[
       'Perussarjat 1–2 puhdasta toistoa varastossa.',
       'Viimeinen sarja usein 0–1 varastossa.',
@@ -1062,6 +1071,10 @@ const GUIDE = {
       'Jos alaraja ei onnistu samalla tekniikalla, kevennä. Jos ylärajan jälkeen onnistuisi vielä 4–5 toistoa, lisää painoa.',
       'Toistot saavat vähentyä sarjojen edetessä: 12, 10 ja 8 on hyvä tulos alueella 8–12.',
       'Eristävän liikkeen viimeisen sarjan voi halutessaan viedä puhtaaseen failureen. Se ei ole pakollista.']},
+    {h:'Ennätykset ja vertailu',items:[
+      'Ennätys lasketaan liikkeen kaikista kirjauksista: A- ja B-päivät lasketaan yhteen, koska ennätys on ennätys riippumatta päivästä.',
+      'Kulta = uusi ennätys. Hopea = sama tai parempi kuin viime kerralla samassa ohjelmassa. Pronssi = kevyempi kerta.',
+      'Tavoitteet, esitäytetyt painot ja hopea/pronssi vertaavat aina saman päivän (A tai B) edelliseen kertaan, koska liikejärjestys vaikuttaa painoihin.']},
     {h:'Sarjojen intensiteetti',items:[
       'Perussarjat 1–2 puhdasta toistoa varastossa.',
       'Viimeinen sarja usein 0–1 varastossa.',
@@ -1260,19 +1273,29 @@ function advice(def, sets, prevSets){
 }
 
 /* paras aiempi työsarja tässä ohjelmassa */
-function bestSet(person, pid, key){
+/* Ennätys lasketaan liikkeen KAIKISTA kirjauksista, myös A- ja B-päivien yli:
+   ennätys on ennätys riippumatta siitä kummalla päivällä se tehtiin.
+   Sen sijaan tavoitteet, esitäyttö ja hopea/pronssi vertaavat aina saman
+   ohjelman edelliseen kertaan, koska liikejärjestys vaikuttaa painoihin. */
+function bestSet(person, key){
   let best = null;
   store[person].sessions.forEach(function(s){
-    if(s.pid !== pid || !s.entries) return;
+    if(!s.entries || !progById(s.pid)) return;
     const arr = s.entries[key];
     if(!arr) return;
     arr.forEach(function(x){
       const kg = num(x.kg), reps = num(x.reps);
       if(reps <= 0) return;
-      if(!best || kg > best.kg || (kg === best.kg && reps > best.reps)) best = {kg:kg, reps:reps, end:s.end};
+      if(!best || kg > best.kg || (kg === best.kg && reps > best.reps))
+        best = {kg:kg, reps:reps, end:s.end, pid:s.pid};
     });
   });
   return best;
+}
+function bestSetLabel(best){
+  if(!best) return '';
+  const pr = progById(best.pid);
+  return fmtKg(best.kg) + ' kg × ' + best.reps + (pr ? ' · ' + pr.day.slice(0,2) + ' ' + fmtDate(best.end) : '');
 }
 
 /* Mitali: kulta = ennätys, hopea = sama tai parempi kuin viimeksi, pronssi = kevyempi kerta.
@@ -1300,10 +1323,10 @@ function medalFor(person, pid, def, sets, prevSets){
   const top = topOf(sets);
   if(!top) return null;
   const kg = num(top.kg), reps = num(top.reps);
-  const best = bestSet(person, pid, def.key);
+  const best = bestSet(person, def.key);
   if(best && (kg > best.kg || (kg === best.kg && reps > best.reps))){
     return {tier:'gold', mode: kg > best.kg ? 'kg' : 'reps',
-            kg:kg, reps:reps, pkg:best.kg, preps:best.reps};
+            kg:kg, reps:reps, pkg:best.kg, preps:best.reps, blabel: bestSetLabel(best)};
   }
   const doneCount = sets.filter(function(s){ return num(s.reps) > 0; }).length;
   if(doneCount < def.sets) return null;
@@ -1323,7 +1346,7 @@ function medalText(m){
   if(m.tier === 'gold') return {
     stars:3,
     label: m.mode === 'kg' ? 'Uusi ennätyspaino' : 'Ennätys toistoissa',
-    val: val, note: 'aiempi ennätys ' + prev};
+    val: val, note: 'aiempi ennätys ' + (m.blabel || prev) + ' – lasketaan A- ja B-päivistä yhdessä'};
   if(m.tier === 'silver' && m.mode === 'up'){
     const dkg = m.kg - m.pkg;
     const delta = dkg > 0 ? '+' + fmtKg(dkg) + ' kg' : '+' + (m.reps - m.preps) + ' toistoa';
@@ -1838,6 +1861,14 @@ function renderProgram(pid){
 
     const foot = document.createElement('div');
     foot.className = 'ex-f';
+    const bestNow = bestSet(person, def.key);
+    if(bestNow){
+      const bchip = document.createElement('span');
+      bchip.className = 'bestchip mono';
+      bchip.textContent = 'Ennätys ' + bestSetLabel(bestNow);
+      bchip.title = 'Ennätys lasketaan tämän liikkeen kaikista kirjauksista, sekä A- että B-päivistä.';
+      foot.appendChild(bchip);
+    }
     const prevChip = document.createElement('button');
     prevChip.type = 'button';
     prevChip.className = 'lastchip';
@@ -3157,7 +3188,7 @@ function finishSession(){
   p.ex.forEach(function(def){
     const arr = entries[def.key];
     if(!arr || !arr.length) return;
-    const best = bestSet(person, a.pid, def.key);
+    const best = bestSet(person, def.key);
     if(!best) return;
     let top = null;
     arr.forEach(function(x){
