@@ -23,7 +23,7 @@
 </style>
 </head>
 <body>
-<title>Saliohjelma 6.3</title>
+<title>Saliohjelma 6.4</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Josefin+Sans:wght@400;600;700&family=Poiret+One&display=swap">
@@ -559,6 +559,29 @@
   .sumlist{display:flex;flex-direction:column;gap:7px;margin:0 0 16px}
   .sumrow{display:flex;justify-content:space-between;gap:10px;font-size:13px;border-bottom:1px solid var(--line);padding-bottom:6px}
   .sumrow:last-child{border-bottom:0}
+  /* vanhan treenin tarkastelu */
+  .stats.tight{grid-template-columns:repeat(auto-fit,minmax(92px,1fr))}
+  .stats.tight .stat{padding:10px 11px}
+  .stats.tight .stat b{font-size:20px}
+  .stats.tight .stat span{font-size:10.5px}
+  .hlink{cursor:pointer;-webkit-tap-highlight-color:transparent}
+  .hlink:active{background:var(--surface-2)}
+  .hlink .det{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+  .hlink .go{margin-left:auto;align-self:center;flex:none;color:var(--ink-3);font-size:15px;line-height:1}
+  .hlink:focus-visible{outline:2px solid var(--acc);outline-offset:-2px}
+  .vnav{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:12px}
+  .vnav .minibtn{max-width:48%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .vsess{margin-top:4px}
+  .vex{padding:12px 0;border-bottom:1px solid var(--line)}
+  .vex:first-child{padding-top:4px}
+  .vex:last-child{border-bottom:0}
+  .setlog{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+  .setlog span{display:inline-flex;align-items:center;gap:5px;white-space:nowrap;
+    font-family:var(--font-m);font-size:12.5px;padding:4px 9px;border-radius:9px;
+    background:var(--surface-2);border:1px solid var(--line);color:var(--ink-2)}
+  .setlog span i{font-style:normal;font-size:10px;color:var(--ink-3)}
+  .setlog span.top{border-color:var(--ink-3);color:var(--ink);font-weight:600}
+  .vex .prbadge{margin-top:10px}
 
   /* ============ TEEMAT ============ */
   /* Tokenit määritellään bodylle, jolloin ne voittavat :root-oletukset molemmissa järjestelmätiloissa. */
@@ -1341,12 +1364,13 @@ function prevForMedal(person, pid, key, skipId){
   }
   return null;
 }
-function medalFor(person, pid, def, sets, prevInfo, final){
+function medalFor(person, pid, def, sets, prevInfo, final, bestIn){
   const prevSets = prevInfo ? prevInfo.sets : null;
   const top = topOf(sets);
   if(!top) return null;
   const kg = num(top.kg), reps = num(top.reps);
-  const best = bestSet(person, def.key);
+  /* bestIn annetaan kun katsotaan vanhaa treeniä: ennätys lasketaan vain sitä ennen */
+  const best = (arguments.length > 6) ? bestIn : bestSet(person, def.key);
   if(best && (kg > best.kg || (kg === best.kg && reps > best.reps))){
     return {tier:'gold', mode: kg > best.kg ? 'kg' : 'reps',
             kg:kg, reps:reps, pkg:best.kg, preps:best.reps, blabel: bestSetLabel(best)};
@@ -2300,6 +2324,9 @@ function programHistoryHtml(person, pid){
       (volume > 0 ? '<div class="sumrow"><span class="muted">Kokonaiskuorma</span><span class="mono muted">' +
         Math.round(volume) + ' kg</span></div>' : '') +
       (s.note ? '<p class="det muted" style="margin:8px 0 0;font-size:12.5px">“' + esc(s.note) + '”</p>' : '') +
+      '<div class="pickrow" style="margin-top:4px">' +
+        '<button type="button" class="minibtn" data-session="' + s.id + '">Tarkastele treeniä</button>' +
+      '</div>' +
       '</div></details>';
   });
   h += '</div>';
@@ -2347,17 +2374,20 @@ function renderHistory(){
       h += '<div class="card" style="padding:18px"><p class="muted" style="margin:0">Ei vielä kirjauksia. ' +
            'Ensimmäinen tallennettu treeni ilmestyy tähän.</p></div>';
     }else{
+      h += '<p class="muted" style="font-size:12.5px;margin:2px 0 10px">Napauta treeniä, niin näet kaikki sarjat, mitalit ja muistiinpanon.</p>';
       h += '<div class="card">';
       sess.slice(0,40).forEach(function(s){
+        const open = ' class="hitem hlink" role="button" tabindex="0" data-session="' + s.id + '"';
         if(s.pid === 'cardio'){
-          h += '<div class="hitem"><span class="hd mono">' + fmtDate(s.end) + '</span><div>' +
+          h += '<div' + open + '><span class="hd mono">' + fmtDate(s.end) + '</span><div style="min-width:0">' +
                '<h4>' + esc(s.kind || 'Cardio') + '</h4><p class="det">' + (s.minutes || '?') + ' min</p></div>' +
-               '<span class="chip cardio">Cardio</span></div>';
+               '<span class="chip cardio">Cardio</span><span class="go" aria-hidden="true">\u203a</span></div>';
           return;
         }
         if(s.pid === 'rest'){
-          h += '<div class="hitem"><span class="hd mono">' + fmtDate(s.end) + '</span><div>' +
-               '<h4>Lepopäivä</h4><p class="det">Ei treeniä – palautuminen on osa ohjelmaa.</p></div></div>';
+          h += '<div' + open + '><span class="hd mono">' + fmtDate(s.end) + '</span><div style="min-width:0">' +
+               '<h4>Lepopäivä</h4><p class="det">Ei treeniä – palautuminen on osa ohjelmaa.</p></div>' +
+               '<span class="go" aria-hidden="true">\u203a</span></div>';
           return;
         }
         const p = progById(s.pid);
@@ -2368,11 +2398,12 @@ function renderHistory(){
           if(arr && setsSummary(arr)) det.push(e.name.split(',')[0] + ': ' + setsSummary(arr));
         });
         const sets = det.length;
-        h += '<div class="hitem"><span class="hd mono">' + fmtDate(s.end) + '</span><div style="min-width:0">' +
+        h += '<div' + open + '><span class="hd mono">' + fmtDate(s.end) + '</span><div style="min-width:0">' +
              '<h4>' + esc(p.name) + ' <span class="muted" style="font-weight:400;font-size:12px">' + p.day + '</span></h4>' +
              '<p class="det">' + esc(det.join(' · ') || 'ei kirjattuja sarjoja') + '</p>' +
              (s.note ? '<p class="det muted">“' + esc(s.note) + '”</p>' : '') +
-             '</div><span class="chip">' + sets + ' liikettä</span></div>';
+             '</div><span class="chip">' + sets + ' liikettä</span>' +
+             '<span class="go" aria-hidden="true">\u203a</span></div>';
       });
       h += '</div>';
     }
@@ -2812,6 +2843,7 @@ function showDay(iso){
     }
     h += '<label class="daylbl">Päivä<input class="pick" type="date" value="' + isoDay(new Date(s.end)) + '" data-movedate="' + s.id + '"></label>';
     h += '<div class="pickrow" style="margin-top:8px">';
+    h += '<button type="button" class="minibtn" data-session="' + s.id + '" data-sessionback="' + iso + '">Tarkastele</button>';
     if(isGym) h += '<button type="button" class="minibtn" data-editsets="' + s.id + '">Muokkaa sarjoja</button>';
     h += '<button type="button" class="minibtn danger" data-del="' + s.id + '">Poista</button>';
     h += '</div></div>';
@@ -2836,14 +2868,17 @@ function showDay(iso){
   state.calDay = iso;
 }
 
-function confirmDelete(id){
+function confirmDelete(id, from){
   const person = state.person;
   const s = store[person].sessions.filter(function(x){ return x.id === id; })[0];
   if(!s) return;
+  const cancel = from === 'session'
+    ? '<button class="btn ghost" data-session="' + id + '" style="flex:1">Peruuta</button>'
+    : '<button class="btn ghost" data-backtoday="' + isoDay(new Date(s.end)) + '" style="flex:1">Peruuta</button>';
   const h = '<div class="ov"><div class="sheet" role="dialog" aria-label="Poista kirjaus">' +
     '<h3>Poistetaanko kirjaus?</h3>' +
     '<p>' + esc(entryLabel(s)) + ' · ' + fmtDate(s.end) + '. Tätä ei voi perua.</p>' +
-    '<div class="row"><button class="btn ghost" data-backtoday="' + isoDay(new Date(s.end)) + '" style="flex:1">Peruuta</button>' +
+    '<div class="row">' + cancel +
     '<button class="btn primary" data-delok="' + id + '" style="flex:1">Poista</button></div></div></div>';
   overlayEl.innerHTML = h;
 }
@@ -3341,6 +3376,238 @@ function showSummary(p, rows, stats, savedId){
   overlayEl.innerHTML = h;
 }
 
+/* ---------------- VANHAN TREENIN TARKASTELU ----------------
+   Tarkastelu näyttää treenin sellaisena kuin se oli: mitalit ja ennätykset
+   lasketaan vain sitä edeltävistä kirjauksista, joten vanha kulta pysyy kultana
+   vaikka ennätys olisi myöhemmin parantunut.                               */
+
+function sessionById(person, id){
+  return store[person].sessions.filter(function(x){ return x.id === id; })[0] || null;
+}
+function endMsOf(s){ return s && s.end ? new Date(s.end).getTime() : 0; }
+/* ennätys ennen annettua hetkeä (kaikki ohjelmat, sama liike) */
+function bestSetBefore(person, key, beforeMs, skipId){
+  let best = null;
+  store[person].sessions.forEach(function(s){
+    if(!s.entries || !progById(s.pid)) return;
+    if(skipId && s.id === skipId) return;
+    if(endMsOf(s) >= beforeMs) return;
+    const arr = s.entries[key];
+    if(!arr) return;
+    arr.forEach(function(x){
+      const kg = num(x.kg), reps = num(x.reps);
+      if(reps <= 0) return;
+      if(!best || kg > best.kg || (kg === best.kg && reps > best.reps))
+        best = {kg:kg, reps:reps, end:s.end, pid:s.pid};
+    });
+  });
+  return best;
+}
+/* vertailukohta ennen annettua hetkeä: sama ohjelma ensin, muuten toinen päivä */
+function prevBefore(person, pid, key, beforeMs, skipId){
+  const list = strengthSessions(person).filter(function(s){
+    return s.id !== skipId && endMsOf(s) < beforeMs;
+  });
+  for(let i = 0; i < list.length; i++){
+    const s = list[i];
+    if(s.pid !== pid) continue;
+    const arr = s.entries && s.entries[key];
+    if(arr && arr.length && arr.some(function(x){ return num(x.reps) > 0; }))
+      return {sets:arr, cross:false, pid:pid, end:s.end};
+  }
+  for(let i = 0; i < list.length; i++){
+    const s = list[i];
+    const arr = s.entries && s.entries[key];
+    if(arr && arr.length && arr.some(function(x){ return num(x.reps) > 0; }))
+      return {sets:arr, cross:true, pid:s.pid, end:s.end};
+  }
+  return null;
+}
+function prevSessionBefore(person, pid, beforeMs, skipId){
+  const list = strengthSessions(person);
+  for(let i = 0; i < list.length; i++){
+    const s = list[i];
+    if(s.pid !== pid || s.id === skipId) continue;
+    if(endMsOf(s) >= beforeMs) continue;
+    return s;
+  }
+  return null;
+}
+function starsHtml(n){
+  if(n === 3) return '<i>&#9733;</i><i class="mid">&#9733;</i><i>&#9733;</i>';
+  if(n === 2) return '<i>&#9733;</i><i class="mid">&#9733;</i>';
+  if(n === 1) return '<i class="mid">&#9733;</i>';
+  return '<i class="mid">&#9734;</i>';
+}
+function medalBadgeHtml(m){
+  const t = medalText(m);
+  return '<div class="prbadge ' + m.tier + '">' +
+    '<span class="prstars" aria-hidden="true">' + starsHtml(t.stars) + '</span>' +
+    '<span class="prtext">' +
+      '<span class="prlabel">' + esc(t.label) + '</span>' +
+      '<b class="prval mono">' + esc(t.val) + '</b>' +
+      '<span class="prprev">' + esc(t.note) + '</span>' +
+    '</span></div>';
+}
+function longDate(iso){
+  const d = new Date(iso);
+  return DAYNAMES[d.getDay()].charAt(0).toUpperCase() + DAYNAMES[d.getDay()].slice(1) +
+    ' ' + d.getDate() + '.' + (d.getMonth()+1) + '.' + d.getFullYear();
+}
+function sessionCloseBtn(back){
+  return back
+    ? '<button class="btn primary" data-backtoday="' + esc(back) + '">Takaisin päivään</button>'
+    : '<button class="btn primary" data-close="1">Valmis</button>';
+}
+function sessionNavHtml(person, s, back){
+  const list = strengthSessions(person);
+  let idx = -1;
+  for(let i = 0; i < list.length; i++) if(list[i].id === s.id){ idx = i; break; }
+  if(idx < 0) return '';
+  const older = list[idx+1], newer = list[idx-1];
+  const bk = back ? ' data-sessionback="' + esc(back) + '"' : '';
+  let h = '<div class="vnav">';
+  h += older
+    ? '<button type="button" class="minibtn" data-session="' + older.id + '"' + bk + '>&lsaquo; ' +
+      esc((progById(older.pid) || {}).name || '') + ' ' + fmtDate(older.end) + '</button>'
+    : '<span class="muted" style="font-size:12px">Vanhin kirjaus</span>';
+  h += newer
+    ? '<button type="button" class="minibtn" data-session="' + newer.id + '"' + bk + '>' +
+      esc((progById(newer.pid) || {}).name || '') + ' ' + fmtDate(newer.end) + ' &rsaquo;</button>'
+    : '<span class="muted" style="font-size:12px">Uusin kirjaus</span>';
+  h += '</div>';
+  return h;
+}
+
+function showSession(id, backIso){
+  const person = state.person;
+  const s = sessionById(person, id);
+  if(!s){ overlayEl.innerHTML = ''; return; }
+  const back = backIso || '';
+  const p = progById(s.pid);
+  let h = '<div class="ov"><div class="sheet" role="dialog" aria-label="Treenin tiedot">';
+
+  /* cardio ja lepo: kevyt katselu */
+  if(!p){
+    const isCardio = s.pid === 'cardio';
+    h += '<h3>' + (isCardio ? esc(s.kind || 'Cardio') : 'Lepopäivä') + '</h3>' +
+      '<p>' + longDate(s.end) + ' &middot; ' + agoText(s.end) + '</p>';
+    if(isCardio){
+      h += '<div class="stats" style="margin:10px 0 14px">' +
+        '<div class="stat"><b class="mono">' + (num(s.minutes) || '?') + '</b><span>minuuttia</span></div>' +
+        '<div class="stat"><b class="mono">' + esc(s.kind || 'Muu') + '</b><span>laji</span></div></div>';
+    }else{
+      h += '<p class="muted" style="font-size:13px;margin:10px 0 0">Ei treeniä &ndash; palautuminen on osa ohjelmaa.</p>';
+    }
+    h += '<div class="pickrow" style="margin-top:14px">' +
+      '<button type="button" class="minibtn danger" data-del="' + s.id + '" data-delfrom="session">Poista</button></div>';
+    h += '<div class="sticky-cta">' + sessionCloseBtn(back) + '</div></div></div>';
+    overlayEl.innerHTML = h;
+    return;
+  }
+
+  const endMs = endMsOf(s);
+  const prevSess = prevSessionBefore(person, s.pid, endMs, s.id);
+  const rows = [], missing = [], prs = [];
+  let sets = 0, tonnage = 0, repsTot = 0;
+  p.ex.forEach(function(def){
+    const arr = s.entries && s.entries[def.key];
+    if(!arr || !arr.length){ missing.push(def.name.split(',')[0]); return; }
+    sets += arr.length;
+    arr.forEach(function(x){
+      tonnage += (num(x.kg) || 0) * (num(x.reps) || 0);
+      repsTot += num(x.reps) || 0;
+    });
+    const bestBefore = bestSetBefore(person, def.key, endMs, s.id);
+    const prevInfo = prevBefore(person, s.pid, def.key, endMs, s.id);
+    const m = medalFor(person, s.pid, def, arr, prevInfo, true, bestBefore);
+    if(m && m.tier === 'gold') prs.push({name:def.name, m:m});
+    rows.push({def:def, arr:arr, m:m, top:topOf(arr)});
+  });
+  /* kesto naytetaan vain jos se on uskottava: jalkikateen kirjatuissa alku ja loppu ovat sama */
+  let mins = s.start ? Math.round((endMs - new Date(s.start).getTime()) / 60000) : 0;
+  if(mins < 2 || mins > 600) mins = 0;
+  let prevSets = 0;
+  if(prevSess && prevSess.entries) for(const k in prevSess.entries) prevSets += prevSess.entries[k].length;
+
+  h += '<h3>' + esc(p.name) + '</h3>';
+  h += '<p>' + longDate(s.end) + ' &middot; ' + agoText(s.end) + '</p>';
+  h += '<div class="row" style="flex-wrap:wrap;gap:6px;margin-top:8px">' +
+    '<span class="chip">' + p.day + '</span>' +
+    '<span class="chip">' + personName(person) + '</span>' +
+    (s.start ? '' : '<span class="chip">jälkikäteen kirjattu</span>') +
+    '</div>';
+  h += sessionNavHtml(person, s, back);
+  h += '<div class="stats tight" style="margin:12px 0 14px">' +
+    (mins ? '<div class="stat"><b class="mono">' + mins + '</b><span>minuuttia</span></div>' : '') +
+    '<div class="stat"><b class="mono">' + sets + '</b><span>työsarjaa' +
+      (prevSets ? ' (ed. ' + prevSets + ')' : '') + '</span></div>' +
+    '<div class="stat"><b class="mono">' + repsTot + '</b><span>toistoa</span></div>' +
+    '</div>';
+
+  if(prs.length){
+    h += '<div class="prbox"><span class="prbox-h">' +
+      '<span class="prstars" aria-hidden="true">' + starsHtml(3) + '</span>' +
+      (prs.length === 1 ? 'Ennätys tässä treenissä' : prs.length + ' ennätystä tässä treenissä') + '</span>';
+    prs.forEach(function(r){
+      h += '<div class="prbox-row"><span class="prbox-name">' + esc(r.name.split(',')[0]) +
+        '<small>' + (r.m.mode === 'kg' ? 'ennätyspaino' : 'toistoennätys') +
+        (r.m.pkg ? ' &middot; aiempi ' + fmtKg(r.m.pkg) + ' kg &times; ' + r.m.preps : '') + '</small></span>' +
+        '<b class="mono">' + fmtKg(r.m.kg) + ' kg &times; ' + r.m.reps + '</b></div>';
+    });
+    h += '</div>';
+  }
+
+  if(!rows.length){
+    h += '<div class="note">Tähän treeniin ei jäänyt kirjattuja sarjoja.</div>';
+  }
+  h += '<div class="vsess">';
+  rows.forEach(function(r, i){
+    h += '<div class="vex"><div class="row spread" style="gap:8px;align-items:baseline">' +
+      '<b style="min-width:0;font-size:14px">' + (i+1) + '. ' + esc(r.def.name.split(',')[0]) + '</b>' +
+      '<span class="muted mono" style="font-size:11px;white-space:nowrap">' + r.def.sets + ' &times; ' +
+      r.def.lo + '&ndash;' + r.def.hi + '</span></div>';
+    h += '<div class="setlog">';
+    let marked = false;
+    r.arr.forEach(function(x, j){
+      const isTop = !marked && r.top && num(x.kg) === num(r.top.kg) && num(x.reps) === num(r.top.reps);
+      if(isTop) marked = true;
+      h += '<span' + (isTop && r.arr.length > 1 ? ' class="top"' : '') + '>' +
+        '<i>' + (j+1) + '.</i>' + (num(x.kg) ? fmtKg(num(x.kg)) + ' kg' : 'oma paino') +
+        ' &times; ' + (num(x.reps) || '&ndash;') + '</span>';
+    });
+    h += '</div>';
+    if(r.m) h += medalBadgeHtml(r.m);
+    h += '</div>';
+  });
+  h += '</div>';
+
+  if(missing.length){
+    h += '<p class="muted" style="font-size:12px;margin:10px 0 0">Ei kirjauksia: ' +
+      esc(missing.join(', ')) + '</p>';
+  }
+  h += '<div class="sumlist" style="margin-top:12px">' +
+    '<div class="sumrow"><span class="muted">Kokonaiskuorma (sekundäärinen)</span>' +
+    '<span class="mono muted">' + Math.round(tonnage) + ' kg</span></div>' +
+    (prevSess ? '<div class="sumrow"><span class="muted">Edellinen sama treeni</span>' +
+      '<span class="mono muted">' + fmtDate(prevSess.end) + '</span></div>' : '') +
+    '</div>';
+
+  h += '<p class="eyebrow" style="margin:16px 0 6px">Muistiinpano treenistä</p>' +
+    '<textarea class="pick" id="sum-note" rows="3" data-note="' + esc(s.id) + '" ' +
+    'placeholder="Miltä tuntui, laitteen säädöt, kipeät kohdat…">' + esc(s.note || '') + '</textarea>';
+
+  h += '<div class="pickrow" style="margin-top:12px">' +
+    '<button type="button" class="minibtn" data-editsets="' + s.id + '">Muokkaa sarjoja</button>' +
+    '<button type="button" class="minibtn danger" data-del="' + s.id + '" data-delfrom="session">Poista</button>' +
+    '</div>';
+  h += '<div class="sticky-cta">' + sessionCloseBtn(back) + '</div>';
+  h += '</div></div>';
+  overlayEl.innerHTML = h;
+  const sh = overlayEl.querySelector('.sheet');
+  if(sh) sh.scrollTop = 0;
+}
+
 function showCardio(forIso){
   cardioPick.date = forIso || null;
   const kinds = ['Hyrox','Jumppa','Juoksu','Muu'];
@@ -3382,7 +3649,7 @@ function confirmDiscard(){
    ============================================================ */
 
 document.addEventListener('click', function(ev){
-  const t = ev.target.closest('[data-person],[data-open],[data-view],[data-tab],[data-cardio],[data-finish],[data-close],[data-savecardio],[data-discard],[data-discard-ask],[data-setskin],[data-rest],[data-ckind],[data-cmin],[data-ckindfilter],[data-timer],[data-calmove],[data-calday],[data-editsets],[data-del],[data-delok],[data-backtoday],[data-addcardio],[data-addrest],[data-abort],[data-clearsets],[data-weekday],[data-active],[data-pickprog],[data-hidebar],[data-showbar],[data-export],[data-import],[data-importtext],[data-copybk]');
+  const t = ev.target.closest('[data-person],[data-open],[data-view],[data-tab],[data-cardio],[data-finish],[data-close],[data-savecardio],[data-discard],[data-discard-ask],[data-setskin],[data-rest],[data-ckind],[data-cmin],[data-ckindfilter],[data-timer],[data-calmove],[data-calday],[data-editsets],[data-del],[data-delok],[data-backtoday],[data-addcardio],[data-addrest],[data-abort],[data-clearsets],[data-weekday],[data-active],[data-pickprog],[data-hidebar],[data-showbar],[data-export],[data-import],[data-importtext],[data-copybk],[data-session]');
   if(!t) return;
 
   if(t.dataset.person){
@@ -3437,8 +3704,9 @@ document.addEventListener('click', function(ev){
     showDay(t.dataset.weekday);
     return;
   }
+  if(t.dataset.session){ showSession(t.dataset.session, t.dataset.sessionback || ''); return; }
   if(t.dataset.editsets){ startEdit(t.dataset.editsets); return; }
-  if(t.dataset.del){ confirmDelete(t.dataset.del); return; }
+  if(t.dataset.del){ confirmDelete(t.dataset.del, t.dataset.delfrom || ''); return; }
   if(t.dataset.delok){
     const id = t.dataset.delok;
     const gone = store[state.person].sessions.filter(function(x){ return x.id === id; })[0];
@@ -3446,8 +3714,12 @@ document.addEventListener('click', function(ev){
     store[state.person].sessions = store[state.person].sessions.filter(function(x){ return x.id !== id; });
     save(state.person);
     overlayEl.innerHTML = '';
-    renderCalendar();
-    if(backIso) showDay(backIso);
+    if(state.view === 'calendar'){
+      renderCalendar();
+      if(backIso) showDay(backIso);
+    }else{
+      renderAll();
+    }
     return;
   }
   if(t.dataset.backtoday){ showDay(t.dataset.backtoday); return; }
@@ -3520,6 +3792,16 @@ document.addEventListener('click', function(ev){
     else if(t.dataset.timer === 'mute'){ muted = !muted; try{ localStorage.setItem('salikirja-muted', muted ? '1' : '0'); }catch(e){} renderBottom(); }
     return;
   }
+});
+
+/* näppäimistö: historian rivit ovat role="button" -laatikoita */
+document.addEventListener('keydown', function(ev){
+  if(ev.key !== 'Enter' && ev.key !== ' ' && ev.key !== 'Spacebar') return;
+  const t = ev.target;
+  if(!t || !t.getAttribute || t.getAttribute('role') !== 'button') return;
+  if(!t.getAttribute('data-session')) return;
+  ev.preventDefault();
+  t.click();
 });
 
 document.addEventListener('input', function(ev){
