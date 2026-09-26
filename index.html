@@ -23,7 +23,7 @@
 </style>
 </head>
 <body>
-<title>Saliohjelma 5.8</title>
+<title>Saliohjelma 5.9</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Josefin+Sans:wght@400;600;700&family=Poiret+One&display=swap">
@@ -1284,6 +1284,18 @@ function topOf(sets){
   return done.slice().sort(function(x,y){
     return (num(y.kg) - num(x.kg)) || (num(y.reps) - num(x.reps)); })[0];
 }
+/* saman ohjelman edellinen kerta (ei koskaan toisen päivän kirjaus) */
+function prevSameProgram(person, pid, key, skipId){
+  const list = strengthSessions(person);
+  for(let i = 0; i < list.length; i++){
+    const s = list[i];
+    if(s.pid !== pid) continue;
+    if(skipId && s.id === skipId) continue;
+    const arr = s.entries && s.entries[key];
+    if(arr && arr.length && arr.some(function(x){ return num(x.reps) > 0; })) return arr;
+  }
+  return null;
+}
 function medalFor(person, pid, def, sets, prevSets){
   const top = topOf(sets);
   if(!top) return null;
@@ -1299,7 +1311,8 @@ function medalFor(person, pid, def, sets, prevSets){
   if(!prev) return null;
   const pkg = num(prev.kg), preps = num(prev.reps);
   if(kg > pkg || (kg === pkg && reps > preps))
-    return {tier:'silver', mode:'up', kg:kg, reps:reps, pkg:pkg, preps:preps};
+    return {tier:'silver', mode:'up', kg:kg, reps:reps, pkg:pkg, preps:preps,
+            bkg: best ? best.kg : 0, breps: best ? best.reps : 0};
   if(kg === pkg && reps === preps)
     return {tier:'silver', mode:'same', kg:kg, reps:reps, pkg:pkg, preps:preps};
   return {tier:'bronze', mode:'down', kg:kg, reps:reps, pkg:pkg, preps:preps};
@@ -1311,9 +1324,18 @@ function medalText(m){
     stars:3,
     label: m.mode === 'kg' ? 'Uusi ennätyspaino' : 'Ennätys toistoissa',
     val: val, note: 'aiempi ennätys ' + prev};
-  if(m.tier === 'silver' && m.mode === 'up') return {
-    stars:2, label:'Parempi kuin viimeksi', val: val,
-    note: 'edellinen kerta ' + prev + ' – juuri näin kasvu tapahtuu'};
+  if(m.tier === 'silver' && m.mode === 'up'){
+    const dkg = m.kg - m.pkg;
+    const delta = dkg > 0 ? '+' + fmtKg(dkg) + ' kg' : '+' + (m.reps - m.preps) + ' toistoa';
+    let note = delta + ' edelliseen (' + prev + ')';
+    if(m.bkg){
+      const gap = m.bkg - m.kg;
+      note += gap > 0
+        ? ' – ennätykseen ' + fmtKg(m.bkg) + ' kg matkaa ' + fmtKg(gap) + ' kg'
+        : ' – ennätys ' + fmtKg(m.bkg) + ' kg × ' + m.breps + ' vielä edellä';
+    }
+    return {stars:2, label:'Nousua edelliseen', val: val, note: note};
+  }
   if(m.tier === 'silver') return {
     stars:2, label:'Sama taso', val: val,
     note: 'tason pitäminen on edistystä – toistot nousevat seuraavaksi'};
@@ -1955,8 +1977,8 @@ function renderProgram(pid){
       }, 60);
     }
     function updateMedal(def, animate){
-      const prevA = lastFor(person, pid, def.key);
-      const m = medalFor(person, pid, def, a.entries[def.key], prevA ? prevA.sets : null);
+      const prevSame = prevSameProgram(person, pid, def.key, a.editId);
+      const m = medalFor(person, pid, def, a.entries[def.key], prevSame);
       const el = hd.querySelector('[data-pr]');
       if(!a.medals) a.medals = {};
       const before = a.medals[def.key] ? a.medals[def.key].tier : '';
@@ -3152,7 +3174,7 @@ function finishSession(){
   p.ex.forEach(function(def){
     const arr = entries[def.key];
     if(!arr || !arr.length) return;
-    const prevArr = prevSess && prevSess.entries ? prevSess.entries[def.key] : null;
+    const prevArr = prevSameProgram(person, a.pid, def.key, a.editId);
     const m = medalFor(person, a.pid, def, arr, prevArr);
     if(m) medalMap[def.key] = m;
   });
