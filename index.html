@@ -23,7 +23,7 @@
 </style>
 </head>
 <body>
-<title>Saliohjelma 6.0</title>
+<title>Saliohjelma 6.1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Josefin+Sans:wght@400;600;700&family=Poiret+One&display=swap">
@@ -296,7 +296,7 @@
   .setblock{border-bottom:1px dashed var(--line);padding-bottom:8px}
   .setblock:last-child{border-bottom:0;padding-bottom:0}
   .setrow{display:grid;grid-template-columns:20px 1fr 74px 38px;gap:6px;align-items:center}
-  .setmeta{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:5px 0 0 26px}
+  .setmeta{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:4px 0 0 26px}
   .setmeta .tgt{font-size:11px;color:var(--ink-3);flex:1;min-width:150px;line-height:1.35}
   .rirrow{display:flex;align-items:center;gap:3px}
   .rirrow .rlab{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);
@@ -1259,14 +1259,11 @@ function advice(def, sets, prevSets){
   if(!done.length) return null;
   const complete = done.length >= def.sets;
   const allTop = done.every(function(s){ return num(s.reps) >= def.hi; });
-  const rirKnown = done.every(function(s){ return s.rir !== '' && s.rir != null; });
-  const rirLow = done.every(function(s){ return s.rir === '' || s.rir == null || num(s.rir) <= 2; });
   const below = done.filter(function(s){ return num(s.reps) < def.lo; }).length;
   const prevBelow = prevSets ? prevSets.filter(function(s){
     return num(s.reps) > 0 && num(s.reps) < def.lo; }).length : 0;
 
-  if(complete && allTop && rirKnown && rirLow) return {k:'up', t:'Lisää pienin paino ensi kerralla'};
-  if(complete && allTop && !rirKnown) return {k:'hold', t:'Ylärajassa – merkitse varasto, niin tiedetään voiko painoa lisätä'};
+  if(complete && allTop) return {k:'up', t:'Lisää pienin paino ensi kerralla'};
   if(below >= 2 || (below >= 1 && prevBelow >= 1)) return {k:'down', t:'Toistot jäävät alarajan alle – kevennä'};
   if(below === 1) return {k:'hold', t:'Yksi sarja jäi alle – pidä paino ja yritä ensi kerralla uudestaan'};
   return {k:'hold', t:'Hae lisää toistoja samalla painolla'};
@@ -1346,7 +1343,7 @@ function medalText(m){
   if(m.tier === 'gold') return {
     stars:3,
     label: m.mode === 'kg' ? 'Uusi ennätyspaino' : 'Ennätys toistoissa',
-    val: val, note: 'aiempi ennätys ' + (m.blabel || prev) + ' – lasketaan A- ja B-päivistä yhdessä'};
+    val: val, note: 'aiempi ennätys ' + (m.blabel || prev)};
   if(m.tier === 'silver' && m.mode === 'up'){
     const dkg = m.kg - m.pkg;
     const delta = dkg > 0 ? '+' + fmtKg(dkg) + ' kg' : '+' + (m.reps - m.preps) + ' toistoa';
@@ -1968,25 +1965,6 @@ function renderProgram(pid){
         tgt.textContent = setTargetText(def, pv) || 'Ei aiempaa kirjausta – valitse maltillinen paino';
         meta.appendChild(tgt);
 
-        const rirRow = document.createElement('span');
-        rirRow.className = 'rirrow';
-        const rlab = document.createElement('span'); rlab.className = 'rlab'; rlab.textContent = 'Varasto';
-        rirRow.appendChild(rlab);
-        [['0','0'],['1','1'],['2','2'],['3','3+']].forEach(function(pair){
-          const bt = document.createElement('button');
-          bt.type = 'button'; bt.className = 'rirbtn'; bt.textContent = pair[1];
-          bt.setAttribute('aria-label','Toistoja varastossa ' + pair[1]);
-          bt.setAttribute('aria-pressed', String(s.rir) === pair[0] ? 'true' : 'false');
-          bt.addEventListener('click', function(){
-            s.rir = (String(s.rir) === pair[0]) ? '' : pair[0];
-            Array.prototype.forEach.call(rirRow.querySelectorAll('.rirbtn'), function(x){
-              x.setAttribute('aria-pressed', x.textContent.replace('+','') === String(s.rir) ? 'true' : 'false');
-            });
-            touch();
-          });
-          rirRow.appendChild(bt);
-        });
-        meta.appendChild(rirRow);
         block.appendChild(meta);
 
         setsWrap.appendChild(block);
@@ -3211,6 +3189,7 @@ function finishSession(){
   });
 
   const endIso = a.forceEnd || new Date().toISOString();
+  let savedId = a.editId || ('s' + Date.now());
   if(a.editId){
     let found = false;
     store[person].sessions = store[person].sessions.map(function(x){
@@ -3218,9 +3197,9 @@ function finishSession(){
       found = true;
       return {id:x.id, pid:a.pid, start:x.start || a.start, end:endIso, entries:entries, note:a.note || ''};
     });
-    if(!found) store[person].sessions.push({id:'s' + Date.now(), pid:a.pid, start:a.start, end:endIso, entries:entries, note:a.note || ''});
+    if(!found) store[person].sessions.push({id:savedId, pid:a.pid, start:a.start, end:endIso, entries:entries, note:a.note || ''});
   }else{
-    store[person].sessions.push({id:'s' + Date.now(), pid:a.pid, start:a.start, end:endIso, entries:entries, note:a.note || ''});
+    store[person].sessions.push({id:savedId, pid:a.pid, start:a.start, end:endIso, entries:entries, note:a.note || ''});
   }
   store[person].active = null;
   progDom = null;
@@ -3258,10 +3237,10 @@ function finishSession(){
   if(prevSess && prevSess.entries){
     for(const k in prevSess.entries) stats.prevCount += prevSess.entries[k].length;
   }
-  showSummary(p, rows, stats);
+  showSummary(p, rows, stats, savedId);
 }
 
-function showSummary(p, rows, stats){
+function showSummary(p, rows, stats, savedId){
   const prs = rows.filter(function(r){ return r.pr; });
   const meds = {gold:0, silver:0, bronze:0};
   rows.forEach(function(r){ if(r.medal) meds[r.medal.tier]++; });
@@ -3303,7 +3282,12 @@ function showSummary(p, rows, stats){
   });
   h += '<div class="sumrow"><span class="muted">Kokonaiskuorma (sekundäärinen)</span>' +
        '<span class="mono muted">' + stats.tonnage + ' kg</span></div>';
-  h += '</div><div class="sticky-cta"><button class="btn primary" data-close="1">Valmis</button></div>';
+  h += '</div>';
+  const sess0 = savedId ? store[state.person].sessions.filter(function(x){ return x.id === savedId; })[0] : null;
+  h += '<p class="eyebrow" style="margin:16px 0 6px">Muistiinpano treenistä</p>' +
+       '<textarea class="pick" id="sum-note" rows="3" data-note="' + esc(savedId || '') + '" ' +
+       'placeholder="Miltä tuntui, laitteen säädöt, kipeät kohdat…">' + esc(sess0 && sess0.note ? sess0.note : '') + '</textarea>';
+  h += '<div class="sticky-cta"><button class="btn primary" data-close="1">Valmis</button></div>';
   h += '</div></div>';
   overlayEl.innerHTML = h;
 }
@@ -3486,6 +3470,22 @@ document.addEventListener('click', function(ev){
     else if(t.dataset.timer === 'stop'){ stopTimer(); }
     else if(t.dataset.timer === 'mute'){ muted = !muted; try{ localStorage.setItem('salikirja-muted', muted ? '1' : '0'); }catch(e){} renderBottom(); }
     return;
+  }
+});
+
+document.addEventListener('input', function(ev){
+  const t = ev.target;
+  if(t && t.id === 'sum-note'){
+    const id = t.getAttribute('data-note');
+    if(!id) return;
+    const person = state.person;
+    let hit = false;
+    store[person].sessions = store[person].sessions.map(function(x){
+      if(x.id !== id) return x;
+      hit = true;
+      return Object.assign({}, x, {note: t.value});
+    });
+    if(hit) save(person);
   }
 });
 
