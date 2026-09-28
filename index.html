@@ -23,7 +23,7 @@
 </style>
 </head>
 <body>
-<title>Saliohjelma 6.5</title>
+<title>Saliohjelma 7.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Josefin+Sans:wght@400;600;700&family=Poiret+One&display=swap">
@@ -221,6 +221,17 @@
   .lastbtn .chev{margin-left:auto;color:var(--ink-3);font-size:20px;font-weight:700;line-height:1;flex:none}
   .lastbtn .mdot{width:12px;height:12px}
   body[data-skin="deco"] .lastbtn{border-radius:4px}
+
+  .aibtn{margin-top:20px;
+    background:linear-gradient(135deg, color-mix(in srgb, var(--up) 11%, var(--surface)), var(--surface) 65%)}
+  .aibtn b{font-size:14px}
+  textarea.pick.aitext{
+    font-family:var(--font-m);font-size:11.5px;line-height:1.5;white-space:pre-wrap;word-break:break-word;
+    height:36vh;min-height:200px;overflow:auto;resize:vertical;margin-top:12px;
+  }
+  .aiacts{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+  .aiacts .btn{padding:11px 10px;font-size:13.5px}
+  .aiacts .btn:first-child{grid-column:1 / -1}
 
   /* ---------- week strip ---------- */
   .week{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;margin-top:14px}
@@ -1625,7 +1636,7 @@ function weekStats(person){
 
 const now0 = new Date();
 const state = {person:'iida', view:'home', pid:null, tab:'historia', chartKey:null, cardioKind:'all',
-               calY:now0.getFullYear(), calM:now0.getMonth()};
+               aiRange:90, calY:now0.getFullYear(), calM:now0.getMonth()};
 const cardioPick = {kind:'Juoksu', min:30};
 try{
   const p = localStorage.getItem('salikirja-person');
@@ -1828,6 +1839,12 @@ function renderHome(){
          '<span class="code">' + (codes ? esc(codes) : '–') + '</span>' + stripe + '</button>';
   });
   h += '</div></div>';
+
+  /* AI-kehitysanalyysi */
+  h += '<button type="button" class="lastbtn aibtn" data-ai="1">' +
+    '<span style="min-width:0"><b>✨ AI-kehitysanalyysi</b>' +
+    '<small>Kokoa treenidata ja valmis ohje tekoälylle</small></span>' +
+    '<span class="chev" aria-hidden="true">›</span></button>';
 
   /* ohjelmat */
   h += '<div style="margin-top:22px"><p class="eyebrow">Ohjelmat · ' + personName(person) + '</p>';
@@ -3692,11 +3709,653 @@ function confirmDiscard(){
 }
 
 /* ============================================================
+   AI-KEHITYSANALYYSI
+   Kokoaa treenihistoriasta tekstimuotoisen analyysipaketin ja
+   valmiin ohjeen tekoälylle. Kaikki lasketaan tässä laitteessa;
+   mitään ei lähetetä minnekään. Ohjelma laskee faktat,
+   tulkinta jätetään tekoälylle.
+   ============================================================ */
+
+const AI_RANGES = [
+  {d:14, l:'Viimeiset 14 päivää'},
+  {d:30, l:'Viimeiset 30 päivää'},
+  {d:90, l:'Viimeiset 90 päivää'},
+  {d:0,  l:'Kaikki harjoitukset'}
+];
+const AI_MUSCLE = {
+  chestpress:'rinta (myös olkapään etuosa ja ojentajat)',
+  pecdeck:'rinta',
+  lateral:'olkapään sivuosa',
+  row:'yläselkä',
+  latpull:'leveä selkälihas',
+  shrug:'epäkäslihas (niska–hartiaseutu)',
+  curl_bar:'hauis',
+  hammer:'hauis ja olkavarren lihas / kyynärvarsi',
+  triceps:'ojentajat',
+  abs:'vatsalihakset',
+  hipthrust:'pakarat',
+  legpress:'etureidet ja pakarat',
+  legcurl:'takareidet',
+  abduction:'pakaran sivuosat',
+  calf:'pohkeet',
+  legext:'etureidet'
+};
+
+function aiPad(n){ return n < 10 ? '0' + n : '' + n; }
+function aiDate(v){
+  const d = new Date(v);
+  return aiPad(d.getDate()) + '.' + aiPad(d.getMonth()+1) + '.' + d.getFullYear();
+}
+function aiN(n){ return String(Math.round(n * 100) / 100).replace('.', ','); }
+function aiPct(from, to){
+  if(!(from > 0) || !isFinite(to)) return null;
+  const r = Math.round(((to - from) / from) * 1000) / 10;
+  return (r > 0 ? '+' : '') + String(r).replace('.', ',') + ' %';
+}
+function aiDays(n){ return n + (n === 1 ? ' päivä' : ' päivää'); }
+function aiLoad(kg, reps){ return (kg > 0 ? aiN(kg) + ' kg' : 'oma paino') + ' × ' + reps; }
+function aiShort(name){ return String(name).split(/ tai |,| \/ /)[0].trim(); }
+function aiRir(x){
+  if(!x || x.rir === '' || x.rir == null) return null;
+  const n = parseFloat(String(x.rir).replace(',', '.'));
+  return isFinite(n) ? n : null;
+}
+function aiDayMs(v){ const d = new Date(v); d.setHours(0,0,0,0); return d.getTime(); }
+
+/* identtinen duplikaatti = sama ohjelma, sama päivä ja täsmälleen samat sarjat */
+function aiSig(s){
+  if(s.pid === 'rest') return 'rest|' + isoDay(new Date(s.end));
+  if(s.pid === 'cardio') return 'cardio|' + isoDay(new Date(s.end)) + '|' + (s.kind || '') + '|' + (num(s.minutes) || 0);
+  const keys = Object.keys(s.entries || {}).sort();
+  return s.pid + '|' + isoDay(new Date(s.end)) + '|' + keys.map(function(k){
+    return k + ':' + (s.entries[k] || []).map(function(x){
+      const r = aiRir(x);
+      return num(x.kg) + 'x' + num(x.reps) + '@' + (r === null ? '-' : r);
+    }).join(',');
+  }).join(';');
+}
+
+/* --- 1. kerää valitun jakson kirjaukset --- */
+function aiCollect(person, days){
+  const today = new Date();
+  const all = (store[person].sessions || []).filter(function(s){
+    return s && s.end && isFinite(new Date(s.end).getTime());
+  }).sort(function(a, b){ return endMsOf(a) - endMsOf(b); });
+
+  let fromMs = -Infinity;
+  if(days){
+    const d = new Date(today); d.setHours(0,0,0,0); d.setDate(d.getDate() - (days - 1));
+    fromMs = d.getTime();
+  }
+  const seen = {};
+  const out = {person:person, days:days, today:today, fromMs:fromMs,
+               gym:[], cardio:[], rest:[], dupes:0, firstEverMs:null};
+  all.forEach(function(s){
+    if(out.firstEverMs === null) out.firstEverMs = aiDayMs(s.end);
+    if(endMsOf(s) < fromMs) return;
+    if(!progById(s.pid) && s.pid !== 'cardio' && s.pid !== 'rest') return;
+    const sig = aiSig(s);
+    if(seen[sig]){ out.dupes++; return; }
+    seen[sig] = true;
+    if(s.pid === 'cardio') out.cardio.push(s);
+    else if(s.pid === 'rest') out.rest.push(s);
+    else out.gym.push(s);
+  });
+
+  /* liikkeet ohjelman järjestyksessä */
+  const order = [];
+  progsFor(person).forEach(function(p){
+    p.ex.forEach(function(e){ if(order.indexOf(e.key) < 0) order.push(e.key); });
+  });
+  const ex = {};
+  out.totalSets = 0; out.rirSets = 0; out.flags = [];
+  out.gym.forEach(function(s){
+    const p = progById(s.pid);
+    Object.keys(s.entries || {}).forEach(function(key){
+      const arr = s.entries[key];
+      if(!arr || !arr.length) return;
+      if(order.indexOf(key) < 0) order.push(key);
+      if(!ex[key]){
+        let def = null;
+        progsFor(person).forEach(function(pp){ pp.ex.forEach(function(e){ if(!def && e.key === key) def = e; }); });
+        ex[key] = {key:key, def:def, name:def ? def.name : key, items:[], progs:[]};
+      }
+      const sets = arr.map(function(x){ return {kg:num(x.kg), reps:num(x.reps), rir:aiRir(x)}; });
+      const done = sets.filter(function(x){ return x.reps > 0; });
+      let reps = 0, vol = 0, rirN = 0;
+      done.forEach(function(x){ reps += x.reps; vol += x.kg * x.reps; });
+      sets.forEach(function(x){ out.totalSets++; if(x.rir !== null){ out.rirSets++; rirN++; } });
+      const top = done.slice().sort(function(x, y){ return (y.kg - x.kg) || (y.reps - x.reps); })[0] || null;
+      const kgs = done.map(function(x){ return x.kg; });
+      const item = {
+        id:s.id, end:s.end, pid:s.pid, prog:p.name, sets:sets, done:done,
+        n:done.length, reps:reps, vol:vol, top:top, rirN:rirN,
+        hasKg:kgs.some(function(k){ return k > 0; }),
+        evenKg:kgs.length > 0 && kgs.every(function(k){ return k === kgs[0]; })
+      };
+      const nm = aiShort(ex[key].name);
+      if(sets.length > done.length)
+        out.flags.push(aiDate(s.end) + ' · ' + nm + ': ' + (sets.length - done.length) +
+          ' kirjattu sarja ilman toistomäärää (jätetty laskennan ulkopuolelle)');
+      if(done.length && !item.hasKg)
+        out.flags.push(aiDate(s.end) + ' · ' + nm + ': painoa ei kirjattu (oma paino tai puuttuva tieto) – volyymia ei laskettu');
+      if(item.top && def0(ex[key]) && item.top.reps > def0(ex[key]).hi * 2)
+        out.flags.push(aiDate(s.end) + ' · ' + nm + ': ' + item.top.reps + ' toistoa on yli kaksinkertainen ohjelman ylärajaan nähden – mahdollinen kirjausvirhe');
+      if(done.length) ex[key].items.push(item);
+      if(ex[key].progs.indexOf(p.name) < 0) ex[key].progs.push(p.name);
+    });
+  });
+  out.order = order.filter(function(k){ return ex[k] && ex[k].items.length; });
+  out.ex = ex;
+  return out;
+}
+function def0(e){ return e && e.def ? e.def : null; }
+
+/* --- 2. vertailukelpoinen sarja: sama ohjelmapäivä ensin --- */
+function aiSeries(e){
+  const byProg = {};
+  e.items.forEach(function(it){ (byProg[it.pid] = byProg[it.pid] || []).push(it); });
+  const series = [];
+  Object.keys(byProg).forEach(function(pid){
+    if(byProg[pid].length >= 2) series.push({items:byProg[pid], prog:byProg[pid][0].prog, cross:false, def:e.def});
+  });
+  if(!series.length && e.items.length >= 2) series.push({items:e.items, prog:'eri ohjelmapäivät', cross:true, def:e.def});
+  series.lone = [];
+  if(series.length && !series[0].cross){
+    Object.keys(byProg).forEach(function(pid){
+      if(byProg[pid].length === 1) series.lone.push(byProg[pid][0]);
+    });
+  }
+  return series;
+}
+
+function aiAvgRir(it){
+  const r = it.done.map(function(x){ return x.rir; }).filter(function(x){ return x !== null; });
+  if(!r.length) return null;
+  return r.reduce(function(a, b){ return a + b; }, 0) / r.length;
+}
+
+/* --- 3. mekaaninen luokitus. Ei fysiologisia päätelmiä. --- */
+function aiClassify(a, b){
+  const kgA = a.top ? a.top.kg : 0, kgB = b.top ? b.top.kg : 0;
+  const avgA = a.n ? a.reps / a.n : 0, avgB = b.n ? b.reps / b.n : 0;
+  const sameSets = a.n === b.n;
+  if(kgB > kgA){
+    if(avgB > avgA + 0.01) return {c:'up2', t:'paino ja toistot nousivat samanaikaisesti → erittäin vahva kehitys'};
+    if(avgB >= avgA * 0.9) return {c:'up', t:'suurempi paino, suunnilleen sama toistomäärä → kehitys'};
+    if(avgB >= avgA * 0.75) return {c:'up', t:'suurempi paino, toistot hieman alempana → todennäköinen kehitys'};
+    return {c:'mixed', t:'paino nousi mutta toistot laskivat selvästi → ei yksiselitteistä kehitystä'};
+  }
+  if(kgB < kgA){
+    if(avgB > avgA * 1.1) return {c:'mixed', t:'kevyempi paino mutta selvästi enemmän toistoja → työkapasiteetti ylös, kuorma alas'};
+    return {c:'down', t:'kevyempi paino eikä selvästi enempää toistoja → lasku'};
+  }
+  /* sama paino */
+  const moreReps = sameSets ? b.reps > a.reps : avgB > avgA + 0.01;
+  const lessReps = sameSets ? b.reps < a.reps : avgB < avgA - 0.01;
+  if(moreReps && (sameSets || b.n >= a.n)) return {c:'up', t:'sama paino, enemmän toistoja → kehitys'};
+  if(moreReps) return {c:'mixed', t:'sama paino, enemmän toistoja per sarja mutta vähemmän sarjoja → vertaa varoen'};
+  if(lessReps) return {c:'down', t:'sama paino, vähemmän toistoja → lasku'};
+  if(b.n > a.n) return {c:'up', t:'sama paino ja toistot per sarja, enemmän sarjoja → työmäärä kasvoi'};
+  if(b.n < a.n) return {c:'down', t:'sama paino ja toistot per sarja, vähemmän sarjoja → työmäärä laski'};
+  const rA = aiAvgRir(a), rB = aiAvgRir(b);
+  if(rA !== null && rB !== null){
+    if(rB > rA) return {c:'maybe', t:'sama suoritus suuremmalla RIR:llä → mahdollinen kehitys (sama tulos kevyemmällä yrityksellä)'};
+    if(rB < rA) return {c:'flat', t:'sama suoritus pienemmällä RIR:llä → EI automaattisesti kehitystä (sama tulos kovemmalla yrityksellä)'};
+  }
+  return {c:'flat', t:'suoritus täsmälleen ennallaan'};
+}
+function aiWorse(cur, prv){
+  const kc = cur.top ? cur.top.kg : 0, kp = prv.top ? prv.top.kg : 0;
+  if(kc !== kp) return kc < kp;
+  return cur.n === prv.n ? cur.reps < prv.reps : (cur.reps / cur.n) < (prv.reps / prv.n);
+}
+function aiDeclineStreak(items){
+  let n = 0;
+  for(let i = items.length - 1; i > 0; i--){
+    if(aiWorse(items[i], items[i-1])) n++; else break;
+  }
+  return n;
+}
+
+/* --- 4. tekstimuotoilu --- */
+function aiSetsLines(it){
+  const L = [];
+  const anyRir = it.done.some(function(x){ return x.rir !== null; });
+  if(it.evenKg && !anyRir){
+    L.push(it.done[0].kg > 0 ? aiN(it.done[0].kg) + ' kg' : 'oma paino (ei painoa kirjattu)');
+    L.push(it.done.map(function(x){ return x.reps; }).join(' / ') + ' reps');
+  }else{
+    it.done.forEach(function(x, i){
+      L.push('Sarja ' + (i+1) + ': ' + (x.kg > 0 ? aiN(x.kg) + ' kg × ' : 'oma paino × ') + x.reps + ' reps' +
+        (x.rir !== null ? ' @ RIR ' + aiN(x.rir) : ''));
+    });
+  }
+  L.push('Sarjoja: ' + it.n + ' · Kokonaistoistot: ' + it.reps +
+    (it.vol > 0 ? ' · Kokonaisvolyymi: ' + aiN(it.vol) + ' kg' : ''));
+  return L;
+}
+function aiCompact(it){
+  const reps = it.done.map(function(x){ return x.reps; }).join('/');
+  if(it.evenKg) return (it.done[0].kg > 0 ? aiN(it.done[0].kg) + ' kg' : 'oma paino') + ' × ' + reps;
+  return it.done.map(function(x){ return aiLoad(x.kg, x.reps); }).join(', ');
+}
+function aiCompareLines(ser){
+  const a = ser.items[0], b = ser.items[ser.items.length - 1];
+  const kgA = a.top ? a.top.kg : 0, kgB = b.top ? b.top.kg : 0;
+  const L = [];
+  L.push('Ensimmäinen → viimeinen' + (ser.cross ? ' (HUOM: eri ohjelmapäivät, liikejärjestys eroaa – suuntaa-antava)' : ' (' + ser.prog + ')') +
+    ', ' + aiDate(a.end) + ' → ' + aiDate(b.end) + ', ' + ser.items.length + ' kirjausta:');
+  L.push(aiCompact(a) + '  →  ' + aiCompact(b));
+  L.push('Paras sarja: ' + aiLoad(kgA, a.top.reps) + ' → ' + aiLoad(kgB, b.top.reps));
+  if(kgA > 0 && kgB > 0) L.push('Painon muutos (paras sarja): ' + aiN(kgA) + ' → ' + aiN(kgB) + ' kg (' + aiPct(kgA, kgB) + ')');
+  else L.push('Painon muutos: ei laskettavissa (painoa ei kirjattu).');
+  L.push('Sarjoja: ' + a.n + ' → ' + b.n);
+  if(kgA === kgB){
+    if(a.n === b.n) L.push('Kokonaistoistot: ' + a.reps + ' → ' + b.reps + ' (' + (aiPct(a.reps, b.reps) || '–') + ')');
+    else{
+      const avA = a.reps / a.n, avB = b.reps / b.n;
+      L.push('Kokonaistoistot: ' + a.reps + ' → ' + b.reps + ' · sarjamäärä muuttui, joten vertailukelpoinen luku on toistot per sarja: ' +
+        aiN(avA) + ' → ' + aiN(avB) + ' (' + (aiPct(avA, avB) || '–') + ')');
+    }
+  }else{
+    L.push('Kokonaistoistot: ' + a.reps + ' → ' + b.reps + ' · toistoprosenttia ei lasketa, koska paino muuttui (' +
+      aiN(kgA) + ' → ' + aiN(kgB) + ' kg)');
+  }
+  if(a.vol > 0 && b.vol > 0){
+    if(a.n === b.n) L.push('Volyymi: ' + aiN(a.vol) + ' → ' + aiN(b.vol) + ' kg (' + aiPct(a.vol, b.vol) + ')');
+    else L.push('Volyymi: ' + aiN(a.vol) + ' → ' + aiN(b.vol) + ' kg · prosenttia ei lasketa, koska sarjamäärä muuttui (' + a.n + ' → ' + b.n + ')');
+  }else{
+    L.push('Volyymi: ei laskettavissa (painoa ei kirjattu).');
+  }
+  if(!a.evenKg || !b.evenKg) L.push('Huom: painot vaihtelivat sarjojen välillä; vertailu tehty parhaan sarjan mukaan.');
+  const rA = aiAvgRir(a), rB = aiAvgRir(b);
+  if(rA !== null || rB !== null)
+    L.push('RIR (keskiarvo): ' + (rA === null ? 'ei kirjattu' : aiN(rA)) + ' → ' + (rB === null ? 'ei kirjattu' : aiN(rB)));
+  if(ser.def){
+    const below = function(it){ return it.done.filter(function(x){ return x.reps < ser.def.lo; }).length; };
+    const bA = below(a), bB = below(b);
+    if(bA || bB) L.push('Sarjoja ohjelman toistoalueen (' + ser.def.lo + '–' + ser.def.hi + ') alapuolella: ' +
+      bA + '/' + a.n + ' → ' + bB + '/' + b.n);
+  }
+  const cl = aiClassify(a, b);
+  const streak = aiDeclineStreak(ser.items);
+  L.push('Ohjelman luokitus: ' + cl.t);
+  if(streak >= 2) L.push('Huom: tulos on heikentynyt ' + streak + ' peräkkäisessä treenissä → mahdollinen taantuminen tai väsymys.');
+  return {lines:L, c:cl.c, streak:streak};
+}
+
+/* --- 5. ennätykset jakson sisällä (verrattuna koko aiempaan historiaan) --- */
+function aiRecords(person, d){
+  const out = [];
+  d.gym.forEach(function(s){
+    Object.keys(s.entries || {}).forEach(function(key){
+      const it = d.ex[key] && d.ex[key].items.filter(function(x){ return x.id === s.id; })[0];
+      if(!it || !it.top) return;
+      const before = bestSetBefore(person, key, endMsOf(s), s.id);
+      if(!before) return;
+      const kg = it.top.kg, reps = it.top.reps;
+      if(kg > before.kg || (kg === before.kg && reps > before.reps)){
+        out.push(aiDate(s.end) + ' · ' + aiShort(d.ex[key].name) + ': ' + aiLoad(kg, reps) +
+          ' (aiempi paras ' + aiLoad(before.kg, before.reps) + ') – ' +
+          (kg > before.kg ? 'painoennätys' : 'toistoennätys samalla painolla'));
+      }
+    });
+  });
+  return out;
+}
+
+/* --- 6. koko datapaketti --- */
+function aiDataText(person, days){
+  const d = aiCollect(person, days);
+  const todayMs = aiDayMs(d.today);
+  const winStart = days ? d.fromMs : (d.firstEverMs !== null ? d.firstEverMs : todayMs);
+  const effStart = Math.max(winStart, d.firstEverMs !== null ? d.firstEverMs : todayMs);
+  const winDays = Math.round((todayMs - effStart) / 864e5) + 1;
+  const L = [];
+
+  L.push(personName(person));
+  L.push('Analyysijakso: ' + aiDate(winStart) + '–' + aiDate(todayMs) + ' (' +
+    (days ? 'viimeiset ' + days + ' päivää' : 'kaikki harjoitukset') + ')');
+  L.push('Harjoituksia (salitreenit): ' + d.gym.length);
+  L.push('Lepopäiviä kirjattu: ' + d.rest.length);
+  const cmin = d.cardio.reduce(function(a, c){ return a + (num(c.minutes) || 0); }, 0);
+  L.push('Cardio-kirjauksia: ' + d.cardio.length + (d.cardio.length ? ' (yhteensä ' + cmin + ' min)' : ''));
+  if(d.dupes) L.push('Identtisiä duplikaattikirjauksia ohitettu: ' + d.dupes + ' (laskettu vain kerran)');
+  L.push('');
+
+  if(!d.gym.length){
+    L.push('VALITULLA JAKSOLLA EI OLE YHTÄÄN SALITREENIÄ.');
+    L.push('Kehitysanalyysia ei voi tehdä ilman harjoitusdataa. Kerro tämä suoraan äläkä arvaa.');
+    L.push('');
+  }else{
+    L.push('LASKENTASÄÄNNÖT (ohjelman laskemia faktoja – älä muuta lukuja):');
+    L.push('- Mukana vain kirjatut sarjat, joissa on toistomäärä. Tyhjiä sarjoja ei lasketa.');
+    L.push('- Kokonaisvolyymi = summa (paino × toistot). Ilman painoa volyymia ei lasketa.');
+    L.push('- Vertailukelpoinen kehitys lasketaan saman ohjelmapäivän kirjauksista, koska A- ja B-päivien liikejärjestys eroaa.');
+    L.push('- Toistoprosentti lasketaan vain, jos paras paino on sama. Volyymiprosentti vain, jos sarjamäärä on sama.');
+    L.push('- "Paras sarja" = raskain sarja, tasatilanteessa enemmän toistoja.');
+    L.push('- RIR = varastoon jääneet toistot. Puuttuvia RIR-arvoja ei ole arvattu.');
+    L.push('- "Ohjelman luokitus" on mekaaninen vertailu, ei fysiologinen tulkinta. Tulkinta on sinun tehtäväsi.');
+    L.push('');
+  }
+
+  /* per liike */
+  const cats = {up2:[], up:[], maybe:[], flat:[], mixed:[], down:[]};
+  const single = [], streaks = [], body = [];
+  d.order.forEach(function(key){
+    const e = d.ex[key];
+    const nm = aiShort(e.name);
+    body.push('=== ' + nm.toUpperCase() + ' ===');
+    body.push('Liike: ' + e.name);
+    if(AI_MUSCLE[key]) body.push('Pääasiallinen lihasryhmä: ' + AI_MUSCLE[key]);
+    body.push('Ohjelmat: ' + e.progs.join(', ') +
+      (e.def ? ' · ohjelman tavoite ' + e.def.sets + ' sarjaa × ' + e.def.lo + '–' + e.def.hi + ' toistoa' + (e.def.perArm ? ' / käsi' : '') : ''));
+    body.push('');
+    e.items.forEach(function(it){
+      body.push(aiDate(it.end) + ' (' + it.prog + ')');
+      aiSetsLines(it).forEach(function(x){ body.push(x); });
+      body.push('');
+    });
+    const series = aiSeries(e);
+    if(!series.length){
+      single.push(nm);
+      body.push('Vain yksi kirjaus tällä jaksolla – kehitystä ei voi arvioida.');
+      body.push('');
+      return;
+    }
+    let best = null;
+    series.forEach(function(ser){
+      const r = aiCompareLines(ser);
+      r.lines.forEach(function(x){ body.push(x); });
+      body.push('');
+      if(!best || ser.items.length > best.n) best = {n:ser.items.length, c:r.c};
+      if(r.streak >= 2 && streaks.indexOf(nm) < 0) streaks.push(nm);
+    });
+    series.lone.forEach(function(it){
+      body.push(it.prog + ': vain yksi kirjaus (' + aiDate(it.end) + ', ' + aiCompact(it) +
+        ') – ei omaa vertailua, koska eri ohjelmapäivän tulos ei ole suoraan vertailukelpoinen.');
+      body.push('');
+    });
+    cats[best.c].push(nm);
+  });
+
+  if(d.gym.length){
+    L.push('YHTEENVETO OHJELMAN LUOKITUKSISTA (mekaaninen, tulkitse itse):');
+    L.push('- Paino ja toistot nousivat: ' + (cats.up2.length ? cats.up2.join(', ') : '–'));
+    L.push('- Kehitystä: ' + (cats.up.length ? cats.up.join(', ') : '–'));
+    L.push('- Mahdollista kehitystä (RIR): ' + (cats.maybe.length ? cats.maybe.join(', ') : '–'));
+    L.push('- Ennallaan: ' + (cats.flat.length ? cats.flat.join(', ') : '–'));
+    L.push('- Ristiriitainen: ' + (cats.mixed.length ? cats.mixed.join(', ') : '–'));
+    L.push('- Laskua: ' + (cats.down.length ? cats.down.join(', ') : '–'));
+    L.push('- Ei arvioitavissa (vain yksi kirjaus): ' + (single.length ? single.join(', ') : '–'));
+    const judged = cats.up2.length + cats.up.length + cats.maybe.length + cats.flat.length + cats.mixed.length + cats.down.length;
+    if(judged) L.push('- Kehitystä samanaikaisesti ' + (cats.up2.length + cats.up.length) + ' liikkeessä ' + judged + ' arvioitavasta.');
+    else L.push('- Yhtään liikettä ei voi vielä arvioida: jokaisesta on vain yksi kirjaus tällä jaksolla.');
+    if(streaks.length) L.push('- Tulos heikentynyt vähintään 2 peräkkäisessä treenissä: ' + streaks.join(', '));
+    L.push('');
+
+    L.push('=== TREENILOKI (aikajärjestys) ===');
+    const log = d.gym.concat(d.cardio, d.rest).sort(function(a, b){ return endMsOf(a) - endMsOf(b); });
+    log.forEach(function(s){
+      if(s.pid === 'rest'){ L.push(aiDate(s.end) + ' · Lepopäivä'); return; }
+      if(s.pid === 'cardio'){ L.push(aiDate(s.end) + ' · Cardio: ' + (s.kind || 'Muu') + ' ' + (num(s.minutes) || 0) + ' min'); return; }
+      let n = 0;
+      Object.keys(s.entries || {}).forEach(function(k){
+        (s.entries[k] || []).forEach(function(x){ if(num(x.reps) > 0) n++; });
+      });
+      let mins = s.start ? Math.round((endMsOf(s) - new Date(s.start).getTime()) / 60000) : 0;
+      if(!(mins >= 10 && mins <= 300)) mins = 0;
+      L.push(aiDate(s.end) + ' · ' + progById(s.pid).name + ' · ' + n + ' työsarjaa' +
+        (mins ? ' · ' + mins + ' min' : '') + (s.note ? ' · muistiinpano: "' + String(s.note).replace(/\s+/g, ' ').trim() + '"' : ''));
+    });
+    L.push('');
+  }
+
+  body.forEach(function(x){ L.push(x); });
+
+  if(d.gym.length){
+    const recs = aiRecords(person, d);
+    L.push('=== UUDET ENNÄTYKSET (PR) TÄLLÄ JAKSOLLA ===');
+    if(recs.length) recs.forEach(function(x){ L.push(x); });
+    else L.push('Ei uusia ennätyksiä (verrattu jokaisen liikkeen koko aiempaan historiaan).');
+    L.push('');
+  }
+
+  /* metatiedot */
+  const gymDays = {}, anyDays = {};
+  d.gym.forEach(function(s){ gymDays[isoDay(new Date(s.end))] = 1; });
+  d.gym.concat(d.cardio, d.rest).forEach(function(s){ anyDays[isoDay(new Date(s.end))] = 1; });
+  const firstG = d.gym.length ? d.gym[0].end : null;
+  const lastG = d.gym.length ? d.gym[d.gym.length - 1].end : null;
+  const spanG = firstG ? Math.round((aiDayMs(lastG) - aiDayMs(firstG)) / 864e5) + 1 : 0;
+  const weeks = winDays / 7;
+  L.push('=== SEURANNAN METATIEDOT ===');
+  if(d.firstEverMs === null){
+    L.push('Sovellukseen ei ole vielä kirjattu yhtään treeniä, cardiota tai lepopäivää.');
+    return L.join('\n');
+  }
+  L.push('Ensimmäinen salitreeni jaksolla: ' + (firstG ? aiDate(firstG) : '–'));
+  L.push('Viimeisin salitreeni: ' + (lastG ? aiDate(lastG) : '–'));
+  L.push('Kokonaisseurannan pituus: ' + aiDays(spanG) + ' (ensimmäisestä viimeiseen salitreeniin)');
+  L.push('Tarkastelujakso sovelluksen käytön ajalta: ' + aiDays(winDays));
+  L.push('Treenipäiviä (sali): ' + Object.keys(gymDays).length);
+  L.push('Lepopäiviä kirjattu: ' + d.rest.length);
+  L.push('Päiviä ilman mitään kirjausta: ' + Math.max(0, winDays - Object.keys(anyDays).length) +
+    ' (voivat olla kirjaamattomia lepopäiviä)');
+  L.push('Salitreenejä viikossa koko tarkastelujaksolla: ' + (weeks > 0 ? aiN(Math.round((d.gym.length / weeks) * 10) / 10) : '0') +
+    ' (ohjelman tavoite 4)');
+  if(d.gym.length >= 2){
+    const spanWeeks = Math.max(1, spanG) / 7;
+    L.push('Salitreenejä viikossa aktiivisen seurannan aikana (ensimmäisestä viimeiseen treeniin): ' +
+      aiN(Math.round((d.gym.length / spanWeeks) * 10) / 10));
+    let gaps = [], prev = null;
+    Object.keys(gymDays).sort().forEach(function(k){
+      const ms = aiDayMs(k + 'T12:00:00');
+      if(prev !== null) gaps.push(Math.round((ms - prev) / 864e5));
+      prev = ms;
+    });
+    if(gaps.length) L.push('Päiviä salitreenien välissä: ' + gaps.join(', ') +
+      ' (lyhin ' + Math.min.apply(null, gaps) + ', pisin ' + Math.max.apply(null, gaps) + ')');
+  }
+  L.push('Cardio-kertoja viikossa keskimäärin: ' + (weeks > 0 ? aiN(Math.round((d.cardio.length / weeks) * 10) / 10) : '0'));
+  L.push('Kirjattuja sarjoja yhteensä: ' + d.totalSets);
+  L.push('RIR-merkintöjä käytettävissä: ' + d.rirSets + '/' + d.totalSets + ' sarjassa');
+  L.push('Liikkeet, joista vain yksi datapiste (kehitystä ei voi arvioida): ' + (single.length ? single.join(', ') : 'ei yhtään'));
+  L.push('');
+  L.push('=== PUUTTUVAT TAI EPÄLUOTETTAVAT TIEDOT ===');
+  const issues = [];
+  d.flags.forEach(function(x){ if(issues.indexOf(x) < 0) issues.push(x); });
+  if(d.totalSets && d.rirSets === 0) issues.push('RIR-arvoja ei ole kirjattu yhdessäkään sarjassa – älä tee oletuksia treenin kuormittavuudesta.');
+  else if(d.totalSets && d.rirSets < d.totalSets) issues.push('RIR puuttuu ' + (d.totalSets - d.rirSets) + ' sarjasta – käsitelty puuttuvana.');
+  if(d.gym.length && d.gym.length < 4) issues.push('Salitreenejä on vain ' + d.gym.length + ' – johtopäätökset ovat suuntaa-antavia.');
+  if(single.length) issues.push(single.length + ' liikkeestä on vain yksi kirjaus.');
+  if(d.dupes) issues.push(d.dupes + ' identtistä duplikaattia poistettu laskennasta.');
+  if(issues.length) issues.slice(0, 50).forEach(function(x){ L.push('- ' + x); });
+  else L.push('Ei havaittuja puutteita.');
+  if(issues.length > 50) L.push('- (+' + (issues.length - 50) + ' muuta vastaavaa)');
+  return L.join('\n');
+}
+
+const AI_PROMPT = [
+'TOIMI KOKENEENA VOIMAHARJOITTELUN, HYPERTROFIAN JA TREENIDATAN ANALYYTIKKONA.',
+'',
+'Alla on oikea harjoitushistoriani saliohjelmastani.',
+'',
+'Tee siitä perusteellinen mutta ymmärrettävä kehitysanalyysi.',
+'',
+'Älä vain referoi numeroita, vaan päättele mitä ne tarkoittavat.',
+'',
+'ANALYSOI ERITYISESTI:',
+'',
+'1. Olenko oikeasti kehittynyt?',
+'2. Missä liikkeissä kehitys on voimakkainta?',
+'3. Missä lihasryhmissä kehitys näyttää voimakkaimmalta?',
+'4. Missä kehitys on pysähtynyt tai mennyt taaksepäin?',
+'5. Erottele mahdollisuuksien mukaan:',
+'   - lisääntynyt voima',
+'   - lisääntynyt työkapasiteetti',
+'   - hypertrofiaan viittaava kehitys',
+'   - tekniikan/liikkeeseen oppimisen vaikutus',
+'6. Huomioi painot, toistot, sarjat ja RIR yhdessä.',
+'7. Älä tulkitse suurempaa kuormaa automaattisesti kehitykseksi, jos esimerkiksi toistot ovat samalla romahtaneet.',
+'8. Etsi pitkän aikavälin trendi yksittäisten treenien sijasta.',
+'9. Huomioi harjoitustiheys ja palautuminen.',
+'10. Kerro, näyttääkö nykyinen ohjelma toimivan.',
+'11. Kerro, mihin minun kannattaa kiinnittää seuraavaksi huomiota.',
+'12. Arvioi, milloin kehitys alkaa todennäköisesti näkyä ulkonäössä, jos nykyinen kehitys jatkuu.',
+'13. Kerro mitä muutoksia voisi realistisesti näkyä:',
+'    - 4 viikon',
+'    - 8 viikon',
+'    - 12 viikon',
+'      kohdalla.',
+'14. Älä keksi tietoja joita datassa ei ole.',
+'15. Jos dataa on liian vähän vahvaan johtopäätökseen, sano se selvästi.',
+'16. Kiinnitä erityistä huomiota siihen, tapahtuuko kehitystä samanaikaisesti useissa eri liikkeissä. Jos näin tapahtuu, tuo tämä esiin kokonaiskehityksen merkkinä.',
+'',
+'Haluan analyysin, joka tuntuu henkilökohtaiselta valmentajan tekemältä analyysiltä eikä geneeriseltä fitness-neuvonnalta.',
+'',
+'ALOITA lyhyellä kokonaisarviolla.',
+'',
+'Sen jälkeen tee selkeä taulukko esimerkiksi:',
+'',
+'Liike | Lähtötilanne | Nyt | Muutos | Tulkinta',
+'',
+'Sen jälkeen käsittele:',
+'',
+'- voimakkain kehitys',
+'- heikoin kehitys',
+'- lihasryhmäkohtainen tulkinta',
+'- kokonaiskuva',
+'- näkyvän muutoksen arvio',
+'- seuraavat tavoitteet',
+'',
+'Älä anna pelkkää kannustavaa palautetta. Ole analyyttinen ja tuo myös ongelmat esiin.',
+'',
+'HARJOITUSDATA:',
+''
+].join('\n');
+
+function aiFullText(person, days){
+  return AI_PROMPT + '\n' + aiDataText(person, days) + '\n';
+}
+
+/* --- lataus: artefaktissa downloads-kyvykkyys, offline-tiedostossa tavallinen lataus --- */
+function aiSaveFile(fname, txt, mime){
+  function viaLink(){
+    try{
+      const blob = new Blob([txt], {type:mime});
+      const url = URL.createObjectURL(blob);
+      const el = document.createElement('a');
+      el.href = url; el.download = fname;
+      document.body.appendChild(el); el.click();
+      setTimeout(function(){ URL.revokeObjectURL(url); el.remove(); }, 1500);
+      aiNotice('Ladattu: ' + fname, false);
+    }catch(e){
+      aiNotice('Lataus ei onnistunut tässä selaimessa. Kopioi teksti Kopioi-napilla.', true);
+    }
+  }
+  if(window.claude && window.claude.use){
+    window.claude.use('downloads').then(function(d){
+      if(d && d.save){
+        d.save({filename:fname, data:txt}).then(function(){ aiNotice('Ladattu: ' + fname, false); })
+          .catch(viaLink);
+      }else viaLink();
+    }).catch(viaLink);
+  }else{
+    viaLink();
+  }
+}
+function aiNotice(msg, warn){
+  const el = document.getElementById('ai-msg');
+  if(!el) return;
+  el.textContent = msg;
+  el.style.borderLeftColor = warn ? 'var(--warn)' : 'var(--up)';
+  el.hidden = false;
+}
+function aiFileName(ext){
+  return personName(state.person) + '-AI-kehitysanalyysi-' + isoDay(new Date()) + '.' + ext;
+}
+
+function showAI(){
+  const person = state.person;
+  const days = state.aiRange;
+  const d = aiCollect(person, days);
+  const txt = aiFullText(person, days);
+  let h = '<div class="ov"><div class="sheet" role="dialog" aria-label="AI-kehitysanalyysi">';
+  h += '<h3>✨ AI-kehitysanalyysi</h3>';
+  h += '<p>Ohjelma laskee treenihistoriasta kehityksen faktat ja lisää alkuun valmiin ohjeen tekoälylle. ' +
+       'Kopioi paketti mihin tahansa tekoälyyn – mitään ei lähetetä automaattisesti.</p>';
+  h += '<div class="row" style="flex-wrap:wrap;gap:6px;margin-top:10px">' +
+       '<span class="chip">Profiili: ' + esc(personName(person)) + '</span></div>';
+  h += '<p class="eyebrow" style="margin:14px 0 6px">Aikaväli</p><div class="pickrow">';
+  AI_RANGES.forEach(function(r){
+    h += '<button type="button" class="pickchip" data-airange="' + r.d + '" aria-pressed="' +
+         (days === r.d) + '">' + r.l + '</button>';
+  });
+  h += '</div>';
+  h += '<div class="stats tight" style="margin:12px 0 10px">' +
+    '<div class="stat"><b class="mono">' + d.gym.length + '</b><span>salitreeniä</span></div>' +
+    '<div class="stat"><b class="mono">' + d.order.length + '</b><span>liikettä</span></div>' +
+    '<div class="stat"><b class="mono">' + d.rest.length + '</b><span>lepopäivää</span></div>' +
+    '</div>';
+  if(!d.gym.length){
+    h += '<div class="note" style="border-left-color:var(--warn)">Tällä aikavälillä ei ole salitreenejä. ' +
+         'Valitse pidempi aikaväli tai kirjaa ensin treenejä – paketti kertoo tekoälylle, ettei dataa ole.</div>';
+  }
+  if(d.dupes){
+    h += '<p class="muted" style="font-size:12px;margin:0 2px 8px">' + d.dupes +
+         (d.dupes === 1 ? ' identtinen duplikaattikirjaus ohitettiin.' : ' identtistä duplikaattikirjausta ohitettiin.') + '</p>';
+  }
+  h += '<div class="aiacts">' +
+    '<button type="button" class="btn accent" data-aicopy="1">📋 Kopioi AI-analyysi</button>' +
+    '<button type="button" class="btn ghost" data-aitxt="1">💾 Lataa analyysidata</button>' +
+    '<button type="button" class="btn ghost" data-aijson="1">📦 Export JSON</button>' +
+    '</div>';
+  h += '<p class="note" id="ai-msg" hidden style="margin-top:10px"></p>';
+  h += '<textarea id="ai-text" class="pick aitext" rows="14" readonly aria-label="Analyysipaketti">' + esc(txt) + '</textarea>';
+  h += '<p class="muted" style="font-size:11.5px;margin:6px 2px 0">' + txt.length.toLocaleString('fi-FI') +
+       ' merkkiä · laskettu tässä laitteessa. Export JSON lataa alkuperäisen raakadatan (molemmat profiilit) – ' +
+       'sama tiedosto kelpaa varmuuskopioksi ja Tuo-toiminnolle.</p>';
+  h += '<div class="sticky-cta"><button class="btn primary" data-close="1">Valmis</button></div>';
+  h += '</div></div>';
+  overlayEl.innerHTML = h;
+}
+
+function aiCopy(btn){
+  const ta = document.getElementById('ai-text');
+  if(!ta) return;
+  const txt = ta.value;
+  const label = '📋 Kopioi AI-analyysi';
+  function ok(){
+    btn.textContent = '✓ Kopioitu';
+    clearTimeout(aiCopy.t);
+    aiCopy.t = setTimeout(function(){ if(document.body.contains(btn)) btn.textContent = label; }, 2000);
+  }
+  function legacy(){
+    let done = false;
+    try{
+      ta.removeAttribute('readonly');
+      ta.focus(); ta.select(); ta.setSelectionRange(0, txt.length);
+      done = document.execCommand('copy');
+    }catch(e){ done = false; }
+    ta.setAttribute('readonly', 'readonly');
+    if(done) ok();
+    else aiNotice('Selain esti kopioinnin. Teksti on valittuna – kopioi se pitkällä painalluksella.', true);
+  }
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(ok, legacy);
+  }else{
+    legacy();
+  }
+}
+
+/* ============================================================
    6. TAPAHTUMAT
    ============================================================ */
 
 document.addEventListener('click', function(ev){
-  const t = ev.target.closest('[data-person],[data-open],[data-view],[data-tab],[data-cardio],[data-finish],[data-close],[data-savecardio],[data-discard],[data-discard-ask],[data-setskin],[data-rest],[data-ckind],[data-cmin],[data-ckindfilter],[data-timer],[data-calmove],[data-calday],[data-editsets],[data-del],[data-delok],[data-backtoday],[data-addcardio],[data-addrest],[data-abort],[data-clearsets],[data-weekday],[data-active],[data-pickprog],[data-hidebar],[data-showbar],[data-export],[data-import],[data-importtext],[data-copybk],[data-session]');
+  const t = ev.target.closest('[data-person],[data-open],[data-view],[data-tab],[data-cardio],[data-finish],[data-close],[data-savecardio],[data-discard],[data-discard-ask],[data-setskin],[data-rest],[data-ckind],[data-cmin],[data-ckindfilter],[data-timer],[data-calmove],[data-calday],[data-editsets],[data-del],[data-delok],[data-backtoday],[data-addcardio],[data-addrest],[data-abort],[data-clearsets],[data-weekday],[data-active],[data-pickprog],[data-hidebar],[data-showbar],[data-export],[data-import],[data-importtext],[data-copybk],[data-session],[data-ai],[data-airange],[data-aicopy],[data-aitxt],[data-aijson]');
   if(!t) return;
 
   if(t.dataset.person){
@@ -3749,6 +4408,18 @@ document.addEventListener('click', function(ev){
     progDom = null;
     setView('calendar');
     showDay(t.dataset.weekday);
+    return;
+  }
+  if(t.dataset.ai){ showAI(); return; }
+  if(t.dataset.airange){ state.aiRange = num(t.dataset.airange); showAI(); return; }
+  if(t.dataset.aicopy){ aiCopy(t); return; }
+  if(t.dataset.aitxt){
+    const ta = document.getElementById('ai-text');
+    aiSaveFile(aiFileName('txt'), ta ? ta.value : aiFullText(state.person, state.aiRange), 'text/plain;charset=utf-8');
+    return;
+  }
+  if(t.dataset.aijson){
+    aiSaveFile('saliohjelma-raakadata-' + isoDay(new Date()) + '.json', backupPayload(), 'application/json');
     return;
   }
   if(t.dataset.session){ showSession(t.dataset.session, t.dataset.sessionback || ''); return; }
