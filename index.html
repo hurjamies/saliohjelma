@@ -23,7 +23,7 @@
 </style>
 </head>
 <body>
-<title>Saliohjelma 7.3</title>
+<title>Saliohjelma 7.4</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Josefin+Sans:wght@400;600;700&family=Poiret+One&display=swap">
@@ -224,6 +224,8 @@
 
   .bkopts{display:flex;flex-direction:column;gap:4px;margin-top:12px}
   .bkopts .btn{width:100%;padding:12px 14px}
+  .bkopts a.btn{display:block;text-align:center;text-decoration:none;color:var(--ink)}
+  .bkopts a.btn.accent{color:var(--on-acc)}
   .bkhint{font-size:12px;color:var(--ink-3);margin:2px 2px 10px;line-height:1.4}
 
   .aibtn{margin-top:20px;
@@ -3170,12 +3172,138 @@ function showRawBackup(txt, fname){
     '<div class="pickrow" style="margin-top:10px"><button class="btn ghost" data-copybk="1">Kopioi leikepöydälle</button></div>' +
     '<div class="sticky-cta"><button class="btn primary" data-close="1">Valmis</button></div></div></div>';
 }
+/* ---- siirto WhatsAppilla ----
+   Lähettäjän oman profiilin treenit pakataan (deflate) ja base64-koodataan
+   viestiin tunnisteen SALIOHJELMA1: perään. Vastaanottaja liittää koko viestin,
+   ja Tuo data poimii koodin viestin seasta. Vanhoissa selaimissa ilman
+   pakkausta käytetään tunnistetta SALIOHJELMA0: (pakkaamaton). */
+const XFER_RE = /SALIOHJELMA([01]):\s*([A-Za-z0-9+\/=\s]+)/;
+const WA_URL_MAX = 6000;   /* tätä pidempi viesti kopioidaan leikepöydälle */
+let waMessage = '';
+function b64FromBytes(u8){
+  let s = '';
+  for(let i = 0; i < u8.length; i += 0x8000) s += String.fromCharCode.apply(null, u8.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+function bytesFromB64(b){
+  const s = atob(b);
+  const u = new Uint8Array(s.length);
+  for(let i = 0; i < s.length; i++) u[i] = s.charCodeAt(i);
+  return u;
+}
+function streamBytes(u8, stream){
+  return new Response(new Blob([u8]).stream().pipeThrough(stream)).arrayBuffer()
+    .then(function(b){ return new Uint8Array(b); });
+}
+function packTransfer(obj){
+  const json = JSON.stringify(obj, function(k, v){ return (k === 'rir' && (v === '' || v == null)) ? undefined : v; });
+  const u8 = new TextEncoder().encode(json);
+  const plain = function(){ return 'SALIOHJELMA0:' + b64FromBytes(u8); };
+  if(typeof CompressionStream === 'undefined') return Promise.resolve(plain());
+  try{
+    return streamBytes(u8, new CompressionStream('deflate-raw'))
+      .then(function(c){ return 'SALIOHJELMA1:' + b64FromBytes(c); }, plain);
+  }catch(e){ return Promise.resolve(plain()); }
+}
+/* palauttaa Promisen JSON-tekstistä, tai null jos tekstissä ei ole siirtokoodia */
+function unpackTransfer(txt){
+  const m = XFER_RE.exec(String(txt || ''));
+  if(!m) return null;
+  let bytes;
+  try{ bytes = bytesFromB64(m[2].replace(/\s+/g, '')); }catch(e){ return Promise.reject(e); }
+  if(m[1] === '0') return Promise.resolve(new TextDecoder().decode(bytes));
+  if(typeof DecompressionStream === 'undefined') return Promise.reject(new Error('no-decompression'));
+  return streamBytes(bytes, new DecompressionStream('deflate-raw'))
+    .then(function(u){ return new TextDecoder().decode(u); });
+}
+function importAny(txt){
+  const u = unpackTransfer(txt);
+  if(!u){ applyImport(txt); return; }
+  u.then(applyImport, function(){
+    overlayEl.innerHTML = '<div class="ov"><div class="sheet" role="dialog" aria-label="Tuonti epäonnistui">' +
+      '<h3>Viestiä ei voitu lukea</h3><p>Siirtokoodi on vajaa tai tämä selain on liian vanha purkamaan sitä. ' +
+      'Varmista, että kopioit koko WhatsApp-viestin, ja yritä uudelleen.</p>' +
+      '<div class="sticky-cta"><button class="btn primary" data-close="1">Sulje</button></div></div></div>';
+  });
+}
+function showWhatsApp(){
+  const person = state.person;
+  const sess = store[person].sessions || [];
+  const gym = sess.filter(function(x){ return progById(x.pid); }).length;
+  if(!sess.length){
+    overlayEl.innerHTML = '<div class="ov"><div class="sheet" role="dialog" aria-label="Lähetä treenit">' +
+      '<h3>Ei lähetettävää</h3><p>' + esc(personName(person)) + ' -profiilissa ei ole vielä kirjauksia tällä laitteella.</p>' +
+      '<div class="sticky-cta"><button class="btn primary" data-close="1">Sulje</button></div></div></div>';
+    return;
+  }
+  const obj = {app:'saliohjelma', kind:'transfer', from:person, exported:new Date().toISOString(), data:{}};
+  obj.data[person] = {sessions:sess};
+  packTransfer(obj).then(function(code){
+    const d = new Date();
+    waMessage = '💪 Saliohjelma: ' + personName(person) + ' – ' + gym + ' salitreeniä, ' + sess.length + ' kirjausta (' +
+      d.getDate() + '.' + (d.getMonth()+1) + '.' + d.getFullYear() + ')\n' +
+      'Tuo näin: kopioi koko tämä viesti → Saliohjelma → Ohjelman ohjeet → Tuo data → Tuo leikepöydältä.\n\n' + code;
+    const url = 'https://wa.me/?text=' + encodeURIComponent(waMessage);
+    const fits = url.length <= WA_URL_MAX;
+    const tooLong = waMessage.length > 60000;   /* WhatsAppin viestiraja on 65 536 merkkiä */
+    const inClaude = !!(window.claude && window.claude.use);
+    let h = '<div class="ov"><div class="sheet" role="dialog" aria-label="Lähetä treenit WhatsAppilla">' +
+      '<h3>💬 Lähetä treenit WhatsAppilla</h3>' +
+      '<p>Viestissä ovat profiilin <b>' + esc(personName(person)) + '</b> kaikki ' + sess.length +
+      ' kirjausta tältä laitteelta. Vastaanottaja tuo ne omaan Saliohjelmaansa – samoja treenejä ei tule kahteen kertaan.</p>' +
+      (tooLong ? '<div class="note" style="border-left-color:var(--warn)">Historia on niin pitkä (' +
+        waMessage.length.toLocaleString('fi-FI') + ' merkkiä), ettei se mahdu yhteen WhatsApp-viestiin. ' +
+        'Lähetä se tiedostona: Vie data → Jaa tai tallenna tiedostona.</div>' : '') +
+      '<div class="bkopts">';
+    if(fits){
+      h += '<a class="btn accent" href="' + esc(url) + '" target="_blank" rel="noopener">💬 Avaa WhatsApp</a>' +
+        '<p class="bkhint">Valitse WhatsAppissa keskustelu, viesti on valmiina. Lähetä se sellaisenaan.</p>';
+    }else{
+      h += '<a class="btn accent" href="https://wa.me/" target="_blank" rel="noopener" data-wacopy="1">💬 Kopioi ja avaa WhatsApp</a>' +
+        '<p class="bkhint">Historia on pitkä, joten viesti kopioidaan leikepöydälle. Valitse WhatsAppissa keskustelu ja liitä viesti (pitkä painallus → Liitä).</p>';
+    }
+    if(!inClaude && navigator.share){
+      h += '<button type="button" class="btn ghost" data-washare="1">📤 Jaa muuhun sovellukseen</button>' +
+        '<p class="bkhint">Esim. Signal, Messenger, sähköposti tai viesti itselle.</p>';
+    }
+    h += '<button type="button" class="btn ghost" data-wacopy="1">📋 Kopioi viesti</button>' +
+      '<p class="bkhint">Liitä viesti mihin tahansa keskusteluun.</p>' +
+      '</div>' +
+      '<p class="note" id="bk-msg" hidden style="margin-top:10px"></p>' +
+      '<textarea id="wa-text" class="pick" rows="3" readonly aria-label="Viestin teksti" ' +
+        'style="font-family:var(--font-m);font-size:11px;margin-top:10px">' + esc(waMessage) + '</textarea>' +
+      '<div class="sticky-cta"><button class="btn primary" data-close="1">Valmis</button></div></div></div>';
+    overlayEl.innerHTML = h;
+  });
+}
+function copyFromTextarea(id){
+  const ta = document.getElementById(id);
+  if(!ta) return false;
+  let ok = false;
+  try{
+    ta.removeAttribute('readonly');
+    ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length);
+    ok = document.execCommand('copy');
+  }catch(e){ ok = false; }
+  ta.setAttribute('readonly', 'readonly');
+  if(!ok && navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(ta.value).then(function(){}, function(){});
+    ok = true;   /* lopullinen tulos selviää vasta liittäessä */
+  }
+  return ok;
+}
+
 function showImport(){
   overlayEl.innerHTML = '<div class="ov"><div class="sheet" role="dialog" aria-label="Tuo data">' +
-    '<h3>Tuo varmuuskopio</h3>' +
-    '<p>Valitse varmuuskopiotiedosto (.json tai .txt) tai liitä varmuuskopion teksti. Kirjaukset yhdistetään nykyisiin – samoja treenejä ei kahdenneta.</p>' +
+    '<h3>Tuo treenit</h3>' +
+    '<p>Tuo WhatsAppilla saatu viesti, varmuuskopiotiedosto (.json tai .txt) tai liitetty teksti. ' +
+    'Kirjaukset yhdistetään nykyisiin – samoja treenejä ei kahdenneta.</p>' +
+    '<div class="bkopts"><button type="button" class="btn accent" data-importclip="1">📥 Tuo leikepöydältä</button>' +
+    '<p class="bkhint">Kopioi ensin koko WhatsApp-viesti (pitkä painallus → Kopioi) ja paina tätä.</p></div>' +
+    '<p class="note" id="imp-msg" hidden style="margin-top:6px"></p>' +
+    '<p class="eyebrow" style="margin:14px 0 6px">tai valitse tiedosto</p>' +
     '<input type="file" id="imp-file" accept="application/json,.json,text/plain,.txt" class="pick">' +
-    '<p class="eyebrow" style="margin:14px 0 6px">tai liitä teksti</p>' +
+    '<p class="eyebrow" style="margin:14px 0 6px">tai liitä teksti tähän</p>' +
     '<textarea id="imp-text" class="pick" rows="5" placeholder="{ \"app\": \"saliohjelma\" ... }" style="font-family:var(--font-m);font-size:11px"></textarea>' +
     '<div class="pickrow" style="margin-top:10px"><button class="btn accent" data-importtext="1">Tuo liitetty teksti</button></div>' +
     '<div class="sticky-cta"><button class="btn primary" data-close="1">Sulje</button></div></div></div>';
@@ -3184,7 +3312,7 @@ function showImport(){
     const f = fi.files && fi.files[0];
     if(!f) return;
     const rd = new FileReader();
-    rd.onload = function(){ applyImport(String(rd.result)); };
+    rd.onload = function(){ importAny(String(rd.result)); };
     rd.readAsText(f);
   });
 }
@@ -3199,6 +3327,7 @@ function applyImport(txt){
     return;
   }
   let added = 0, skipped = 0;
+  const perPerson = [];
   PERSONS.forEach(function(pn){
     const inc = d[pn];
     if(!inc || !Array.isArray(inc.sessions)) return;
@@ -3212,11 +3341,14 @@ function applyImport(txt){
     const before = store[pn].sessions.length;
     store[pn].sessions = mergeSessions(store[pn].sessions, clean);
     added += store[pn].sessions.length - before;
+    perPerson.push(personName(pn) + ': ' + (store[pn].sessions.length - before) + ' uutta');
     writeLocal(pn);
     save(pn);
   });
   overlayEl.innerHTML = '<div class="ov"><div class="sheet" role="dialog" aria-label="Tuonti valmis">' +
-    '<h3>Tiedot tuotu</h3><p>Uusia kirjauksia lisättiin ' + added + ' kpl. Olemassa olevat säilyivät.' +
+    '<h3>Tiedot tuotu</h3><p>Uusia kirjauksia lisättiin ' + added + ' kpl' +
+    (perPerson.length ? ' (' + perPerson.join(', ') + ')' : '') + '. Olemassa olevat säilyivät.' +
+    (added && db ? ' Ne tallentuvat myös pilveen.' : '') +
     (skipped ? ' ' + skipped + ' vioittunutta tai tuntematonta kirjausta ohitettiin.' : '') + '</p>' +
     '<div class="sticky-cta"><button class="btn primary" data-close="1">Valmis</button></div></div></div>';
   progDom = null;
@@ -3294,12 +3426,15 @@ function renderGuide(){
     h += '</ul></section>';
   });
   h += '<section class="card gsec"><h3>Varmuuskopio</h3>' +
-    '<p class="muted" style="font-size:13px;margin:0 0 10px">Vie kirjaukset JSON-tiedostoksi tai tuo ne takaisin. ' +
-    'Näin treenihistoria ei ole pelkän selaimen tai pilven varassa.</p>' +
+    '<p class="muted" style="font-size:13px;margin:0 0 10px">Lähetä treenit toiselle laitteelle WhatsAppilla, ' +
+    'vie ne tiedostoksi tai tuo takaisin. Näin treenihistoria ei ole pelkän yhden puhelimen varassa.</p>' +
     '<div class="pickrow">' +
+      '<button type="button" class="btn accent" data-whatsapp="1" style="flex:1 1 100%">💬 Lähetä treenit WhatsAppilla</button>' +
       '<button type="button" class="btn ghost" data-export="1">Vie data</button>' +
       '<button type="button" class="btn ghost" data-import="1">Tuo data</button>' +
-    '</div></section>';
+    '</div>' +
+    '<p class="muted" style="font-size:12px;margin:10px 0 0">WhatsApp-viesti sisältää valitun profiilin treenit. ' +
+    'Vastaanottaja tuo ne kohdasta Tuo data → Tuo leikepöydältä.</p></section>';
   h += '<section class="card gsec"><h3>Tausta</h3><ul>' +
     '<li>Liikkeet ja sarjamäärät ovat käytännön lähtöehdotus, eivät yksilöllisesti todettu optimi.</li>' +
     '<li><a href="https://acsm.org/resistance-training-guidelines-update-2026/" target="_blank" rel="noopener">ACSM: voimaharjoittelun suositus (2026)</a></li>' +
@@ -4509,7 +4644,7 @@ function aiCopy(btn){
    ============================================================ */
 
 document.addEventListener('click', function(ev){
-  const t = ev.target.closest('[data-person],[data-open],[data-view],[data-tab],[data-cardio],[data-finish],[data-close],[data-savecardio],[data-discard],[data-discard-ask],[data-setskin],[data-rest],[data-ckind],[data-cmin],[data-ckindfilter],[data-timer],[data-calmove],[data-calday],[data-editsets],[data-del],[data-delok],[data-backtoday],[data-addcardio],[data-addrest],[data-abort],[data-clearsets],[data-weekday],[data-active],[data-pickprog],[data-hidebar],[data-showbar],[data-export],[data-import],[data-importtext],[data-copybk],[data-bkselect],[data-bkshare],[data-bkdl],[data-session],[data-replaceok],[data-ai],[data-airange],[data-aicopy],[data-aitxt],[data-aijson]');
+  const t = ev.target.closest('[data-person],[data-open],[data-view],[data-tab],[data-cardio],[data-finish],[data-close],[data-savecardio],[data-discard],[data-discard-ask],[data-setskin],[data-rest],[data-ckind],[data-cmin],[data-ckindfilter],[data-timer],[data-calmove],[data-calday],[data-editsets],[data-del],[data-delok],[data-backtoday],[data-addcardio],[data-addrest],[data-abort],[data-clearsets],[data-weekday],[data-active],[data-pickprog],[data-hidebar],[data-showbar],[data-export],[data-import],[data-importtext],[data-copybk],[data-bkselect],[data-whatsapp],[data-wacopy],[data-washare],[data-importclip],[data-bkshare],[data-bkdl],[data-session],[data-replaceok],[data-ai],[data-airange],[data-aicopy],[data-aitxt],[data-aijson]');
   if(!t) return;
 
   if(t.dataset.person){
@@ -4525,7 +4660,41 @@ document.addEventListener('click', function(ev){
   if(t.dataset.import){ showImport(); return; }
   if(t.dataset.importtext){
     const ta = document.getElementById('imp-text');
-    applyImport(ta ? ta.value : '');
+    importAny(ta ? ta.value : '');
+    return;
+  }
+  if(t.dataset.whatsapp){ showWhatsApp(); return; }
+  if(t.dataset.wacopy){
+    /* linkki (Kopioi ja avaa WhatsApp) jatkaa kopioinnin jälkeen WhatsAppiin */
+    const ok = copyFromTextarea('wa-text');
+    if(t.tagName !== 'A'){
+      if(ok){ t.textContent = '✓ Kopioitu'; bkNotice('Viesti kopioitu. Liitä se keskusteluun (pitkä painallus → Liitä).', false); }
+      else bkNotice('Selain esti kopioinnin. Valitse teksti alta ja kopioi se pitkällä painalluksella.', true);
+    }
+    return;
+  }
+  if(t.dataset.washare){
+    navigator.share({text:waMessage}).then(function(){ bkNotice('Jaettu.', false); }, function(err){
+      if(err && err.name === 'AbortError') return;
+      bkNotice('Jakaminen ei onnistunut. Käytä WhatsApp- tai Kopioi-nappia.', true);
+    });
+    return;
+  }
+  if(t.dataset.importclip){
+    const msg = document.getElementById('imp-msg');
+    const fail = function(){
+      if(msg){ msg.hidden = false; msg.style.borderLeftColor = 'var(--warn)';
+        msg.textContent = 'Selain ei antanut lukea leikepöytää. Liitä viesti alla olevaan kenttään (pitkä painallus → Liitä) ja paina Tuo liitetty teksti.'; }
+      const ta = document.getElementById('imp-text'); if(ta) ta.focus();
+    };
+    if(!navigator.clipboard || !navigator.clipboard.readText){ fail(); return; }
+    navigator.clipboard.readText().then(function(txt){
+      if(!txt || !txt.trim()){
+        if(msg){ msg.hidden = false; msg.style.borderLeftColor = 'var(--warn)'; msg.textContent = 'Leikepöytä on tyhjä. Kopioi ensin koko WhatsApp-viesti.'; }
+        return;
+      }
+      importAny(txt);
+    }, fail);
     return;
   }
   if(t.dataset.bkshare && backupFile){
