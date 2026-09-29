@@ -23,7 +23,7 @@
 </style>
 </head>
 <body>
-<title>Saliohjelma 7.1</title>
+<title>Saliohjelma 7.2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Josefin+Sans:wght@400;600;700&family=Poiret+One&display=swap">
@@ -221,6 +221,10 @@
   .lastbtn .chev{margin-left:auto;color:var(--ink-3);font-size:20px;font-weight:700;line-height:1;flex:none}
   .lastbtn .mdot{width:12px;height:12px}
   body[data-skin="deco"] .lastbtn{border-radius:4px}
+
+  .bkopts{display:flex;flex-direction:column;gap:4px;margin-top:12px}
+  .bkopts .btn{width:100%;padding:12px 14px}
+  .bkhint{font-size:12px;color:var(--ink-3);margin:2px 2px 10px;line-height:1.4}
 
   .aibtn{margin-top:20px;
     background:linear-gradient(135deg, color-mix(in srgb, var(--up) 11%, var(--surface)), var(--surface) 65%)}
@@ -3045,6 +3049,43 @@ function backupPayload(){
     data:{iida:store.iida, matti:store.matti}
   }, null, 1);
 }
+/* ---- tiedoston vienti puhelimessa ----
+   Kotinäytölle asennetussa sovelluksessa (etenkin iPhonessa) tavallinen lataus
+   ei avaa tallennusikkunaa. Jakovalikko toimii: iPhonessa "Tallenna Tiedostoihin",
+   Androidissa esim. Drive tai sähköposti. Android-Chrome ei jaa .json-tiedostoja,
+   joten silloin sama sisältö jaetaan .txt-tiedostona (Tuo hyväksyy molemmat). */
+function isTouchDevice(){
+  try{ return window.matchMedia('(pointer: coarse)').matches; }catch(e){ return false; }
+}
+function shareableFile(fname, txt, mime){
+  if(!navigator.share || !navigator.canShare || typeof File === 'undefined') return null;
+  try{
+    let f = new File([txt], fname, {type:mime});
+    if(navigator.canShare({files:[f]})) return f;
+    f = new File([txt], fname.replace(/\.[a-z0-9]+$/i, '') + '.txt', {type:'text/plain'});
+    if(navigator.canShare({files:[f]})) return f;
+  }catch(e){}
+  return null;
+}
+function shareFile(f, ok, fail){
+  navigator.share({files:[f], title:f.name}).then(function(){ ok(f.name); }, function(err){
+    if(err && err.name === 'AbortError') return;   /* käyttäjä sulki jakovalikon */
+    fail(err);
+  });
+}
+function downloadViaLink(fname, txt, mime){
+  try{
+    const blob = new Blob([txt], {type:mime});
+    const url = URL.createObjectURL(blob);
+    const el = document.createElement('a');
+    el.href = url; el.download = fname;
+    document.body.appendChild(el); el.click();
+    setTimeout(function(){ URL.revokeObjectURL(url); el.remove(); }, 1500);
+    return true;
+  }catch(e){ return false; }
+}
+
+let backupFile = null;   /* {txt, fname} vientivalikon napeille */
 function exportData(){
   const txt = backupPayload();
   const fname = 'saliohjelma-' + isoDay(new Date()) + '.json';
@@ -3052,23 +3093,43 @@ function exportData(){
     window.claude.use('downloads').then(function(d){
       if(d && d.save){
         d.save({filename:fname, data:txt}).then(function(){ showBackupDone(fname); })
-          .catch(function(){ showRawBackup(txt, fname); });
+          .catch(function(){ showBackupOptions(txt, fname); });
       }else{
-        showRawBackup(txt, fname);
+        showBackupOptions(txt, fname);
       }
-    }).catch(function(){ showRawBackup(txt, fname); });
+    }).catch(function(){ showBackupOptions(txt, fname); });
   }else{
-    /* offline-tiedosto: tavallinen lataus toimii */
-    try{
-      const blob = new Blob([txt], {type:'application/json'});
-      const url = URL.createObjectURL(blob);
-      const el = document.createElement('a');
-      el.href = url; el.download = fname;
-      document.body.appendChild(el); el.click();
-      setTimeout(function(){ URL.revokeObjectURL(url); el.remove(); }, 1500);
-      showBackupDone(fname);
-    }catch(e){ showRawBackup(txt, fname); }
+    showBackupOptions(txt, fname);
   }
+}
+function showBackupOptions(txt, fname){
+  backupFile = {txt:txt, fname:fname};
+  const canShare = !!shareableFile(fname, txt, 'application/json');
+  let h = '<div class="ov"><div class="sheet" role="dialog" aria-label="Varmuuskopio">' +
+    '<h3>Varmuuskopio</h3>' +
+    '<p>Tiedosto sisältää molempien profiilien kaikki treenit. Valitse tapa, joka toimii puhelimessasi.</p>' +
+    '<div class="bkopts">';
+  if(canShare){
+    h += '<button type="button" class="btn accent" data-bkshare="1">📤 Jaa tai tallenna tiedostona</button>' +
+      '<p class="bkhint">iPhone: valitse jakovalikosta <b>Tallenna Tiedostoihin</b>. Android: esim. Drive, sähköposti tai viesti itselle.</p>';
+  }
+  h += '<button type="button" class="btn ghost" data-bkdl="1">💾 Lataa tiedostona</button>' +
+    '<p class="bkhint">Android ja tietokone: tiedosto menee Lataukset-kansioon. Kotinäytön sovelluksessa lataus ei aina toimi.</p>' +
+    '<button type="button" class="btn ghost" data-copybk="1">📋 Kopioi tekstinä</button>' +
+    '<p class="bkhint">Liitä esim. Muistiinpanoihin tai viestinä itsellesi. Tuo data -toiminto hyväksyy liitetyn tekstin.</p>' +
+    '</div>' +
+    '<p class="note" id="bk-msg" hidden style="margin-top:10px"></p>' +
+    '<textarea id="bk-text" class="pick" rows="3" readonly aria-label="Varmuuskopion teksti" ' +
+      'style="font-family:var(--font-m);font-size:11px;margin-top:10px">' + esc(txt) + '</textarea>' +
+    '<div class="sticky-cta"><button class="btn primary" data-close="1">Valmis</button></div></div></div>';
+  overlayEl.innerHTML = h;
+}
+function bkNotice(msg, warn){
+  const el = document.getElementById('bk-msg');
+  if(!el) return;
+  el.textContent = msg;
+  el.style.borderLeftColor = warn ? 'var(--warn)' : 'var(--up)';
+  el.hidden = false;
 }
 function showBackupDone(fname){
   overlayEl.innerHTML = '<div class="ov"><div class="sheet" role="dialog" aria-label="Varmuuskopio">' +
@@ -3086,8 +3147,8 @@ function showRawBackup(txt, fname){
 function showImport(){
   overlayEl.innerHTML = '<div class="ov"><div class="sheet" role="dialog" aria-label="Tuo data">' +
     '<h3>Tuo varmuuskopio</h3>' +
-    '<p>Valitse JSON-tiedosto tai liitä varmuuskopion teksti. Kirjaukset yhdistetään nykyisiin – samoja treenejä ei kahdenneta.</p>' +
-    '<input type="file" id="imp-file" accept="application/json,.json" class="pick">' +
+    '<p>Valitse varmuuskopiotiedosto (.json tai .txt) tai liitä varmuuskopion teksti. Kirjaukset yhdistetään nykyisiin – samoja treenejä ei kahdenneta.</p>' +
+    '<input type="file" id="imp-file" accept="application/json,.json,text/plain,.txt" class="pick">' +
     '<p class="eyebrow" style="margin:14px 0 6px">tai liitä teksti</p>' +
     '<textarea id="imp-text" class="pick" rows="5" placeholder="{ \"app\": \"saliohjelma\" ... }" style="font-family:var(--font-m);font-size:11px"></textarea>' +
     '<div class="pickrow" style="margin-top:10px"><button class="btn accent" data-importtext="1">Tuo liitetty teksti</button></div>' +
@@ -4301,16 +4362,16 @@ function aiFullText(person, days){
 /* --- lataus: artefaktissa downloads-kyvykkyys, offline-tiedostossa tavallinen lataus --- */
 function aiSaveFile(fname, txt, mime){
   function viaLink(){
-    try{
-      const blob = new Blob([txt], {type:mime});
-      const url = URL.createObjectURL(blob);
-      const el = document.createElement('a');
-      el.href = url; el.download = fname;
-      document.body.appendChild(el); el.click();
-      setTimeout(function(){ URL.revokeObjectURL(url); el.remove(); }, 1500);
-      aiNotice('Ladattu: ' + fname, false);
-    }catch(e){
-      aiNotice('Lataus ei onnistunut tässä selaimessa. Kopioi teksti Kopioi-napilla.', true);
+    if(downloadViaLink(fname, txt, mime))
+      aiNotice('Lataus käynnistetty: ' + fname + '. Jos tiedostoa ei näy Latauksissa, käytä Kopioi-nappia.', false);
+    else aiNotice('Lataus ei onnistunut tässä selaimessa. Kopioi teksti Kopioi-napilla.', true);
+  }
+  /* puhelimessa jakovalikko: toimii myös kotinäytön sovelluksessa */
+  if(!(window.claude && window.claude.use) && isTouchDevice()){
+    const f = shareableFile(fname, txt, mime);
+    if(f){
+      shareFile(f, function(n){ aiNotice('Jaettu: ' + n, false); }, viaLink);
+      return;
     }
   }
   if(window.claude && window.claude.use){
@@ -4413,7 +4474,7 @@ function aiCopy(btn){
    ============================================================ */
 
 document.addEventListener('click', function(ev){
-  const t = ev.target.closest('[data-person],[data-open],[data-view],[data-tab],[data-cardio],[data-finish],[data-close],[data-savecardio],[data-discard],[data-discard-ask],[data-setskin],[data-rest],[data-ckind],[data-cmin],[data-ckindfilter],[data-timer],[data-calmove],[data-calday],[data-editsets],[data-del],[data-delok],[data-backtoday],[data-addcardio],[data-addrest],[data-abort],[data-clearsets],[data-weekday],[data-active],[data-pickprog],[data-hidebar],[data-showbar],[data-export],[data-import],[data-importtext],[data-copybk],[data-session],[data-replaceok],[data-ai],[data-airange],[data-aicopy],[data-aitxt],[data-aijson]');
+  const t = ev.target.closest('[data-person],[data-open],[data-view],[data-tab],[data-cardio],[data-finish],[data-close],[data-savecardio],[data-discard],[data-discard-ask],[data-setskin],[data-rest],[data-ckind],[data-cmin],[data-ckindfilter],[data-timer],[data-calmove],[data-calday],[data-editsets],[data-del],[data-delok],[data-backtoday],[data-addcardio],[data-addrest],[data-abort],[data-clearsets],[data-weekday],[data-active],[data-pickprog],[data-hidebar],[data-showbar],[data-export],[data-import],[data-importtext],[data-copybk],[data-bkshare],[data-bkdl],[data-session],[data-replaceok],[data-ai],[data-airange],[data-aicopy],[data-aitxt],[data-aijson]');
   if(!t) return;
 
   if(t.dataset.person){
@@ -4432,6 +4493,19 @@ document.addEventListener('click', function(ev){
     applyImport(ta ? ta.value : '');
     return;
   }
+  if(t.dataset.bkshare && backupFile){
+    const f = shareableFile(backupFile.fname, backupFile.txt, 'application/json');
+    if(!f){ bkNotice('Jakaminen ei ole käytettävissä tässä selaimessa. Käytä Lataa- tai Kopioi-vaihtoehtoa.', true); return; }
+    shareFile(f, function(n){ bkNotice('Jaettu: ' + n + '. Tarkista, että tiedosto tallentui valitsemaasi paikkaan.', false); },
+      function(){ bkNotice('Jakaminen ei onnistunut. Käytä Lataa- tai Kopioi-vaihtoehtoa.', true); });
+    return;
+  }
+  if(t.dataset.bkdl && backupFile){
+    if(downloadViaLink(backupFile.fname, backupFile.txt, 'application/json'))
+      bkNotice('Lataus käynnistetty: ' + backupFile.fname + '. Jos tiedostoa ei näy Latauksissa, käytä Jaa- tai Kopioi-vaihtoehtoa.', false);
+    else bkNotice('Lataus ei onnistunut tässä selaimessa. Käytä Jaa- tai Kopioi-vaihtoehtoa.', true);
+    return;
+  }
   if(t.dataset.copybk){
     const ta = document.getElementById('bk-text');
     if(ta){
@@ -4439,7 +4513,8 @@ document.addEventListener('click', function(ev){
       try{ document.execCommand('copy'); }catch(e){}
       if(navigator.clipboard) { try{ navigator.clipboard.writeText(ta.value); }catch(e){} }
       ta.setAttribute('readonly','readonly');
-      t.textContent = 'Kopioitu';
+      t.textContent = '✓ Kopioitu';
+      bkNotice('Kopioitu leikepöydälle. Liitä teksti talteen, esim. Muistiinpanoihin.', false);
     }
     return;
   }
