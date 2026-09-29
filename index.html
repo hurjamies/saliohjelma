@@ -23,7 +23,7 @@
 </style>
 </head>
 <body>
-<title>Saliohjelma 7.0</title>
+<title>Saliohjelma 7.1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Josefin+Sans:wght@400;600;700&family=Poiret+One&display=swap">
@@ -1160,6 +1160,8 @@ const store = {iida:{sessions:[],active:null}, matti:{sessions:[],active:null}};
 let db = null;
 const pending = {iida:null, matti:null};
 const writing = {iida:false, matti:false};
+/* milloin tätä profiilia on viimeksi muutettu tällä laitteella (ms) */
+const savedAt = {iida:0, matti:0};
 let saveNote = '';
 
 function lsKey(p){ return 'salikirja-'+p; }
@@ -1168,6 +1170,7 @@ function loadLocal(){
     try{
       const raw = localStorage.getItem(lsKey(p));
       if(raw){ const o = JSON.parse(raw); if(o && o.sessions) store[p] = o; }
+      savedAt[p] = num(localStorage.getItem(lsKey(p) + '-saved'));
     }catch(e){}
   });
 }
@@ -1175,6 +1178,8 @@ function writeLocal(p){
   try{ localStorage.setItem(lsKey(p), JSON.stringify(store[p])); }catch(e){}
 }
 function save(p){
+  savedAt[p] = Date.now();
+  try{ localStorage.setItem(lsKey(p) + '-saved', String(savedAt[p])); }catch(e){}
   writeLocal(p);
   if(!db) return;
   clearTimeout(pending[p]);
@@ -1205,11 +1210,16 @@ function connect(){
         const data = snap.data() || {};
         const remoteSessions = Array.isArray(data.sessions) ? data.sessions : [];
         const busy = (state.view === 'program' && state.person === p && store[p].active);
-        if(busy){
-          store[p].sessions = mergeSessions(store[p].sessions, remoteSessions);
-        }else{
-          store[p].sessions = mergeSessions(store[p].sessions, remoteSessions);
-          store[p].active = data.active || null;
+        /* pilvestä voi palata vanhempi tallennus (oma kaiku tai viivästynyt kirjoitus).
+           Keskeneräinen treeni otetaan pilvestä vain, jos pilven tieto on uudempi
+           kuin tämän laitteen viimeisin muutos. */
+        const remoteMs = Date.parse(data.updated || '') || 0;
+        const localNewer = savedAt[p] > remoteMs;
+        store[p].sessions = mergeSessions(store[p].sessions, remoteSessions);
+        if(!busy && !localNewer) store[p].active = data.active || null;
+        if(localNewer && db){
+          clearTimeout(pending[p]);
+          pending[p] = setTimeout(function(){ flush(p); }, 800);
         }
         writeLocal(p);
         if(state.view !== 'program') renderAll();
@@ -1915,6 +1925,8 @@ function ensureActive(pid){
 }
 
 function renderProgram(pid){
+  const w0 = activeWork();
+  if(w0 && w0.a.pid !== pid && progById(w0.a.pid)){ pid = w0.a.pid; state.pid = pid; }
   const p = progById(pid);
   if(!p){ setView('home'); return; }
   if(progDom && progDom.pid === pid && progDom.person === state.person) { refreshProgramStatus(); return; }
@@ -2947,8 +2959,49 @@ function confirmDelete(id, from){
   overlayEl.innerHTML = h;
 }
 
+/* Keskeneräisen treenin suoja: jos treeniin on kirjattu sarjoja, sitä ei
+   korvata ilman vahvistusta. Pelkät esitäytetyt painot eivät ole kirjauksia. */
+let pendingReplace = null;
+function activeWork(){
+  const a = store[state.person].active;
+  if(!a || !a.entries) return null;
+  let n = 0;
+  for(const k in a.entries) (a.entries[k] || []).forEach(function(x){ if(num(x.reps) > 0 || x.done) n++; });
+  return n ? {a:a, n:n} : null;
+}
+function guardReplace(what, proceed){
+  const w = activeWork();
+  if(!w){ proceed(); return; }
+  const p = progById(w.a.pid);
+  const name = p ? p.name : 'Treeni';
+  pendingReplace = proceed;
+  const lead = w.a.editId
+    ? 'Muokkaat ' + fmtDate(w.a.forceEnd) + ' tallennettua treeniä ' + esc(name) + ' – muutoksia ei ole vielä tallennettu.'
+    : esc(name) + ' on kesken: ' + w.n + ' ' + (w.n === 1 ? 'sarja' : 'sarjaa') + ' kirjattu, aloitettu ' + agoText(w.a.start) + '.';
+  overlayEl.innerHTML = '<div class="ov"><div class="sheet" role="dialog" aria-label="Treeni kesken">' +
+    '<h3>Treeni on kesken</h3>' +
+    '<p>' + lead + ' ' + esc(what) + ' hylkäisi ' + (w.a.editId ? 'muutokset' : 'nämä kirjaukset') + '.</p>' +
+    '<div class="skins">' +
+      '<button type="button" class="btn accent" data-open="' + w.a.pid + '" style="width:100%">Jatka keskeneräistä</button>' +
+      '<button type="button" class="btn ghost" data-finish="1" style="width:100%">' +
+        (w.a.editId ? 'Tallenna muutokset ensin' : 'Tallenna keskeneräinen treeni') + '</button>' +
+      '<button type="button" class="btn rest" data-replaceok="1" style="width:100%">Hylkää ja jatka</button>' +
+    '</div>' +
+    '<div class="sticky-cta"><button class="btn primary" data-close="1">Peruuta</button></div>' +
+    '</div></div>';
+}
+function openProgram(pid){
+  overlayEl.innerHTML = ''; progDom = null; progChartKey = null;
+  setView('program', pid);
+}
+
 /* muokkaa aiempaa treeniä ohjelmanäkymässä */
 function startEdit(id){
+  const cur = store[state.person].active;
+  if(cur && cur.editId !== id && activeWork()){
+    guardReplace('Toisen treenin muokkaaminen', function(){ store[state.person].active = null; startEdit(id); });
+    return;
+  }
   const person = state.person;
   const s = store[person].sessions.filter(function(x){ return x.id === id; })[0];
   if(!s || !progById(s.pid)) return;
@@ -2970,6 +3023,11 @@ function startEdit(id){
   setView('program', s.pid);
 }
 function startOnDate(pid, iso){
+  if(activeWork()){
+    guardReplace('Uuden treenin kirjaaminen päivälle ' + fmtDate(isoAtNoon(iso)),
+      function(){ store[state.person].active = null; startOnDate(pid, iso); });
+    return;
+  }
   const person = state.person;
   store[person].active = null;
   progDom = null; progChartKey = null;
@@ -4355,7 +4413,7 @@ function aiCopy(btn){
    ============================================================ */
 
 document.addEventListener('click', function(ev){
-  const t = ev.target.closest('[data-person],[data-open],[data-view],[data-tab],[data-cardio],[data-finish],[data-close],[data-savecardio],[data-discard],[data-discard-ask],[data-setskin],[data-rest],[data-ckind],[data-cmin],[data-ckindfilter],[data-timer],[data-calmove],[data-calday],[data-editsets],[data-del],[data-delok],[data-backtoday],[data-addcardio],[data-addrest],[data-abort],[data-clearsets],[data-weekday],[data-active],[data-pickprog],[data-hidebar],[data-showbar],[data-export],[data-import],[data-importtext],[data-copybk],[data-session],[data-ai],[data-airange],[data-aicopy],[data-aitxt],[data-aijson]');
+  const t = ev.target.closest('[data-person],[data-open],[data-view],[data-tab],[data-cardio],[data-finish],[data-close],[data-savecardio],[data-discard],[data-discard-ask],[data-setskin],[data-rest],[data-ckind],[data-cmin],[data-ckindfilter],[data-timer],[data-calmove],[data-calday],[data-editsets],[data-del],[data-delok],[data-backtoday],[data-addcardio],[data-addrest],[data-abort],[data-clearsets],[data-weekday],[data-active],[data-pickprog],[data-hidebar],[data-showbar],[data-export],[data-import],[data-importtext],[data-copybk],[data-session],[data-replaceok],[data-ai],[data-airange],[data-aicopy],[data-aitxt],[data-aijson]');
   if(!t) return;
 
   if(t.dataset.person){
@@ -4387,7 +4445,24 @@ document.addEventListener('click', function(ev){
   }
   if(t.dataset.hidebar){ bottomHidden = true; renderBottom(); updateFinishState(); return; }
   if(t.dataset.showbar){ bottomHidden = false; renderBottom(); updateFinishState(); return; }
-  if(t.dataset.open){ overlayEl.innerHTML = ''; progDom = null; progChartKey = null; setView('program', t.dataset.open); return; }
+  if(t.dataset.open){
+    const pid = t.dataset.open;
+    const cur = store[state.person].active;
+    if(cur && cur.pid !== pid && activeWork()){
+      const np = progById(pid);
+      guardReplace('Ohjelman ' + (np ? np.name : '') + ' aloittaminen',
+        function(){ store[state.person].active = null; save(state.person); openProgram(pid); });
+      return;
+    }
+    openProgram(pid);
+    return;
+  }
+  if(t.dataset.replaceok){
+    const fn = pendingReplace; pendingReplace = null;
+    overlayEl.innerHTML = '';
+    if(fn) fn();
+    return;
+  }
   if(t.dataset.view){ progDom = null; setView(t.dataset.view); return; }
   if(t.dataset.tab){ state.tab = t.dataset.tab; renderHistory(); return; }
   if(t.dataset.cardio){ showCardio(); return; }
