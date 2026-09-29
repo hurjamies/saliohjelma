@@ -23,7 +23,7 @@
 </style>
 </head>
 <body>
-<title>Saliohjelma 7.2</title>
+<title>Saliohjelma 7.3</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Josefin+Sans:wght@400;600;700&family=Poiret+One&display=swap">
@@ -3086,29 +3086,55 @@ function downloadViaLink(fname, txt, mime){
 }
 
 let backupFile = null;   /* {txt, fname} vientivalikon napeille */
+/* Clauden tiedostolataus on vain omistajan organisaation jäsenille. Kun se
+   kerran estyy, ei yritetä uudelleen vaan ohjataan suoraan kopiointiin. */
+let claudeDlOff = false;
+const CLAUDE_DL_NOTE = 'Claude-sovellus ei salli tiedostolatausta tälle tilille. Kopioi varmuuskopio tekstinä – ' +
+  'se toimii aina, ja Tuo data -toiminto hyväksyy liitetyn tekstin.';
 function exportData(){
   const txt = backupPayload();
   const fname = 'saliohjelma-' + isoDay(new Date()) + '.json';
-  if(window.claude && window.claude.use){
+  if(window.claude && window.claude.use && !claudeDlOff){
     window.claude.use('downloads').then(function(d){
-      if(d && d.save){
-        d.save({filename:fname, data:txt}).then(function(){ showBackupDone(fname); })
-          .catch(function(){ showBackupOptions(txt, fname); });
-      }else{
-        showBackupOptions(txt, fname);
-      }
-    }).catch(function(){ showBackupOptions(txt, fname); });
+      if(!d || !d.save){ claudeDlOff = true; showBackupOptions(txt, fname, CLAUDE_DL_NOTE); return; }
+      d.save({filename:fname, data:txt}).then(function(){ showBackupDone(fname); })
+        .catch(function(err){
+          const code = err && err.code;
+          if(code === 'declined') return;                /* katsoja perui itse */
+          if(code === 'rate_limited'){ showBackupOptions(txt, fname, 'Tallennusikkuna on jo auki tai sitä pyydettiin juuri. Yritä hetken päästä tai kopioi tekstinä.'); return; }
+          claudeDlOff = true;
+          showBackupOptions(txt, fname, CLAUDE_DL_NOTE);
+        });
+    }).catch(function(){ claudeDlOff = true; showBackupOptions(txt, fname, CLAUDE_DL_NOTE); });
   }else{
-    showBackupOptions(txt, fname);
+    showBackupOptions(txt, fname, claudeDlOff ? CLAUDE_DL_NOTE : '');
   }
 }
-function showBackupOptions(txt, fname){
+function showBackupOptions(txt, fname, note){
   backupFile = {txt:txt, fname:fname};
-  const canShare = !!shareableFile(fname, txt, 'application/json');
+  const inClaude = !!(window.claude && window.claude.use);
+  const canShare = !inClaude && !!shareableFile(fname, txt, 'application/json');
   let h = '<div class="ov"><div class="sheet" role="dialog" aria-label="Varmuuskopio">' +
     '<h3>Varmuuskopio</h3>' +
-    '<p>Tiedosto sisältää molempien profiilien kaikki treenit. Valitse tapa, joka toimii puhelimessasi.</p>' +
+    '<p>Tiedosto sisältää molempien profiilien kaikki tällä laitteella olevat treenit.' +
+    (inClaude ? '' : ' Valitse tapa, joka toimii puhelimessasi.') + '</p>' +
+    (note ? '<div class="note" style="border-left-color:var(--warn)">' + esc(note) + '</div>' : '') +
     '<div class="bkopts">';
+  if(inClaude){
+    /* Clauden sisällä jako ja tavallinen lataus ovat estettyjä – kopiointi toimii */
+    h += '<button type="button" class="btn accent" data-copybk="1">📋 Kopioi tekstinä</button>' +
+      '<p class="bkhint">Liitä teksti esim. Muistiinpanoihin tai viestinä itsellesi. ' +
+      'Siirto GitHub-versioon: avaa se → Ohjelman ohjeet → Tuo data → liitä teksti → Tuo liitetty teksti.</p>' +
+      '<button type="button" class="btn ghost" data-bkselect="1">Valitse koko teksti</button>' +
+      '<p class="bkhint">Jos kopiointi ei onnistu, valitse teksti tällä ja kopioi se pitkällä painalluksella.</p>' +
+      '</div>' +
+      '<p class="note" id="bk-msg" hidden style="margin-top:10px"></p>' +
+      '<textarea id="bk-text" class="pick" rows="6" readonly aria-label="Varmuuskopion teksti" ' +
+        'style="font-family:var(--font-m);font-size:11px;margin-top:10px">' + esc(txt) + '</textarea>' +
+      '<div class="sticky-cta"><button class="btn primary" data-close="1">Valmis</button></div></div></div>';
+    overlayEl.innerHTML = h;
+    return;
+  }
   if(canShare){
     h += '<button type="button" class="btn accent" data-bkshare="1">📤 Jaa tai tallenna tiedostona</button>' +
       '<p class="bkhint">iPhone: valitse jakovalikosta <b>Tallenna Tiedostoihin</b>. Android: esim. Drive, sähköposti tai viesti itselle.</p>';
@@ -4375,12 +4401,21 @@ function aiSaveFile(fname, txt, mime){
     }
   }
   if(window.claude && window.claude.use){
+    const blocked = function(){
+      claudeDlOff = true;
+      aiNotice('Claude-sovellus ei salli tiedostolatausta tälle tilille. Käytä Kopioi AI-analyysi -nappia.', true);
+    };
+    if(claudeDlOff){ blocked(); return; }
     window.claude.use('downloads').then(function(d){
-      if(d && d.save){
-        d.save({filename:fname, data:txt}).then(function(){ aiNotice('Ladattu: ' + fname, false); })
-          .catch(viaLink);
-      }else viaLink();
-    }).catch(viaLink);
+      if(!d || !d.save){ blocked(); return; }
+      d.save({filename:fname, data:txt}).then(function(){ aiNotice('Tallennettu: ' + fname, false); })
+        .catch(function(err){
+          const code = err && err.code;
+          if(code === 'declined') return;
+          if(code === 'rate_limited'){ aiNotice('Tallennusikkuna on jo auki. Yritä hetken päästä.', true); return; }
+          blocked();
+        });
+    }).catch(blocked);
   }else{
     viaLink();
   }
@@ -4474,7 +4509,7 @@ function aiCopy(btn){
    ============================================================ */
 
 document.addEventListener('click', function(ev){
-  const t = ev.target.closest('[data-person],[data-open],[data-view],[data-tab],[data-cardio],[data-finish],[data-close],[data-savecardio],[data-discard],[data-discard-ask],[data-setskin],[data-rest],[data-ckind],[data-cmin],[data-ckindfilter],[data-timer],[data-calmove],[data-calday],[data-editsets],[data-del],[data-delok],[data-backtoday],[data-addcardio],[data-addrest],[data-abort],[data-clearsets],[data-weekday],[data-active],[data-pickprog],[data-hidebar],[data-showbar],[data-export],[data-import],[data-importtext],[data-copybk],[data-bkshare],[data-bkdl],[data-session],[data-replaceok],[data-ai],[data-airange],[data-aicopy],[data-aitxt],[data-aijson]');
+  const t = ev.target.closest('[data-person],[data-open],[data-view],[data-tab],[data-cardio],[data-finish],[data-close],[data-savecardio],[data-discard],[data-discard-ask],[data-setskin],[data-rest],[data-ckind],[data-cmin],[data-ckindfilter],[data-timer],[data-calmove],[data-calday],[data-editsets],[data-del],[data-delok],[data-backtoday],[data-addcardio],[data-addrest],[data-abort],[data-clearsets],[data-weekday],[data-active],[data-pickprog],[data-hidebar],[data-showbar],[data-export],[data-import],[data-importtext],[data-copybk],[data-bkselect],[data-bkshare],[data-bkdl],[data-session],[data-replaceok],[data-ai],[data-airange],[data-aicopy],[data-aitxt],[data-aijson]');
   if(!t) return;
 
   if(t.dataset.person){
@@ -4508,14 +4543,34 @@ document.addEventListener('click', function(ev){
   }
   if(t.dataset.copybk){
     const ta = document.getElementById('bk-text');
-    if(ta){
-      ta.removeAttribute('readonly'); ta.select(); ta.setSelectionRange(0, 999999);
-      try{ document.execCommand('copy'); }catch(e){}
-      if(navigator.clipboard) { try{ navigator.clipboard.writeText(ta.value); }catch(e){} }
-      ta.setAttribute('readonly','readonly');
+    if(!ta) return;
+    const okMsg = function(){
       t.textContent = '✓ Kopioitu';
-      bkNotice('Kopioitu leikepöydälle. Liitä teksti talteen, esim. Muistiinpanoihin.', false);
-    }
+      bkNotice('Kopioitu leikepöydälle (' + ta.value.length.toLocaleString('fi-FI') +
+        ' merkkiä). Liitä teksti talteen, esim. Muistiinpanoihin.', false);
+    };
+    const failMsg = function(){
+      ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length);
+      bkNotice('Selain esti kopioinnin. Teksti on nyt valittuna – paina sitä pitkään ja valitse Kopioi.', true);
+    };
+    let done = false;
+    try{
+      ta.removeAttribute('readonly');
+      ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length);
+      done = document.execCommand('copy');
+    }catch(e){ done = false; }
+    ta.setAttribute('readonly', 'readonly');
+    if(done){ okMsg(); return; }
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(ta.value).then(okMsg, failMsg);
+    }else failMsg();
+    return;
+  }
+  if(t.dataset.bkselect){
+    const ta = document.getElementById('bk-text');
+    if(!ta) return;
+    ta.focus(); ta.select(); ta.setSelectionRange(0, ta.value.length);
+    bkNotice('Teksti valittu – paina sitä pitkään ja valitse Kopioi.', false);
     return;
   }
   if(t.dataset.hidebar){ bottomHidden = true; renderBottom(); updateFinishState(); return; }
