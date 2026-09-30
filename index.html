@@ -2580,7 +2580,7 @@ function renderHome(){
                                             (cell && cell.state === 'done') ? 'done' : 'rest') : 'gym');
   const shownProg = active ? progById(active.pid) : recProg;
   h += '<section class="today hero" style="--acc:' + accentOf(shownProg) + '">';
-  h += '<div class="hero-copy">' + (kind === 'gym' ? '<img class="hero-art" src="assets/dumbbell.webp" alt="" aria-hidden="true" width="768" height="432">' : '');
+  h += '<div class="hero-copy">' + (kind === 'gym' ? '<img class="hero-art" src="assets/hero-' + resolvedSkin(skin) + '.webp" alt="" aria-hidden="true" width="768" height="512">' : '');
   h += '<span class="kicker' + (kind === 'done' ? ' done' : '') + '">' + (active ? 'Kesken' : kind === 'gym' ? 'Suositus' : kind === 'cardio' ? 'Suositus · cardio' :
        kind === 'done' ? 'Päivä kirjattu' : 'Suositus · lepo') + '</span>';
   if(kind === 'gym'){
@@ -4379,6 +4379,7 @@ function resolvedSkin(id){ return id === 'auto' ? (skinMedia.matches ? 'dark' : 
 function applySkin(id){
   skin = SKINS.some(function(s){ return s.id === id; }) ? id : 'auto';
   document.body.setAttribute('data-skin', resolvedSkin(skin));
+  document.querySelectorAll('.hero-art').forEach(function(img){ img.src = 'assets/hero-' + resolvedSkin(skin) + '.webp'; });
   document.documentElement.style.colorScheme = ['dark','neon'].indexOf(resolvedSkin(skin)) >= 0 ? 'dark' : 'light';
   const color = getComputedStyle(document.body).getPropertyValue('--bg').trim();
   const meta = document.querySelector('meta[name="theme-color"]');

@@ -55,16 +55,22 @@ näkyvät molempien puhelimissa reaaliajassa. Ilman verkkoa tehdyt kirjaukset l�
 
 Varmuuskopio: **Ohjeet → Varmuuskopio → Vie data / Tuo data**.
 
-## Teemojen kuva
+## Teemojen kuvataustat
 
-Päivän salitreenikortin koristekuva on `assets/dumbbell.webp` (noin 44 kt).
-Kuva on luotu OpenAI ImageGenillä käyttäjän antaman tyyliviitteen pohjalta.
-Kuva ja teematyylit kuuluvat service workerin offline-välimuistiin.
+Päivän salitreenikortissa on valitun teeman mukainen käsipaino ja saliympäristö.
+Kuvat vaihtuvat myös laitteen vaalean/tumman asetuksen mukana:
 
-Kuvaprompti: Yksi klassinen säädettävä metallinen käsipaino, pyöreät tummat
-rautalevyt ja hopeinen karhennettu kahva, kolmen neljäsosan lähikuva, neutraali
-studiovalaistus. Oikealle painottuva sommittelu, vasemmalla tyhjää tilaa,
-läpinäkyvä tausta, ei tekstiä, logoja tai käyttöliittymää.
+- Neon Synth: violetti valaistus ja neonheijastukset.
+- Art Deco: lämmin norsunluu, messinki ja vanhan urheiluklubin tunnelma.
+- Mustavalkopunainen: mustavalkoinen sali ja punainen saliteline.
+- Luonto: puu, kasvit ja lämmin luonnonvalo.
+- Tumma: grafiitinharmaa sali ja hillitty teräksensininen valo.
+- Vaalea: valoisa sali ja kevyet salvianvihreät yksityiskohdat.
+
+Kuvat sijaitsevat `assets/hero-{teema}.webp`-tiedostoissa. Ne on luotu
+OpenAI ImageGenillä käyttäjän antaman tyyliviitteen pohjalta. Teematyylit
+ja kaikki kuusi kuvataustaa kuuluvat service workerin offline-välimuistiin.
+Kuvat ovat koristeita; tekstien luettavuus säilytetään erillisellä pehmeällä häivytyksellä.
 
 ## Ohjelmien tausta
 
