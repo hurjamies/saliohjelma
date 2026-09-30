@@ -23,7 +23,7 @@
 </style>
 </head>
 <body>
-<title>Saliohjelma 10.0</title>
+<title>Saliohjelma 10.1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Josefin+Sans:wght@400;600;700&family=Poiret+One&display=swap">
@@ -1529,6 +1529,7 @@ function syncStop(){
   sync.partners = {};
   sync.shareTo = [];
   sync.profileReady = false;
+  sync.shareBlocked = false;
 }
 
 /* ---- profiilit ja treenikaverit ----
@@ -1594,15 +1595,18 @@ function syncListen(){
       const changed = JSON.stringify(partners) !== JSON.stringify(sync.partners || {}) || !sync.profileReady;
       sync.partners = partners;
       sync.profileReady = true;
+      sync.shareBlocked = false;
       try{ localStorage.setItem('salikirja-partners-' + uid, JSON.stringify(partners)); }catch(e){}
       refreshPersons();
       if(changed){ renderAll(); }
       syncRender();
     }, function(err){
-      sync.status = (err && err.code === 'permission-denied') ? 'denied' : 'error';
-      sync.error = err && (err.code || err.message) || '';
-      /* ilman profiilitietoja synkronoidaan silti oma data */
+      /* Profiilien estyminen koskee vain treenikavereita (esim. vanhat tietokantasäännöt).
+         Omat treenit synkronoituvat silti, joten synkronoinnin tilaa ei muuteta virheeksi. */
+      sync.shareBlocked = !!(err && err.code === 'permission-denied');
+      sync.shareError = err && (err.code || err.message) || '';
       sync.profileReady = true; refreshPersons(); syncRender();
+      if(state.view === 'home' && !overlayEl.innerHTML) renderAll();
     }));
   });
 }
@@ -1757,6 +1761,11 @@ function partnerListHtml(){
   if(!sync.user || !sync.me) return '';
   const ps = visiblePersons().filter(function(p){ return p !== sync.me; });
   let h = '<div id="partner-list"><p class="eyebrow" style="margin:14px 0 6px">Treenikaverit</p>';
+  if(sync.shareBlocked){
+    return h + '<div class="note" style="border-left-color:var(--warn)">Treenikaverit eivät ole vielä käytössä: Firebasen ' +
+      'tietokantasäännöt ovat vanhat. Omat treenisi synkronoituvat normaalisti. Päivitä säännöt Firebase-konsolissa ' +
+      '(Firestore Database → Rules), niin kutsut ja yhteinen näkymä toimivat.</div></div>';
+  }
   if(!ps.length) h += '<p class="muted" style="font-size:12.5px;margin:0 0 8px">Ei vielä treenikavereita. Kutsu kaveri, niin näette toistenne treenit ja yhteisen kehityksen.</p>';
   ps.forEach(function(p){
     h += '<div class="row spread" style="padding:6px 0;border-bottom:1px solid var(--line)"><b>' + esc(personName(p)) + '</b>' +
@@ -2903,7 +2912,7 @@ function renderHome(){
       '<span class="lbico" aria-hidden="true">👥</span><span style="min-width:0"><b>Yhdessä · ' + esc(personName(tp[0])) + ' &amp; ' + esc(personName(tp[1])) + '</b>' +
       '<small>Yhteiset treenipäivät ja yhteisten liikkeiden kehitys</small></span>' +
       '<span class="chev" aria-hidden="true">›</span></button>';
-  }else if(sync.enabled && sync.user && sync.me && sync.profileReady){
+  }else if(sync.enabled && sync.user && sync.me && sync.profileReady && !sync.shareBlocked){
     h += '<button type="button" class="lastbtn togbtn" data-invite="1">' +
       '<span class="lbico" aria-hidden="true">👥</span><span style="min-width:0"><b>Kutsu treenikaveri</b>' +
       '<small>Näette toistenne treenit ja yhteisen kehityksen</small></span>' +
