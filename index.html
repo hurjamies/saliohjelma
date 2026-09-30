@@ -8,12 +8,12 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Saliohjelma">
-<link rel="manifest" href="manifest.json?v=10.2.3">
-<link rel="icon" type="image/x-icon" href="favicon.ico?v=10.2.3">
-<link rel="icon" type="image/png" sizes="48x48" href="icon-48.png?v=10.2.3">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=10.2.3">
-<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=10.2.3">
-<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=10.2.3">
+<link rel="manifest" href="manifest.json?v=11.0.0">
+<link rel="icon" type="image/x-icon" href="favicon.ico?v=11.0.0">
+<link rel="icon" type="image/png" sizes="48x48" href="icon-48.png?v=11.0.0">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=11.0.0">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=11.0.0">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=11.0.0">
 <style>
   :root{
     color-scheme: light dark;
@@ -26,7 +26,7 @@
 </style>
 </head>
 <body>
-<title>Saliohjelma 10.2.3</title>
+<title>Saliohjelma 11.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Josefin+Sans:wght@400;600;700&family=Poiret+One&display=swap">
@@ -136,6 +136,47 @@
     color:var(--ink-2);font-family:var(--font-d);letter-spacing:.01em;
   }
   .seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:var(--shadow)}
+  /* henkilövalikko */
+  .pmenu{position:relative;flex:none}
+  .pmenu-btn{display:flex;align-items:center;gap:6px;min-height:36px;padding:5px 11px 5px 12px;border:1px solid var(--line);
+    background:var(--surface-2);border-radius:999px;font-family:var(--font-d);font-size:13.5px;font-weight:700;color:var(--ink);cursor:pointer}
+  .pmenu-btn .pdot{margin:0}
+  .pmenu-btn svg{color:var(--ink-3);transition:transform .15s}
+  .pmenu.open .pmenu-btn svg{transform:rotate(180deg)}
+  .pmenu-btn.other{border-color:var(--up);box-shadow:inset 0 0 0 1px var(--up)}
+  .pmenu-list{position:absolute;right:0;top:calc(100% + 8px);width:240px;max-width:calc(100vw - 32px);background:var(--surface);
+    border:1px solid var(--line-2);border-radius:14px;box-shadow:0 14px 36px -14px rgba(0,0,0,.4);padding:6px;z-index:70}
+  .pm-h{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-3);margin:6px 10px;line-height:1.4}
+  .pmenu-list button{display:flex;align-items:center;gap:8px;width:100%;min-height:44px;padding:8px 10px;border:0;background:none;
+    border-radius:10px;font:inherit;font-size:14.5px;color:var(--ink);text-align:left;cursor:pointer}
+  .pmenu-list button:hover,.pmenu-list button[aria-checked="true"]{background:var(--surface-2)}
+  .pmenu-list .pm-n{font-weight:600}
+  .pmenu-list small{color:var(--ink-3);font-size:12px}
+  .pm-check{margin-left:auto;color:var(--up);font-weight:700}
+  .pmenu-list .pm-inv{color:var(--up);font-weight:600;margin-top:4px;border-top:1px solid var(--line);border-radius:0 0 10px 10px}
+  /* ohjelmaeditori */
+  .edcard{padding:14px 16px;margin-top:12px;display:grid;gap:12px}
+  .edl{display:grid;gap:5px;font-size:12.5px;font-weight:600;color:var(--ink-2)}
+  .edin{width:100%;box-sizing:border-box;min-height:44px;padding:10px 12px;border:1px solid var(--line-2);border-radius:10px;
+    background:var(--surface);color:var(--ink);font:inherit;font-size:15px}
+  .edsub{margin:0;font-weight:700;font-family:var(--font-d);font-size:14px}
+  .edex{padding:12px 14px;margin-top:10px}
+  .edex-top{display:flex;align-items:center;gap:10px}
+  .edex-top .ex-n{flex:none}
+  .edex-nums{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin-top:10px}
+  .ednum{display:grid;gap:4px;font-size:11px;color:var(--ink-3);font-weight:600;align-content:end}
+  .ednum input{min-height:44px;width:100%;box-sizing:border-box;padding:8px 4px;border:1px solid var(--line-2);border-radius:10px;
+    background:var(--surface);color:var(--ink);font-family:var(--font-m);font-size:15px;font-weight:600;text-align:center}
+  .edex-act{display:flex;gap:8px;margin-top:10px}
+  .edex-act .minibtn{min-height:36px;min-width:40px}
+  .edex-act .danger{margin-left:auto}
+  .edinfo{font-size:12px;line-height:1.45;margin:12px 2px 0}
+  .edbtns{display:grid;gap:8px;margin-top:14px}
+  .edextra{text-align:center;margin-top:14px}
+  .flash{position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom, 0px));transform:translateX(-50%);background:var(--ink);
+    color:var(--bg);padding:10px 16px;border-radius:999px;font-size:13.5px;font-weight:600;z-index:80;box-shadow:var(--shadow);
+    max-width:calc(100vw - 32px);text-align:center}
+  .guidebtn{margin-top:10px}
   .iconbtn{
     border:1px solid var(--line);background:var(--surface);border-radius:10px;width:32px;height:32px;
     display:grid;place-items:center;color:var(--ink-2);flex:none;
@@ -838,15 +879,12 @@
     .hello h1{font-size:36px}
   }
 </style>
-<link rel="stylesheet" href="themes.css?v=10.2.3">
+<link rel="stylesheet" href="themes.css?v=11.0.0">
 
 <header class="topbar">
   <div class="topbar-in">
     <button type="button" class="brandbtn" id="btn-home" aria-label="Tänään – etusivu"><svg class="brandmark" width="26" height="26" viewBox="0 0 26 26" aria-hidden="true" fill="currentColor"><rect x="1.5" y="9.5" width="3" height="7" rx="1.2"/><rect x="5" y="6.5" width="4" height="13" rx="1.6"/><rect x="9" y="11.6" width="8" height="2.8" rx="1"/><rect x="17" y="6.5" width="4" height="13" rx="1.6"/><rect x="21.5" y="9.5" width="3" height="7" rx="1.2"/></svg><span class="brand">Saliohjelma</span></button>
-    <div class="seg" id="personseg" role="group" aria-label="Valitse henkilö">
-      <button type="button" data-person="iida" aria-pressed="true">Iidis</button>
-      <button type="button" data-person="matti" aria-pressed="false">Matti</button>
-    </div>
+    <div class="pmenu" id="personseg"></div>
     <button type="button" class="iconbtn syncbtn" id="btn-sync" data-syncsheet="1" hidden data-state="off" aria-label="Synkronointi"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M5.2 14.2h7.9a3.1 3.1 0 0 0 .4-6.2 4.3 4.3 0 0 0-8.3-.9 3.6 3.6 0 0 0 0 7.1z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><i class="sdot"></i></button>
     <button type="button" class="iconbtn" id="btn-skin" title="Väriteema" aria-label="Väriteema"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 1.6a6.4 6.4 0 0 1 0 12.8z" fill="currentColor"/></svg></button>
   </div>
@@ -859,6 +897,7 @@
 <main id="view-guide" class="wrap" hidden></main>
 <main id="view-together" class="wrap" hidden></main>
 <main id="view-programs" class="wrap" hidden></main>
+<main id="view-editor" class="wrap" hidden></main>
 <nav class="tabbar" id="tabbar" aria-label="Päävalikko"><div class="tabbar-in"><button type="button" data-view="home" data-nav="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.8 9.4v9.3c0 .9.7 1.6 1.6 1.6h9.2c.9 0 1.6-.7 1.6-1.6V9.4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg><span>Tänään</span></button><button type="button" data-view="programs" data-nav="programs"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 6.5h12M8.5 12h12M8.5 17.5h12" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><circle cx="4.3" cy="6.5" r="1.3" fill="currentColor"/><circle cx="4.3" cy="12" r="1.3" fill="currentColor"/><circle cx="4.3" cy="17.5" r="1.3" fill="currentColor"/></svg><span>Ohjelmat</span></button><button type="button" data-view="history" data-nav="history"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20v-6M10 20V9M15 20v-8M20 20V4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span>Kehitys</span></button><button type="button" data-view="calendar" data-nav="calendar" id="btn-cal"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M3.5 10h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg><span>Kalenteri</span></button></div></nav>
 <div id="bottom"></div>
 <div id="overlay"></div>
@@ -1078,6 +1117,106 @@ const PERSONS = ['iida','matti'];
 const PERSON_NAMES = {iida:'Iidis', matti:'Matti'};
 function personName(p){ return PERSON_NAMES[p] || p; }
 const store = {iida:{sessions:[],active:null}, matti:{sessions:[],active:null}};
+
+/* ---- muokattavat ohjelmat ----
+   Valmiit ohjelmat (yllä) ovat pohja. Käyttäjän muutokset ja omat ohjelmat tallentuvat
+   henkilökohtaiseen varastoon salikirja-<henkilö>-programs = {at, list, names}:
+   - list: muokatut valmiit ohjelmat (sama id) ja omat ohjelmat (id <henkilö>-c…)
+   - names: kaikkien joskus käytettyjen liikkeiden nimet, jotta vanhat kirjaukset näkyvät aina nimellä
+   Kirjattuja treenejä ei koskaan muuteta: poistetut liikkeet siirtyvät ohjelman retired-listaan
+   ja poistettu oma ohjelma vain arkistoidaan, joten sen treenit säilyvät historiassa ja kehityksessä.
+   Synkronointi: profiles/{henkilö}.programs (JSON-teksti) + programsAt, uusin muutos voittaa. */
+const BASE_PROGRAMS = JSON.parse(JSON.stringify(PROGRAMS));
+const BASE_IDS = BASE_PROGRAMS.map(function(p){ return p.id; });
+const PROG_TYPES = {yla:'Ylävartalo', ala:'Alavartalo', koko:'Koko keho', muu:'Muu'};
+function progKey(p){ return 'salikirja-' + p + '-programs'; }
+function emptyProgStore(){ return {v:1, at:0, list:[], names:{}}; }
+function cleanText(v, max){
+  return String(v == null ? '' : v).replace(/[<>"'`\\]/g, '').replace(/\s+/g, ' ').trim().slice(0, max || 80);
+}
+function clampInt(v, lo, hi, def){
+  const n = Math.round(Number(String(v).replace(',', '.')));
+  return (String(v).trim() !== '' && isFinite(n)) ? Math.min(hi, Math.max(lo, n)) : def;
+}
+function cleanEx(e){
+  if(!e || typeof e !== 'object' || !/^[a-z0-9_]{1,48}$/.test(String(e.key))) return null;
+  const lo = clampInt(e.lo, 1, 100, 8);
+  const hi = Math.max(lo, clampInt(e.hi, 1, 100, Math.max(lo, 12)));
+  const o = {key:String(e.key), name:cleanText(e.name, 90) || String(e.key), sets:clampInt(e.sets, 1, 10, 2),
+    lo:lo, hi:hi, rest:clampInt(e.rest, 15, 600, 105), tip:cleanText(e.tip, 1200)};
+  if(e.perArm) o.perArm = true;
+  return o;
+}
+function cleanProg(x, person){
+  if(!x || typeof x !== 'object' || !/^[a-z0-9-]{1,48}$/.test(String(x.id))) return null;
+  const base = BASE_PROGRAMS.filter(function(b){ return b.id === x.id; })[0];
+  if(base && base.person !== person) return null;
+  if(!base && String(x.id).indexOf(person + '-c') !== 0) return null;
+  const seen = {};
+  const ex = (Array.isArray(x.ex) ? x.ex : []).map(cleanEx).filter(function(e){
+    if(!e || seen[e.key]) return false;
+    seen[e.key] = true; return true;
+  }).slice(0, 30);
+  if(!ex.length) return null;
+  const retired = (Array.isArray(x.retired) ? x.retired : []).map(cleanEx).filter(function(e){
+    if(!e || seen[e.key]) return false;
+    seen[e.key] = true; return true;
+  });
+  const type = PROG_TYPES[x.type] ? x.type : (base ? base.type : 'muu');
+  const p = {id:String(x.id), person:person, type:type, ex:ex, retired:retired,
+    name:cleanText(x.name, 40) || (base ? base.name : 'Oma ohjelma'),
+    sub:x.sub === undefined && base ? base.sub : cleanText(x.sub, 120)};
+  if(base){
+    p.rot = base.rot; p.day = base.day; p.wd = base.wd;
+    if(base.note) p.note = base.note;
+    p.edited = true;
+  }else{
+    p.rot = null; p.day = 'Oma ohjelma'; p.wd = null; p.custom = true;
+    if(x.archived) p.archived = true;
+  }
+  return p;
+}
+function normStore(o){
+  const names = {};
+  if(o && o.names && typeof o.names === 'object'){
+    Object.keys(o.names).slice(0, 400).forEach(function(k){
+      if(/^[a-z0-9_]{1,48}$/.test(k)) names[k] = cleanText(o.names[k], 90);
+    });
+  }
+  return {v:1, at:Number(o && o.at) || 0, list:(o && Array.isArray(o.list)) ? o.list.slice(0, 40) : [], names:names, dirty:!!(o && o.dirty)};
+}
+function loadProgStore(p){
+  try{
+    const o = JSON.parse(localStorage.getItem(progKey(p)) || 'null');
+    if(o && Array.isArray(o.list)) return normStore(o);
+  }catch(e){}
+  return emptyProgStore();
+}
+const progStore = {};
+PERSONS.forEach(function(p){ progStore[p] = loadProgStore(p); });
+function saveProgStore(p){ try{ localStorage.setItem(progKey(p), JSON.stringify(progStore[p])); }catch(e){} }
+function applyPrograms(){
+  const out = [];
+  PERSONS.forEach(function(person){
+    const over = {}, order = [];
+    progStore[person].list.forEach(function(x){
+      const c = cleanProg(x, person);
+      if(!c) return;
+      if(!over[c.id]) order.push(c.id);
+      over[c.id] = c;
+    });
+    BASE_PROGRAMS.forEach(function(b){ if(b.person === person) out.push(over[b.id] || JSON.parse(JSON.stringify(b))); });
+    order.forEach(function(id){ if(BASE_IDS.indexOf(id) < 0) out.push(over[id]); });
+  });
+  PROGRAMS.length = 0;
+  out.forEach(function(p){ PROGRAMS.push(p); });
+}
+applyPrograms();
+/* tallennettu varasto muodossa, joka kulkee varmuuskopiossa ja palvelimella */
+function progStorePublic(p){
+  const s = progStore[p];
+  return {v:1, at:s.at, list:s.list, names:s.names};
+}
 let db = null;
 const pending = {iida:null, matti:null};
 const writing = {iida:false, matti:false};
@@ -1270,13 +1409,7 @@ function visiblePersons(){
 }
 function refreshPersons(){
   const vis = visiblePersons();
-  const seg = document.getElementById('personseg');
-  if(seg){
-    seg.innerHTML = vis.map(function(p){
-      return '<button type="button" data-person="' + p + '" aria-pressed="' + (p === state.person) + '">' + esc(personName(p)) + '</button>';
-    }).join('');
-    seg.hidden = vis.length < 2;
-  }
+  paintPersonMenu();
   if(vis.indexOf(state.person) < 0){
     state.person = vis[0];
     try{ localStorage.setItem('salikirja-person', state.person); }catch(e){}
@@ -1308,6 +1441,7 @@ function syncListen(){
     sync.unsub.push(F.onSnapshot(myRef, function(snap){
       const d = snap.exists() ? snap.data() : {};
       sync.shareTo = Array.isArray(d.sharedWith) ? d.sharedWith.slice() : [];
+      if(snap.exists() && !snap.metadata.hasPendingWrites) programsFromProfile(sync.me, d);
       if(state.view === 'guide' || document.getElementById('partner-list')) syncRender();
     }, function(){}));
     const q = F.query(F.collection(sync.fs, 'profiles'), F.where('sharedWith', 'array-contains', uid));
@@ -1316,7 +1450,7 @@ function syncListen(){
       const partners = {};
       snap.docs.forEach(function(d){
         const x = d.data();
-        if(PERSONS.indexOf(d.id) >= 0 && d.id !== sync.me) partners[d.id] = x.owner || '';
+        if(PERSONS.indexOf(d.id) >= 0 && d.id !== sync.me){ partners[d.id] = x.owner || ''; programsFromProfile(d.id, x); }
       });
       const changed = JSON.stringify(partners) !== JSON.stringify(sync.partners || {}) || !sync.profileReady;
       sync.partners = partners;
@@ -1745,14 +1879,14 @@ function agoText(iso){
 }
 function num(v){ const n = parseFloat(String(v).replace(',','.')); return isFinite(n) ? n : 0; }
 function progById(id){ for(const p of PROGRAMS) if(p.id === id) return p; return null; }
-function progsFor(person){ return PROGRAMS.filter(function(p){ return p.person === person; }); }
+function progsFor(person){ return PROGRAMS.filter(function(p){ return p.person === person && !p.archived; }); }
 function strengthSessions(person){
   return store[person].sessions.filter(function(s){ return s.pid && progById(s.pid); })
     .sort(function(a,b){ return (a.end||'') < (b.end||'') ? 1 : -1; }); // uusin ensin
 }
 function partnerProgram(pid){
   const p = progById(pid);
-  if(!p) return null;
+  if(!p || typeof p.rot !== 'number') return null;
   const other = (p.person === 'iida') ? 'matti' : 'iida';
   return progsFor(other).filter(function(x){ return x.rot === p.rot; })[0] || null;
 }
@@ -1988,7 +2122,10 @@ function setTargetText(def, prevSet){
    - jos treeneista on kulunut 3 vrk tai enemman, kierto jatkuu heti kun palautuminen sallii
    - cardio 1-2 kertaa viikossa, muuten lepo                                              */
 
-function progCode(p){ return (p.type === 'ala' ? 'A' : 'Y') + p.name.slice(-1); }
+function progCode(p){
+  if(typeof p.rot !== 'number') return (p.name.replace(/[^A-Za-zÅÄÖåäö0-9]/g, '').slice(0, 2) || 'O').toUpperCase();
+  return (p.type === 'ala' ? 'A' : 'Y') + (p.rot < 2 ? 'A' : 'B');
+}
 function daysBetween(a, b){
   const x = new Date(a.getFullYear(), a.getMonth(), a.getDate());
   const y = new Date(b.getFullYear(), b.getMonth(), b.getDate());
@@ -2000,7 +2137,7 @@ const WEEK_CARDIO_TARGET = 2;
 function adaptiveWeek(person){
   const monday = weekStartOf(new Date());
   const todayIso = isoDay(new Date());
-  const progs = progsFor(person);
+  const progs = rotProgs(person);
 
   /* lähtötilanne edellisiltä viikoilta */
   let lastRot = null, lastArea = null, lastDate = null;
@@ -2009,7 +2146,10 @@ function adaptiveWeek(person){
     const d = new Date(hist[i].end);
     if(d < monday){
       const p = progById(hist[i].pid);
-      if(p){ lastRot = p.rot; lastArea = p.type; lastDate = d; }
+      if(p){
+        lastArea = p.type; lastDate = d;
+        for(let j = i; j < hist.length && lastRot === null; j++){ const q = progById(hist[j].pid); if(q && typeof q.rot === 'number') lastRot = q.rot; }
+      }
       break;
     }
   }
@@ -2027,7 +2167,7 @@ function adaptiveWeek(person){
 
     if(gymLog){
       const p = progById(gymLog.pid);
-      gymCount++; doneGym++; lastRot = p.rot; lastArea = p.type; lastDate = d;
+      gymCount++; doneGym++; if(typeof p.rot === 'number') lastRot = p.rot; lastArea = p.type; lastDate = d;
       out.push({iso:iso, state:'done', kind:'gym', code:progCode(p), label:p.name, pid:p.id});
       continue;
     }
@@ -2050,7 +2190,7 @@ function adaptiveWeek(person){
 
     const nextRot = (lastRot === null) ? 0 : (lastRot + 1) % 4;
     const nextProg = progs[nextRot];
-    const needGap = (lastArea === null) ? 0 : (nextProg.type === lastArea ? 2 : 1);
+    const needGap = (lastArea === null) ? 0 : ((nextProg.type === lastArea || lastArea === 'koko') ? 2 : 1);
     const sinceGym = (lastDate === null) ? 99 : daysBetween(lastDate, d);
     const gapOk = sinceGym >= needGap;
     const drifting = sinceGym >= 3;
@@ -2150,7 +2290,8 @@ const views = {
   calendar: document.getElementById('view-calendar'),
   guide: document.getElementById('view-guide'),
   together: document.getElementById('view-together'),
-  programs: document.getElementById('view-programs')
+  programs: document.getElementById('view-programs'),
+  editor: document.getElementById('view-editor')
 };
 const bottomEl = document.getElementById('bottom');
 const overlayEl = document.getElementById('overlay');
@@ -2166,13 +2307,11 @@ function setView(v, pid){
 }
 function renderAll(){
   document.body.className = document.body.className.replace(/\bview-\S+/g, '').trim() + ' view-' + state.view;
-  const NAV = {home:'home', together:'home', programs:'programs', guide:'programs', history:'history', calendar:'calendar'};
+  const NAV = {home:'home', together:'home', programs:'programs', editor:'programs', guide:'programs', history:'history', calendar:'calendar'};
   Array.prototype.forEach.call(document.querySelectorAll('#tabbar [data-nav]'), function(b){
     if(b.dataset.nav === NAV[state.view]) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
   });
-  Array.prototype.forEach.call(document.querySelectorAll('#personseg button'), function(b){
-    b.setAttribute('aria-pressed', b.dataset.person === state.person ? 'true' : 'false');
-  });
+  paintPersonMenu();
   if(state.view === 'home') renderHome();
   else if(state.view === 'program') renderProgram(state.pid);
   else if(state.view === 'history') renderHistory();
@@ -2180,6 +2319,7 @@ function renderAll(){
   else if(state.view === 'guide') renderGuide();
   else if(state.view === 'together') renderTogether();
   else if(state.view === 'programs') renderPrograms();
+  else if(state.view === 'editor') renderEditor();
   renderBottom();
 }
 
@@ -2233,12 +2373,11 @@ function progressGroup(){ return [progressMe()].concat(cmpSelected()); }
 function exKeysOf(p){
   const out = [];
   progsFor(p).forEach(function(pr){ pr.ex.forEach(function(e){ if(out.indexOf(e.key) < 0) out.push(e.key); }); });
+  strengthSessions(p).forEach(function(s){ Object.keys(s.entries || {}).forEach(function(k){ if(out.indexOf(k) < 0) out.push(k); }); });
   return out;
 }
 function exNameShort(key){
-  let n = key;
-  PERSONS.some(function(p){ return progsFor(p).some(function(pr){ return pr.ex.some(function(e){ if(e.key === key){ n = e.name; return true; } return false; }); }); });
-  return String(n).split(/ tai |,| \/ /)[0].trim();
+  return String(exName(key)).split(/ tai |,| \/ /)[0].trim();
 }
 function est1rm(kg, reps){ return kg > 0 ? kg * (1 + reps / 30) : reps; }
 function exPoints(p, key){
@@ -2336,6 +2475,8 @@ function renderTogether(){
   }
   h += '</div>';
 
+  h += overallBlockHtml('ovchart', grp);
+
   /* liikkeiden kehitys */
   h += '<p class="eyebrow" style="margin:18px 0 8px">' + (cmp ? 'Liikkeiden kehitys rinnakkain' : 'Liikkeiden kehitys') + '</p>';
   if(!keys.length){
@@ -2414,6 +2555,7 @@ function renderTogether(){
     }
   }
   views.together.innerHTML = h;
+  drawOverallChart('ovchart', grp, col);
   if(document.getElementById('togchart')) drawTogetherChart(grp, col);
 }
 
@@ -2421,15 +2563,27 @@ function drawTogetherChart(pair, col){
   const box = document.getElementById('togchart');
   const key = state.togKey;
   const series = pair.map(function(p){ return {p:p, pts:exPoints(p, key)}; });
+  drawLineChart(box, series, col, 'Kehitys prosentteina: ' + exNameShort(key), function(q){
+    return '<b class="mono">' + (q.kg > 0 ? fmtKg(q.kg) + ' kg × ' : '') + q.reps + '</b> ' + pctText(q.pct);
+  }, function(s){
+    const l = s.pts[s.pts.length - 1];
+    return l ? ' <b class="mono">' + (s.pts.length > 1 ? pctText(l.pct) : 'lähtötaso') + '</b>' : ' <span class="muted">ei kirjauksia</span>';
+  });
+}
+
+/* prosenttikäyrä: yksi viiva per henkilö, 0 % = oma lähtötaso */
+function drawLineChart(box, series, col, label, tipRow, legendTail){
+  if(!box) return;
   const cs = getComputedStyle(document.body);
   const ink3 = cs.getPropertyValue('--ink-3').trim() || '#78828F';
   const ink2 = cs.getPropertyValue('--ink-2').trim() || '#4B5563';
   const line = cs.getPropertyValue('--line').trim() || '#D9DFE8';
   const surf = cs.getPropertyValue('--surface').trim() || '#fff';
   const w = Math.max(260, box.clientWidth - 12);
-  const h = 200, padL = 42, padR = 64, padT = 16, padB = 26;
+  const multi = series.length > 1;
+  const h = 200, padL = 42, padR = multi ? 64 : 18, padT = 16, padB = 26;
   const allPts = series.reduce(function(a, s){ return a.concat(s.pts); }, []);
-  if(!allPts.length){ box.innerHTML = '<p class="muted" style="margin:6px">Ei kirjauksia tästä liikkeestä.</p>'; return; }
+  if(!allPts.length){ box.innerHTML = '<p class="muted" style="margin:6px">Ei kirjauksia.</p>'; return; }
   let t0 = Math.min.apply(null, allPts.map(function(q){ return q.t; }));
   let t1 = Math.max.apply(null, allPts.map(function(q){ return q.t; }));
   if(t0 === t1){ t0 -= 864e5 * 3; t1 += 864e5 * 3; }
@@ -2438,8 +2592,7 @@ function drawTogetherChart(pair, col){
   if(hi - lo < 10){ hi += (10 - (hi - lo)) / 2; lo -= (10 - (hi - lo)) / 2; if(lo > 0) lo = 0; }
   const x = function(t){ return padL + (t - t0) / (t1 - t0) * (w - padL - padR); };
   const y = function(v){ return padT + (1 - (v - lo) / (hi - lo)) * (h - padT - padB); };
-  let svg = '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" role="img" aria-label="Kehitys prosentteina: ' +
-    esc(exNameShort(key)) + '">';
+  let svg = '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" role="img" aria-label="' + esc(label) + '">';
   /* ruudukko: 0 % korostettuna */
   const step = (hi - lo) > 40 ? 20 : (hi - lo) > 20 ? 10 : 5;
   for(let v = Math.ceil(lo / step) * step; v <= hi; v += step){
@@ -2456,33 +2609,36 @@ function drawTogetherChart(pair, col){
       s.pts.forEach(function(q, i){ d += (i ? ' L' : 'M') + x(q.t).toFixed(1) + ' ' + y(q.pct).toFixed(1); });
       svg += '<path d="' + d + '" fill="none" stroke="' + c + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
     }
+    /* tiheässä sarjassa vain viimeinen piste merkitään, muuten jokainen */
+    const dense = s.pts.length > 24;
     s.pts.forEach(function(q, i){
       const last = i === s.pts.length - 1;
+      if(dense && !last) return;
       svg += '<circle cx="' + x(q.t).toFixed(1) + '" cy="' + y(q.pct).toFixed(1) + '" r="' + (last ? 5 : 4) + '" fill="' + (last ? c : surf) +
         '" stroke="' + (last ? surf : c) + '" stroke-width="2"/>';
     });
     if(s.pts.length){
       const l = s.pts[s.pts.length - 1];
-      labels.push({y:y(l.pct), x:x(l.t), txt:personName(s.p) + ' ' + pctText(l.pct), c:c});
+      labels.push({y:y(l.pct), txt:personName(s.p)});
     }
   });
-  /* suorat nimilaput viivojen päihin, ei päällekkäin */
-  labels.sort(function(a, b){ return a.y - b.y; });
-  for(let i = 1; i < labels.length; i++) if(labels[i].y - labels[i-1].y < 14) labels[i].y = labels[i-1].y + 14;
-  labels.forEach(function(l){
-    svg += '<text x="' + (w - padR + 6) + '" y="' + (l.y + 4).toFixed(1) + '" font-size="11" font-weight="600" fill="' + ink2 +
-      '" font-family="IBM Plex Mono, monospace">' + esc(l.txt.split(' ')[0].slice(0, 7)) + '</text>';
-  });
+  /* suorat nimilaput viivojen päihin, ei päällekkäin (vain kun viivoja on useampi) */
+  if(multi){
+    labels.sort(function(a, b){ return a.y - b.y; });
+    for(let i = 1; i < labels.length; i++) if(labels[i].y - labels[i-1].y < 14) labels[i].y = labels[i-1].y + 14;
+    labels.forEach(function(l){
+      svg += '<text x="' + (w - padR + 6) + '" y="' + (l.y + 4).toFixed(1) + '" font-size="11" font-weight="600" fill="' + ink2 +
+        '" font-family="IBM Plex Mono, monospace">' + esc(l.txt.slice(0, 7)) + '</text>';
+    });
+  }
   svg += '<text x="' + padL + '" y="' + (h - 7) + '" font-size="11" fill="' + ink3 + '" font-family="IBM Plex Mono, monospace">' + fmtDate(new Date(t0)) + '</text>';
   svg += '<text x="' + (w - padR) + '" y="' + (h - 7) + '" text-anchor="end" font-size="11" fill="' + ink3 + '" font-family="IBM Plex Mono, monospace">' + fmtDate(new Date(t1)) + '</text>';
-  svg += '<line id="tog-x" x1="0" y1="' + padT + '" x2="0" y2="' + (h - padB) + '" stroke="' + ink3 + '" stroke-width="1" visibility="hidden"/>';
+  svg += '<line class="xhair" x1="0" y1="' + padT + '" x2="0" y2="' + (h - padB) + '" stroke="' + ink3 + '" stroke-width="1" visibility="hidden"/>';
   svg += '</svg>';
   /* selite: aina näkyvissä, identiteetti myös tekstinä */
   let legend = '<div class="toglegend">';
   series.forEach(function(s){
-    const l = s.pts[s.pts.length - 1];
-    legend += '<span><i class="pdot" style="background:' + col[s.p] + '"></i>' + esc(personName(s.p)) +
-      (l ? ' <b class="mono">' + (s.pts.length > 1 ? pctText(l.pct) : 'lähtötaso') + '</b>' : ' <span class="muted">ei kirjauksia</span>') + '</span>';
+    legend += '<span><i class="pdot" style="background:' + col[s.p] + '"></i>' + esc(personName(s.p)) + legendTail(s) + '</span>';
   });
   legend += '</div>';
   box.innerHTML = legend + svg;
@@ -2490,7 +2646,7 @@ function drawTogetherChart(pair, col){
   tip.className = 'tt'; tip.hidden = true;
   box.appendChild(tip);
   const svgEl = box.querySelector('svg');
-  const xl = box.querySelector('#tog-x');
+  const xl = box.querySelector('.xhair');
   box.onpointermove = function(ev){
     const r = svgEl.getBoundingClientRect();
     const px = ev.clientX - r.left;
@@ -2502,13 +2658,13 @@ function drawTogetherChart(pair, col){
       let near = null;
       s.pts.forEach(function(q){ if(q.t <= best.t + 36e5 * 12 && (!near || q.t > near.t)) near = q; });
       html += '<br><i class="pdot" style="background:' + col[s.p] + '"></i>' + esc(personName(s.p)) + ': ' +
-        (near ? '<b class="mono">' + (near.kg > 0 ? fmtKg(near.kg) + ' kg × ' : '') + near.reps + '</b> ' + pctText(near.pct) +
+        (near ? tipRow(near) +
           (near.t < best.t - 36e5 * 12 ? ' <span class="muted">(' + fmtDate(near.end) + ')</span>' : '') : '<span class="muted">–</span>');
     });
     tip.innerHTML = html; tip.hidden = false;
     const tx = x(best.t);
     xl.setAttribute('x1', tx); xl.setAttribute('x2', tx); xl.setAttribute('visibility', 'visible');
-    tip.style.left = Math.min(tx + 10, w - 170) + 'px';
+    tip.style.left = Math.min(Math.max(tx, 90), w - 90) + 'px';
     tip.style.top = '36px';
   };
   box.onpointerleave = function(){ tip.hidden = true; xl.setAttribute('visibility', 'hidden'); };
@@ -2676,7 +2832,7 @@ function renderHome(){
     let label = '', kd = 'rest';
     if(w.rot === 'cardio'){ label = 'Cardio tai lepo'; kd = 'cardio'; }
     else if(w.rot === 'rest'){ label = 'Lepo'; kd = 'rest'; }
-    else { label = progsFor(person)[w.rot].name.replace('Ylävartalo','Ylä').replace('Alavartalo','Ala'); kd = 'gym'; }
+    else { label = rotProgs(person)[w.rot].name.replace('Ylävartalo','Ylä').replace('Alavartalo','Ala'); kd = 'gym'; }
     h += '<div class="wd planday k-' + kd + (isToday ? ' is-today' : '') +
          '" style="--k:' + KIND_STRONG[kd] + ';--ks:' + KIND_SOFT[kd] + '">' +
          '<b>' + w.d + '</b><span class="plan">' + esc(label) + '</span></div>';
@@ -2702,8 +2858,11 @@ function renderHome(){
   }
   h += aiCardHtml();
 
-  h += '<div class="homefoot"><button type="button" class="linkbtn" data-view="guide">Ohjeet, synkronointi ja varmuuskopio</button>' +
-    '<p class="muted" id="save-note">' + esc(homeSaveText()) + '</p></div>';
+  h += '<button type="button" class="lastbtn guidebtn" data-view="guide">' +
+    '<span class="lbico" aria-hidden="true">📘</span><span style="min-width:0"><b>Ohjeet, synkronointi ja varmuuskopio</b>' +
+    '<small>Käyttöohje, kirjautuminen, treenikaverit, varmuuskopio ja tuonti</small></span>' +
+    '<span class="chev" aria-hidden="true">›</span></button>';
+  h += '<div class="homefoot"><p class="muted" id="save-note">' + esc(homeSaveText()) + '</p></div>';
 
   views.home.innerHTML = h;
 }
@@ -2719,7 +2878,9 @@ function renderPrograms(){
   const person = state.person;
   const rec = recommend(person);
   let h = '<div class="phead workout-hero"><div class="hero-copy">' + themeArt() + '<h1>Ohjelmat</h1>' +
-    '<p class="muted" style="font-size:13.5px;margin:4px 0 0">' + esc(personName(person)) + ' · neljän treenin kierto</p></div></div>';
+    '<p class="muted" style="font-size:13.5px;margin:4px 0 0">' + esc(personName(person)) + ' · neljän treenin kierto' +
+    (function(){ const n = progsFor(person).filter(function(p){ return p.custom; }).length; return n ? ' + ' + n + (n === 1 ? ' oma ohjelma' : ' omaa ohjelmaa') : ''; })() +
+    '</p></div></div>';
   h += '<div class="grid">';
   progsFor(person).forEach(function(p){
     const last = strengthSessions(person).filter(function(s){ return s.pid === p.id; })[0];
@@ -2727,7 +2888,7 @@ function renderPrograms(){
     const sets = p.ex.reduce(function(a,e){ return a + e.sets; }, 0);
     h += '<button class="pcard' + (isRec ? ' rec' : '') + '" style="--acc:' + accentOf(p) + '" data-open="' + p.id + '">';
     if(isRec) h += '<span class="recflag">Suositus tänään</span>';
-    h += '<div class="top"><div><span class="day">' + p.day + '</span><h3>' + esc(p.name) + '</h3></div></div>';
+    h += '<div class="top"><div><span class="day">' + esc(p.day) + (p.edited ? ' · muokattu' : '') + '</span><h3>' + esc(p.name) + '</h3></div></div>';
     h += '<p class="sub">' + esc(p.sub) + '</p>';
     const sh = sharedKeys(p.id);
     let shCount = 0;
@@ -2746,13 +2907,443 @@ function renderPrograms(){
     h += '</button>';
   });
   h += '</div>';
-  h += '<button type="button" class="lastbtn" data-pickprog="1" style="margin-top:16px">' +
+  if(progsCanEdit(person)){
+    h += '<button type="button" class="lastbtn addprog" data-editprog="new" style="margin-top:16px">' +
+      '<span class="lbico" aria-hidden="true">＋</span><span style="min-width:0"><b>Lisää ohjelma</b>' +
+      '<small>Tee oma ohjelma valitsemistasi liikkeistä</small></span><span class="chev" aria-hidden="true">›</span></button>';
+    h += '<button type="button" class="lastbtn" data-editlist="1">' +
+      '<span class="lbico" aria-hidden="true">✎</span><span style="min-width:0"><b>Muokkaa ohjelmia</b>' +
+      '<small>Vaihda liikkeitä, sarjoja, toistoja ja järjestystä</small></span><span class="chev" aria-hidden="true">›</span></button>';
+  }
+  h += '<button type="button" class="lastbtn" data-pickprog="1"' + (progsCanEdit(person) ? '' : ' style="margin-top:16px"') + '>' +
     '<span class="lbico" aria-hidden="true">＋</span><span style="min-width:0"><b>Aloita muu ohjelma</b>' +
     '<small>Valitse mikä tahansa ohjelma suosituksesta riippumatta</small></span><span class="chev" aria-hidden="true">›</span></button>';
   h += '<button type="button" class="lastbtn" data-view="guide">' +
     '<span class="lbico" aria-hidden="true">📘</span><span style="min-width:0"><b>Ohjelman ohjeet</b>' +
     '<small>Periaatteet, synkronointi, treenikaverit ja varmuuskopio</small></span><span class="chev" aria-hidden="true">›</span></button>';
   views.programs.innerHTML = h;
+}
+
+/* ---------------- OHJELMIEN LISÄYS JA MUOKKAUS ---------------- */
+function rotProgs(person){
+  return progsFor(person).filter(function(p){ return typeof p.rot === 'number'; })
+    .sort(function(a, b){ return a.rot - b.rot; });
+}
+/* kirjautuneena ohjelmia voi muokata vain omaan profiiliin; ilman synkronointia molempiin */
+function progsCanEdit(person){
+  return !(sync.enabled && sync.user && sync.me) || person === sync.me;
+}
+function exName(key){
+  for(let i = 0; i < PROGRAMS.length; i++){
+    const p = PROGRAMS[i];
+    for(let j = 0; j < p.ex.length; j++) if(p.ex[j].key === key) return p.ex[j].name;
+    for(let j = 0; j < (p.retired || []).length; j++) if(p.retired[j].key === key) return p.retired[j].name;
+  }
+  for(let i = 0; i < PERSONS.length; i++){ const n = progStore[PERSONS[i]].names[key]; if(n) return n; }
+  for(let i = 0; i < BASE_PROGRAMS.length; i++){
+    const e = BASE_PROGRAMS[i].ex.filter(function(x){ return x.key === key; })[0];
+    if(e) return e.name;
+  }
+  return key;
+}
+/* ohjelman liikkeet + treenissä kirjatut liikkeet, jotka on sittemmin poistettu ohjelmasta */
+function sessionExList(p, s){
+  const list = p.ex.slice();
+  const have = {};
+  list.forEach(function(e){ have[e.key] = true; });
+  Object.keys((s && s.entries) || {}).forEach(function(k){
+    const arr = s.entries[k];
+    if(have[k] || !Array.isArray(arr) || !arr.length) return;
+    const r = (p.retired || []).filter(function(e){ return e.key === k; })[0];
+    list.push(r || {key:k, name:exName(k), sets:arr.length, lo:8, hi:12, rest:105, tip:''});
+    have[k] = true;
+  });
+  return list;
+}
+
+/* ---- synkronointi profiilidokumentin kautta ---- */
+function adoptRemotePrograms(person, raw, at){
+  if(!raw || typeof raw !== 'string' || raw.length > 400000) return false;
+  let o = null;
+  try{ o = JSON.parse(raw); }catch(e){ return false; }
+  if(!o || !Array.isArray(o.list)) return false;
+  const rat = Number(at) || Number(o.at) || 0;
+  if(rat <= progStore[person].at) return false;
+  progStore[person] = normStore(o);
+  progStore[person].at = rat;
+  progStore[person].dirty = false;
+  saveProgStore(person);
+  applyPrograms();
+  return true;
+}
+function pushPrograms(person){
+  const st = progStore[person];
+  if(!st.dirty || !sync.user || sync.me !== person || !sync.api || !sync.fs) return;
+  const F = sync.api.F;
+  const at = st.at;
+  F.setDoc(F.doc(sync.fs, 'profiles', person), {programs:JSON.stringify(progStorePublic(person)), programsAt:at}, {merge:true})
+    .then(function(){
+      if(progStore[person].at === at){ progStore[person].dirty = false; saveProgStore(person); }
+    }, function(){ /* esim. vanhat tietokantasäännöt: ohjelmat säilyvät tässä laitteessa ja lähtevät myöhemmin */ });
+}
+/* profiilin tilannekuva palvelimelta: uudempi versio otetaan käyttöön, oma uudempi lähetetään */
+function programsFromProfile(person, d){
+  const rat = Number(d && d.programsAt) || 0;
+  if(adoptRemotePrograms(person, d && d.programs, rat)){ afterProgramsChanged(); return; }
+  if(person === sync.me && progStore[person].at > rat){ progStore[person].dirty = true; pushPrograms(person); }
+}
+function afterProgramsChanged(){
+  progDom = null;
+  if(overlayEl.innerHTML || state.view === 'program' || state.view === 'editor') return;
+  renderAll();
+}
+function saveProgramRecord(person, rec){
+  const st = progStore[person];
+  const now = Math.max(Date.now(), st.at + 1);
+  if(rec){
+    rec.at = now;
+    st.list = st.list.filter(function(x){ return !x || x.id !== rec.id; }).concat([rec]);
+    rec.ex.concat(rec.retired || []).forEach(function(e){ st.names[e.key] = e.name; });
+  }
+  st.at = now; st.dirty = true;
+  saveProgStore(person);
+  applyPrograms();
+  progDom = null;
+  pushPrograms(person);
+}
+
+/* ---- editori ---- */
+function exLibrary(person, skip){
+  const seen = {}, out = [];
+  const add = function(e, own){
+    if(!e || seen[e.key] || skip[e.key]) return;
+    seen[e.key] = true;
+    out.push({key:e.key, name:e.name, def:e, own:own});
+  };
+  PROGRAMS.forEach(function(p){ if(p.person === person) p.ex.concat(p.retired || []).forEach(function(e){ add(e, true); }); });
+  PROGRAMS.forEach(function(p){ if(p.person !== person) p.ex.forEach(function(e){ add(e, false); }); });
+  BASE_PROGRAMS.forEach(function(p){ p.ex.forEach(function(e){ add(e, p.person === person); }); });
+  return out.sort(function(a, b){ return a.name.localeCompare(b.name, 'fi'); });
+}
+function slugKey(name){
+  const s = String(name).toLowerCase().replace(/[äå]/g, 'a').replace(/ö/g, 'o').replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 18);
+  return 'c_' + (s || 'liike') + '_' + Date.now().toString(36) + Math.floor(Math.random() * 36).toString(36);
+}
+function openEditor(pid){
+  const person = state.person;
+  if(!progsCanEdit(person)) return;
+  const a = store[person].active;
+  if(pid && a && a.pid === pid){
+    overlayEl.innerHTML = '<div class="ov"><div class="sheet" role="dialog" aria-label="Ohjelma on käytössä">' +
+      '<h3>Treeni on kesken</h3><p>Tässä ohjelmassa on kesken oleva treeni. Tallenna tai keskeytä se ensin, niin kirjaukset eivät sekoitu muutoksiin.</p>' +
+      '<div class="sticky-cta"><button class="btn primary" data-close="1">Selvä</button></div></div></div>';
+    return;
+  }
+  let draft;
+  const src = pid ? progById(pid) : null;
+  if(src){
+    draft = {id:src.id, name:src.name, sub:src.sub || '', type:src.type, ex:JSON.parse(JSON.stringify(src.ex))};
+  }else{
+    draft = {id:person + '-c' + Date.now().toString(36), name:'', sub:'', type:'yla', ex:[]};
+  }
+  state.edit = {person:person, isNew:!src, base:!!(src && BASE_IDS.indexOf(src.id) >= 0), draft:draft};
+  overlayEl.innerHTML = '';
+  setView('editor');
+}
+function edNumField(label, f, i, v, min, max){
+  return '<label class="ednum"><span>' + label + '</span><input type="number" inputmode="numeric" min="' + min + '" max="' + max +
+    '" data-edf="' + f + '" data-i="' + i + '" value="' + esc(v) + '"></label>';
+}
+function renderEditor(){
+  const ed = state.edit;
+  if(!ed){ views.editor.innerHTML = ''; return; }
+  const d = ed.draft;
+  const src = progById(d.id);
+  let h = '<div class="phead"><button class="back" type="button" data-edcancel="1">← Ohjelmat</button>' +
+    '<h1>' + (ed.isNew ? 'Uusi ohjelma' : 'Muokkaa ohjelmaa') + '</h1>' +
+    '<p class="muted" style="font-size:13.5px;margin:4px 0 0">' + esc(personName(ed.person)) + ' · ' +
+    (ed.base ? 'kierron ' + (src.rot + 1) + '. treeni' : 'oma ohjelma kierron ulkopuolella') + '</p></div>';
+  h += '<div class="card edcard">' +
+    '<label class="edl"><span>Nimi</span><input class="edin" id="ed-name" maxlength="40" autocomplete="off" value="' + esc(d.name) + '" placeholder="esim. Koko keho"></label>' +
+    '<label class="edl"><span>Kuvaus</span><input class="edin" id="ed-sub" maxlength="120" autocomplete="off" value="' + esc(d.sub) + '" placeholder="esim. Rinta, selkä ja jalat"></label>' +
+    '<label class="edl"><span>Alue</span><select class="edin" id="ed-type">' + Object.keys(PROG_TYPES).map(function(k){
+      return '<option value="' + k + '"' + (k === d.type ? ' selected' : '') + '>' + PROG_TYPES[k] + '</option>';
+    }).join('') + '</select></label></div>';
+  h += '<p class="eyebrow" style="margin:18px 0 8px">Liikkeet · ' + d.ex.length + '</p>';
+  if(!d.ex.length) h += '<div class="card" style="padding:14px 16px"><p class="muted" style="margin:0">Lisää ohjelmaan ainakin yksi liike alta.</p></div>';
+  d.ex.forEach(function(e, i){
+    h += '<div class="card edex">' +
+      '<div class="edex-top"><span class="ex-n mono">' + (i + 1) + '</span>' +
+      '<input class="edin" data-edf="name" data-i="' + i + '" maxlength="90" value="' + esc(e.name) + '" aria-label="Liikkeen ' + (i + 1) + ' nimi"></div>' +
+      '<div class="edex-nums">' +
+        edNumField('Sarjat', 'sets', i, e.sets, 1, 10) +
+        edNumField('Toistot min', 'lo', i, e.lo, 1, 100) +
+        edNumField('Toistot max', 'hi', i, e.hi, 1, 100) +
+        edNumField('Lepo s', 'rest', i, e.rest, 15, 600) +
+      '</div><div class="edex-act">' +
+        '<button type="button" class="minibtn" data-edmove="' + i + '" data-dir="-1"' + (i === 0 ? ' disabled' : '') + ' aria-label="Siirrä ylös">↑</button>' +
+        '<button type="button" class="minibtn" data-edmove="' + i + '" data-dir="1"' + (i === d.ex.length - 1 ? ' disabled' : '') + ' aria-label="Siirrä alas">↓</button>' +
+        '<button type="button" class="minibtn danger" data-edrm="' + i + '">Poista liike</button>' +
+      '</div></div>';
+  });
+  const skip = {};
+  d.ex.forEach(function(e){ skip[e.key] = true; });
+  const lib = exLibrary(ed.person, skip);
+  h += '<div class="card edcard"><p class="edsub">Lisää liike</p>' +
+    '<label class="edl"><span>Aiemmista liikkeistä</span><select class="edin" id="ed-lib"><option value="">Valitse liike…</option>' +
+    lib.map(function(x){ return '<option value="' + x.key + '">' + esc(x.name) + (x.own ? '' : ' (' + esc(personName(ed.person === 'iida' ? 'matti' : 'iida')) + ')') + '</option>'; }).join('') +
+    '</select></label>' +
+    '<label class="edl"><span>tai uusi liike</span><input class="edin" id="ed-newname" maxlength="90" autocomplete="off" placeholder="esim. Kulmasoutu käsipainolla"></label>' +
+    '<button type="button" class="btn ghost" data-edadd="1" style="width:100%">＋ Lisää liike</button>' +
+    '<p class="note" id="ed-addmsg" role="status" hidden></p></div>';
+  h += '<p class="muted edinfo">Muutokset koskevat tulevia treenejä. Kirjatut treenit säilyvät ennallaan, myös poistettujen liikkeiden osalta. ' +
+    'Aiemmista liikkeistä valittu liike jatkaa samaa kehityskäyrää.' + (ed.base ? ' Ohjelma pysyy samalla paikalla kierrossa.' : '') + '</p>';
+  h += '<p class="note" id="ed-msg" role="alert" hidden></p>';
+  h += '<div class="edbtns"><button type="button" class="btn primary" data-edsave="1">Tallenna ohjelma</button>' +
+    '<button type="button" class="btn ghost" data-edcancel="1">Peruuta</button></div>';
+  if(ed.base && src && src.edited) h += '<div class="edextra"><button type="button" class="linkbtn" data-edreset="1">Palauta alkuperäinen ohjelma</button></div>';
+  if(!ed.base && !ed.isNew) h += '<div class="edextra"><button type="button" class="minibtn danger" data-edarchive="1">Poista ohjelma</button></div>';
+  views.editor.innerHTML = h;
+}
+function edMsg(id, txt){
+  const el = document.getElementById(id);
+  if(!el) return;
+  el.textContent = txt; el.hidden = !txt;
+  if(txt) el.scrollIntoView({block:'center', behavior:'smooth'});
+}
+function edAddExercise(){
+  const ed = state.edit;
+  if(!ed) return;
+  const sel = document.getElementById('ed-lib'), nn = document.getElementById('ed-newname');
+  const key = sel ? sel.value : '';
+  const name = cleanText(nn ? nn.value : '', 90);
+  let e = null;
+  if(key){
+    const hit = exLibrary(ed.person, {}).filter(function(x){ return x.key === key; })[0];
+    if(hit) e = JSON.parse(JSON.stringify(hit.def));
+  }else if(name){
+    e = {key:slugKey(name), name:name, sets:3, lo:8, hi:12, rest:105, tip:''};
+  }
+  if(!e){ edMsg('ed-addmsg', 'Valitse liike listasta tai kirjoita uuden liikkeen nimi.'); return; }
+  if(ed.draft.ex.some(function(x){ return x.key === e.key; })){ edMsg('ed-addmsg', 'Liike on jo ohjelmassa.'); return; }
+  ed.draft.ex.push(e);
+  renderEditor();
+  const cards = document.querySelectorAll('#view-editor .edex');
+  if(cards.length) cards[cards.length - 1].scrollIntoView({block:'center', behavior:'smooth'});
+}
+function edSave(){
+  const ed = state.edit;
+  if(!ed) return;
+  const d = ed.draft, person = ed.person;
+  const name = cleanText(d.name, 40);
+  if(!name){ edMsg('ed-msg', 'Anna ohjelmalle nimi.'); return; }
+  if(!d.ex.length){ edMsg('ed-msg', 'Lisää ohjelmaan ainakin yksi liike.'); return; }
+  const clash = progsFor(person).filter(function(p){ return p.id !== d.id && p.name.toLowerCase() === name.toLowerCase(); })[0];
+  if(clash){ edMsg('ed-msg', 'Sinulla on jo ohjelma nimeltä ' + clash.name + '. Valitse toinen nimi.'); return; }
+  for(let i = 0; i < d.ex.length; i++){
+    const e = d.ex[i];
+    if(!cleanText(e.name, 90)){ edMsg('ed-msg', 'Liikkeeltä ' + (i + 1) + ' puuttuu nimi.'); return; }
+    const lo = clampInt(e.lo, 1, 100, NaN), hi = clampInt(e.hi, 1, 100, NaN);
+    if(!(lo > 0) || !(hi > 0) || hi < lo){ edMsg('ed-msg', 'Tarkista liikkeen ' + cleanText(e.name, 40) + ' toistot: max ei voi olla pienempi kuin min.'); return; }
+  }
+  const ex = d.ex.map(cleanEx).filter(Boolean);
+  const keep = {};
+  ex.forEach(function(e){ keep[e.key] = true; });
+  /* ohjelmasta poistetut liikkeet talteen, jotta niiden kirjaukset näkyvät yhä nimellä */
+  const prev = progById(d.id);
+  const retired = [];
+  (prev ? prev.ex.concat(prev.retired || []) : []).forEach(function(e){
+    if(!keep[e.key] && !retired.some(function(r){ return r.key === e.key; })) retired.push(cleanEx(e));
+  });
+  const rec = {id:d.id, name:name, sub:cleanText(d.sub, 120), type:PROG_TYPES[d.type] ? d.type : 'muu', ex:ex, retired:retired.filter(Boolean)};
+  saveProgramRecord(person, rec);
+  state.edit = null;
+  setView('programs');
+  flashNote('Ohjelma ' + name + ' tallennettu.');
+}
+function edConfirm(kind){
+  const ed = state.edit;
+  if(!ed) return;
+  const p = progById(ed.draft.id);
+  if(!p) return;
+  const used = strengthSessions(ed.person).filter(function(s){ return s.pid === p.id; }).length;
+  const reset = kind === 'reset';
+  overlayEl.innerHTML = '<div class="ov"><div class="sheet" role="dialog" aria-label="' + (reset ? 'Palauta ohjelma' : 'Poista ohjelma') + '">' +
+    '<h3>' + (reset ? 'Palautetaanko alkuperäinen ' + esc(p.name) + '?' : 'Poistetaanko ' + esc(p.name) + '?') + '</h3>' +
+    '<p>' + (reset ? 'Ohjelman liikkeet palaavat alkuperäisiksi.' : 'Ohjelma poistuu ohjelmalistasta.') +
+    (used ? ' Sen ' + used + ' kirjattua treeniä säilyvät historiassa ja kehityksessä.' : '') + '</p>' +
+    '<div class="sticky-cta"><button class="btn primary" data-edconfirm="' + kind + '">' + (reset ? 'Palauta' : 'Poista ohjelma') + '</button>' +
+    '<button class="btn ghost" data-close="1">Peruuta</button></div></div></div>';
+}
+function edApplyConfirm(kind){
+  const ed = state.edit;
+  if(!ed) return;
+  const person = ed.person, id = ed.draft.id;
+  const st = progStore[person];
+  if(kind === 'reset'){
+    const prev = progById(id);
+    /* muokatun version liikkeiden nimet jäävät talteen vanhoja kirjauksia varten */
+    if(prev) prev.ex.concat(prev.retired || []).forEach(function(e){ st.names[e.key] = e.name; });
+    st.list = st.list.filter(function(x){ return !x || x.id !== id; });
+    saveProgramRecord(person, null);
+  }else{
+    const cur = st.list.filter(function(x){ return x && x.id === id; })[0];
+    if(!cur) return;
+    const rec = JSON.parse(JSON.stringify(cur));
+    rec.archived = true;
+    saveProgramRecord(person, rec);
+  }
+  state.edit = null;
+  overlayEl.innerHTML = '';
+  setView('programs');
+  flashNote(kind === 'reset' ? 'Alkuperäinen ohjelma palautettu.' : 'Ohjelma poistettu. Sen treenit säilyivät.');
+}
+function flashNote(txt){
+  let el = document.getElementById('flash');
+  if(!el){ el = document.createElement('div'); el.id = 'flash'; el.className = 'flash'; el.setAttribute('role', 'status'); document.body.appendChild(el); }
+  el.textContent = txt; el.hidden = false;
+  clearTimeout(flashNote.t);
+  flashNote.t = setTimeout(function(){ el.hidden = true; }, 2600);
+}
+function showEditList(){
+  const person = state.person;
+  let h = '<div class="ov"><div class="sheet" role="dialog" aria-label="Muokkaa ohjelmia"><h3>Muokkaa ohjelmia</h3>' +
+    '<p>Valitse muokattava ohjelma. Kirjatut treenit säilyvät ennallaan.</p><div class="skins">';
+  progsFor(person).forEach(function(p){
+    h += '<button class="skinbtn" type="button" data-editprog="' + p.id + '"><span class="dot" style="background:' + accentOf(p) + '"></span>' +
+      '<span>' + esc(p.name) + '<small>' + esc((p.custom ? 'Oma ohjelma' : p.day + (p.edited ? ' · muokattu' : '')) + ' · ' + p.ex.length + ' liikettä') + '</small></span></button>';
+  });
+  h += '</div><div class="sticky-cta"><button class="btn primary" data-editprog="new">＋ Lisää ohjelma</button>' +
+    '<button class="btn ghost" data-close="1">Sulje</button></div></div></div>';
+  overlayEl.innerHTML = h;
+}
+document.addEventListener('input', function(ev){
+  const ed = state.edit, t = ev.target;
+  if(!ed || state.view !== 'editor' || !t) return;
+  if(t.id === 'ed-name') ed.draft.name = t.value;
+  else if(t.id === 'ed-sub') ed.draft.sub = t.value;
+  else if(t.dataset && t.dataset.edf){
+    const e = ed.draft.ex[+t.dataset.i];
+    if(e) e[t.dataset.edf] = t.value;
+  }
+  else if(t.id === 'ed-newname' && t.value){ const s = document.getElementById('ed-lib'); if(s) s.value = ''; }
+});
+document.addEventListener('change', function(ev){
+  const ed = state.edit, t = ev.target;
+  if(!ed || state.view !== 'editor' || !t) return;
+  if(t.id === 'ed-type') ed.draft.type = t.value;
+  if(t.id === 'ed-lib' && t.value){ const n = document.getElementById('ed-newname'); if(n) n.value = ''; }
+});
+
+/* ---------------- HENKILÖVALIKKO (yläpalkki) ---------------- */
+function paintPersonMenu(){
+  const seg = document.getElementById('personseg');
+  if(!seg) return;
+  const vis = visiblePersons();
+  const me = progressMe();
+  const signed = !!(sync.enabled && sync.user && sync.me);
+  const col = pairColors(vis);
+  const canInvite = signed && sync.profileReady && !sync.shareBlocked;
+  const open = seg.classList.contains('open');
+  let h = '<button type="button" class="pmenu-btn' + (signed && state.person !== me ? ' other' : '') + '" data-pmenu="1" aria-haspopup="true" aria-expanded="' + open +
+    '" aria-controls="person-menu" aria-label="Näytä kenen treenit: nyt ' + esc(personName(state.person)) + '">' +
+    '<i class="pdot" style="background:' + col[state.person] + '"></i><span class="pm-name">' + esc(personName(state.person)) + '</span>' +
+    '<svg width="12" height="12" viewBox="0 0 12 12" aria-hidden="true"><path d="M2.5 4.5 6 8l3.5-3.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg></button>';
+  h += '<div class="pmenu-list" id="person-menu" role="menu"' + (open ? '' : ' hidden') + '><p class="pm-h">Näytä treenit</p>';
+  vis.forEach(function(p){
+    const on = p === state.person;
+    h += '<button type="button" role="menuitemradio" aria-checked="' + on + '" data-person="' + p + '">' +
+      '<i class="pdot" style="background:' + col[p] + '"></i><span class="pm-n">' + esc(personName(p)) + '</span>' +
+      '<small>' + (signed ? (p === me ? 'sinä' : 'treenikaveri') : '') + '</small>' +
+      '<span class="pm-check" aria-hidden="true">' + (on ? '✓' : '') + '</span></button>';
+  });
+  if(canInvite) h += '<button type="button" role="menuitem" class="pm-inv" data-invite="1">＋ Kutsu treenikaveri</button>';
+  else if(signed && vis.length < 2 && sync.shareBlocked) h += '<p class="pm-h" style="text-transform:none;letter-spacing:0">Treenikaverit tulevat käyttöön, kun tietokannan säännöt on päivitetty.</p>';
+  h += '</div>';
+  seg.innerHTML = h;
+  seg.hidden = false;
+}
+function setPersonMenu(open){
+  const seg = document.getElementById('personseg');
+  if(!seg) return;
+  seg.classList.toggle('open', !!open);
+  const btn = seg.querySelector('.pmenu-btn'), list = document.getElementById('person-menu');
+  if(btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if(list) list.hidden = !open;
+  if(open){ const cur = list && list.querySelector('[aria-checked="true"]'); if(cur) cur.focus({preventScroll:true}); }
+}
+document.addEventListener('keydown', function(ev){
+  if(ev.key === 'Escape'){
+    const seg = document.getElementById('personseg');
+    if(seg && seg.classList.contains('open')){ setPersonMenu(false); const b = seg.querySelector('.pmenu-btn'); if(b) b.focus(); }
+  }
+});
+
+/* ---------------- KOKONAISKEHITYS ----------------
+   Ketjutettu indeksi kaikista kirjatuista liikkeistä ja treeneistä. Jokaisessa treenissä
+   jokaisen liikkeen parasta sarjaa (arvioitu maksimi, oman painon liikkeissä toistot)
+   verrataan saman liikkeen edelliseen kirjaukseen. Treenin muutos on näiden suhteiden
+   geometrinen keskiarvo, ja muutokset kerrotaan peräkkäin. Uudet liikkeet ja
+   ohjelmamuutokset eivät siksi vääristä käyrää. Yksittäinen suhde rajataan
+   välille −20 % … +25 % (symmetrinen logaritmisesti), jotta näppäilyvirhe ei heilauta
+   koko käyrää: virheellinen kirjaus ja sitä seuraava oikea kumoavat toisensa. */
+function overallSeries(p){
+  const prev = {};
+  let idx = 1;
+  const pts = [];
+  strengthSessions(p).slice().reverse().forEach(function(s){
+    let logSum = 0, n = 0, exN = 0;
+    Object.keys(s.entries || {}).forEach(function(key){
+      let best = 0;
+      (s.entries[key] || []).forEach(function(x){
+        const kg = num(x.kg), reps = num(x.reps);
+        if(reps > 0){ const v = est1rm(kg, reps); if(v > best) best = v; }
+      });
+      if(best <= 0) return;
+      exN++;
+      if(prev[key]){
+        const r = Math.min(1.25, Math.max(0.8, best / prev[key]));
+        logSum += Math.log(r); n++;
+      }
+      prev[key] = best;
+    });
+    if(!exN) return;
+    if(n) idx *= Math.exp(logSum / n);
+    pts.push({t:new Date(s.end).getTime(), end:s.end, pid:s.pid, pct:(idx - 1) * 100, n:n, exN:exN});
+  });
+  return pts;
+}
+function overallSummary(pts){
+  if(!pts.length) return null;
+  const last = pts[pts.length - 1];
+  const from = Date.now() - 30 * 864e5;
+  let base = null;
+  pts.forEach(function(q){ if(q.t < from) base = q; });
+  const d30 = base ? ((1 + last.pct / 100) / (1 + base.pct / 100) - 1) * 100 : null;
+  return {pct:last.pct, d30:d30, n:pts.length};
+}
+function overallBlockHtml(boxId, persons){
+  const any = persons.some(function(p){ return overallSeries(p).length; });
+  let h = '<p class="eyebrow" style="margin:18px 0 8px">Kokonaiskehitys</p>';
+  if(!any) return h + '<div class="card" style="padding:16px"><p class="muted" style="margin:0">Kokonaiskehitys piirtyy, kun treenejä on kirjattu.</p></div>';
+  h += '<div class="card chartbox ovchart" id="' + boxId + '"></div>';
+  h += '<p class="muted" style="font-size:11.5px;margin:6px 2px 0;line-height:1.4">Arvio kaikista kirjatuista liikkeistä ja treeneistä. ' +
+    'Jokaisessa treenissä jokaisen liikkeen parasta sarjaa verrataan saman liikkeen edelliseen kertaan, ja muutokset ketjutetaan ' +
+    'ensimmäisestä treenistä alkaen. Uudet liikkeet eivät siksi vääristä käyrää, ja yksittäiset poikkeamat (esim. näppäilyvirhe) rajataan.</p>';
+  return h;
+}
+function drawOverallChart(boxId, persons, col){
+  const box = document.getElementById(boxId);
+  if(!box) return;
+  const series = persons.map(function(p){ return {p:p, pts:overallSeries(p)}; });
+  drawLineChart(box, series, col, 'Kokonaiskehitys prosentteina', function(q){
+    return '<b class="mono">' + pctText(q.pct) + '</b> <span class="muted">' + q.n + '/' + q.exN + ' liikettä verrattu</span>';
+  }, function(s){
+    const sm = overallSummary(s.pts);
+    if(!sm) return ' <span class="muted">ei treenejä</span>';
+    return ' <b class="mono">' + (sm.n > 1 ? pctText(sm.pct) : 'lähtötaso') + '</b>' +
+      (sm.d30 !== null && sm.n > 1 ? ' <span class="muted mono">· 30 pv ' + pctText(sm.d30) + '</span>' : '');
+  });
 }
 
 /* ---------------- OHJELMANÄKYMÄ ---------------- */
@@ -3306,7 +3897,7 @@ function programHistoryHtml(person, pid){
   past.slice(0,6).forEach(function(s, idx){
     const lines = [];
     let sets = 0, volume = 0;
-    p.ex.forEach(function(e){
+    sessionExList(p, s).forEach(function(e){
       const arr = s.entries && s.entries[e.key];
       if(!arr || !arr.length) return;
       sets += arr.length;
@@ -3393,7 +3984,7 @@ function renderHistory(){
         const p = progById(s.pid);
         if(!p) return;
         let det = [];
-        p.ex.forEach(function(e){
+        sessionExList(p, s).forEach(function(e){
           const arr = s.entries && s.entries[e.key];
           if(arr && setsSummary(arr)) det.push(e.name.split(',')[0] + ': ' + setsSummary(arr));
         });
@@ -3410,11 +4001,13 @@ function renderHistory(){
   }else if(state.tab === 'cardio'){
     h += renderCardioTab(person);
   }else{
+    h += overallBlockHtml('ovchart2', [person]);
+    h += '<p class="eyebrow" style="margin:18px 0 8px">Liikkeittäin</p>';
     const keys = {};
     sess.forEach(function(s){
       if(!progById(s.pid) || !s.entries) return;
       const p = progById(s.pid); if(!p) return;
-      p.ex.forEach(function(e){
+      sessionExList(p, s).forEach(function(e){
         const arr = s.entries[e.key];
         if(arr && topKg(arr) > 0) keys[e.key] = e.name;
       });
@@ -3434,6 +4027,7 @@ function renderHistory(){
     }
   }
   views.history.innerHTML = h;
+  if(state.tab === 'kehitys') drawOverallChart('ovchart2', [person], pairColors([person]));
   if(state.tab === 'kehitys' && document.getElementById('chartbox')) drawChart();
   if(state.tab === 'cardio' && document.getElementById('cardiobox')) drawCardioChart();
 }
@@ -3735,7 +4329,7 @@ function entryTag(s){
   if(k === 'rest') return {k:k, t:'L'};
   const p = progById(s.pid);
   if(!p) return {k:'rest', t:'?'};
-  return {k:k, t:(p.type === 'ala' ? 'A' : 'Y') + p.name.slice(-1)};
+  return {k:k, t:progCode(p)};
 }
 const KIND_ORDER = ['gym','cardio','rest'];
 function sortKinds(kinds){
@@ -3939,6 +4533,10 @@ function startEdit(id){
     while(rows.length < e.sets) rows.push({kg:rows.length ? rows[rows.length-1].kg : '', reps:'', rir:'', done:false});
     entries[e.key] = rows;
   });
+  Object.keys(s.entries || {}).forEach(function(k){
+    if(entries[k] || !Array.isArray(s.entries[k])) return;
+    entries[k] = s.entries[k].map(function(x){ return {kg:String(num(x.kg) || ''), reps:String(num(x.reps) || ''), rir:x.rir || '', done:true}; });
+  });
   store[person].active = {pid:s.pid, start:s.start || s.end, entries:entries, note:s.note || '',
                           editId:s.id, forceEnd:s.end};
   progDom = null; progChartKey = null;
@@ -3966,7 +4564,8 @@ function startOnDate(pid, iso){
 function backupPayload(){
   return JSON.stringify({
     app:'saliohjelma', version:'5.5', exported:new Date().toISOString(),
-    data:{iida:store.iida, matti:store.matti}
+    data:{iida:store.iida, matti:store.matti},
+    programs:{iida:progStorePublic('iida'), matti:progStorePublic('matti')}
   }, null, 1);
 }
 /* ---- tiedoston vienti puhelimessa ----
@@ -4157,6 +4756,8 @@ function showWhatsApp(){
   }
   const obj = {app:'saliohjelma', kind:'transfer', from:person, exported:new Date().toISOString(), data:{}};
   obj.data[person] = {sessions:sess};
+  obj.programs = {};
+  obj.programs[person] = progStorePublic(person);
   packTransfer(obj).then(function(code){
     const d = new Date();
     waMessage = '💪 Saliohjelma: ' + personName(person) + ' – ' + gym + ' salitreeniä, ' + sess.length + ' kirjausta (' +
@@ -4247,6 +4848,18 @@ function applyImport(txt){
   }
   let added = 0, skipped = 0;
   const perPerson = [];
+  /* ohjelmat ensin, jotta omien ohjelmien treenit tunnistetaan */
+  if(obj && obj.programs && typeof obj.programs === 'object'){
+    PERSONS.forEach(function(pn){
+      const ps = obj.programs[pn];
+      if(!ps || !Array.isArray(ps.list) || !(Number(ps.at) > progStore[pn].at)) return;
+      progStore[pn] = normStore(ps);
+      progStore[pn].dirty = true;
+      saveProgStore(pn);
+    });
+    applyPrograms();
+    PERSONS.forEach(pushPrograms);
+  }
   PERSONS.forEach(function(pn){
     const inc = d[pn];
     if(!inc || !Array.isArray(inc.sessions)) return;
@@ -4379,13 +4992,22 @@ const skinMedia = window.matchMedia('(prefers-color-scheme: dark)');
 let skin = 'auto';
 try{ const sv = localStorage.getItem('salikirja-skin'); if(SKINS.some(function(s){ return s.id === sv; })) skin = sv; }catch(e){}
 function resolvedSkin(id){ return id === 'auto' ? (skinMedia.matches ? 'dark' : 'light') : id; }
+function heroSrc(){
+  try{
+    const v = getComputedStyle(document.body).getPropertyValue('--hero-image');
+    const m = v && v.match(/url\(\s*['"]?([^'")]+)['"]?\s*\)/);
+    if(m) return m[1];
+  }catch(e){}
+  return 'assets/hero-' + resolvedSkin(skin) + '.webp';
+}
 function themeArt(){
-  return '<img class="hero-art" src="assets/hero-' + resolvedSkin(skin) + '.webp" alt="" aria-hidden="true" width="768" height="512">';
+  return '<img class="hero-art" src="' + esc(heroSrc()) + '" alt="" aria-hidden="true" width="768" height="512">';
 }
 function applySkin(id){
   skin = SKINS.some(function(s){ return s.id === id; }) ? id : 'auto';
   document.body.setAttribute('data-skin', resolvedSkin(skin));
-  document.querySelectorAll('.hero-art').forEach(function(img){ img.src = 'assets/hero-' + resolvedSkin(skin) + '.webp'; });
+  const hs = heroSrc();
+  document.querySelectorAll('.hero-art').forEach(function(img){ img.src = hs; });
   document.documentElement.style.colorScheme = ['dark','neon'].indexOf(resolvedSkin(skin)) >= 0 ? 'dark' : 'light';
   const color = getComputedStyle(document.body).getPropertyValue('--bg').trim();
   const meta = document.querySelector('meta[name="theme-color"]');
@@ -4798,7 +5420,7 @@ function showSession(id, backIso){
   const prevSess = prevSessionBefore(person, s.pid, endMs, s.id);
   const rows = [], missing = [], prs = [];
   let sets = 0, tonnage = 0, repsTot = 0;
-  p.ex.forEach(function(def){
+  sessionExList(p, s).forEach(function(def){
     const arr = s.entries && s.entries[def.key];
     if(!arr || !arr.length){ missing.push(def.name.split(',')[0]); return; }
     sets += arr.length;
@@ -4821,7 +5443,7 @@ function showSession(id, backIso){
   h += '<h3>' + esc(p.name) + '</h3>';
   h += '<p>' + longDate(s.end) + ' &middot; ' + agoText(s.end) + '</p>';
   h += '<div class="row" style="flex-wrap:wrap;gap:6px;margin-top:8px">' +
-    '<span class="chip">' + p.day + '</span>' +
+    '<span class="chip">' + esc(p.day) + '</span>' +
     '<span class="chip">' + personName(person) + '</span>' +
     (s.start ? '' : '<span class="chip">jälkikäteen kirjattu</span>') +
     '</div>';
@@ -5042,7 +5664,7 @@ function aiCollect(person, days){
       if(!ex[key]){
         let def = null;
         progsFor(person).forEach(function(pp){ pp.ex.forEach(function(e){ if(!def && e.key === key) def = e; }); });
-        ex[key] = {key:key, def:def, name:def ? def.name : key, items:[], progs:[]};
+        ex[key] = {key:key, def:def, name:def ? def.name : exName(key), items:[], progs:[]};
       }
       const sets = arr.map(function(x){ return {kg:num(x.kg), reps:num(x.reps), rir:aiRir(x)}; });
       const done = sets.filter(function(x){ return x.reps > 0; });
@@ -5589,17 +6211,37 @@ function aiCopy(btn){
    ============================================================ */
 
 document.addEventListener('click', function(ev){
-  const t = ev.target.closest('[data-person],[data-open],[data-view],[data-tab],[data-cardio],[data-finish],[data-close],[data-savecardio],[data-discard],[data-discard-ask],[data-setskin],[data-rest],[data-ckind],[data-cmin],[data-ckindfilter],[data-timer],[data-calmove],[data-calday],[data-editsets],[data-del],[data-delok],[data-backtoday],[data-addcardio],[data-addrest],[data-abort],[data-clearsets],[data-weekday],[data-active],[data-pickprog],[data-hidebar],[data-showbar],[data-export],[data-import],[data-importtext],[data-copybk],[data-bkselect],[data-signin],[data-signout],[data-togkey],[data-cmp],[data-invite],[data-joincode],[data-acceptinv],[data-unshare],[data-unshareok],[data-resetpw],[data-syncsheet],[data-whatsapp],[data-wacopy],[data-washare],[data-importclip],[data-bkshare],[data-bkdl],[data-session],[data-replaceok],[data-ai],[data-airange],[data-aicopy],[data-aitxt],[data-aijson]');
+  const t = ev.target.closest('[data-person],[data-open],[data-view],[data-tab],[data-cardio],[data-finish],[data-close],[data-savecardio],[data-discard],[data-discard-ask],[data-setskin],[data-rest],[data-ckind],[data-cmin],[data-ckindfilter],[data-timer],[data-calmove],[data-calday],[data-editsets],[data-del],[data-delok],[data-backtoday],[data-addcardio],[data-addrest],[data-abort],[data-clearsets],[data-weekday],[data-active],[data-pickprog],[data-hidebar],[data-showbar],[data-export],[data-import],[data-importtext],[data-copybk],[data-bkselect],[data-signin],[data-signout],[data-togkey],[data-cmp],[data-pmenu],[data-editprog],[data-editlist],[data-edcancel],[data-edsave],[data-edadd],[data-edmove],[data-edrm],[data-edreset],[data-edarchive],[data-edconfirm],[data-invite],[data-joincode],[data-acceptinv],[data-unshare],[data-unshareok],[data-resetpw],[data-syncsheet],[data-whatsapp],[data-wacopy],[data-washare],[data-importclip],[data-bkshare],[data-bkdl],[data-session],[data-replaceok],[data-ai],[data-airange],[data-aicopy],[data-aitxt],[data-aijson]');
+  const segOpen = document.getElementById('personseg');
+  if(segOpen && segOpen.classList.contains('open') && !ev.target.closest('[data-pmenu]')) setPersonMenu(false);
   if(!t) return;
 
+  if(t.dataset.pmenu){ setPersonMenu(!(segOpen && segOpen.classList.contains('open'))); return; }
   if(t.dataset.person){
     if(visiblePersons().indexOf(t.dataset.person) < 0) return;
     state.person = t.dataset.person;
     try{ localStorage.setItem('salikirja-person', state.person); }catch(e){}
     progDom = null;
-    setView('home');
+    state.edit = null;
+    setView(['program', 'editor', 'guide'].indexOf(state.view) >= 0 ? 'home' : state.view);
     return;
   }
+  if(t.dataset.editprog){ openEditor(t.dataset.editprog === 'new' ? null : t.dataset.editprog); return; }
+  if(t.dataset.editlist){ showEditList(); return; }
+  if(t.dataset.edcancel){ state.edit = null; setView('programs'); return; }
+  if(t.dataset.edsave){ edSave(); return; }
+  if(t.dataset.edadd){ edAddExercise(); return; }
+  if(t.dataset.edmove){
+    const ex = state.edit && state.edit.draft.ex, i = +t.dataset.edmove, j = i + (+t.dataset.dir);
+    if(ex && j >= 0 && j < ex.length){ const tmp = ex[i]; ex[i] = ex[j]; ex[j] = tmp; renderEditor();
+      const b = document.querySelector('[data-edmove="' + j + '"][data-dir="' + t.dataset.dir + '"]') || document.querySelector('[data-edmove="' + j + '"]');
+      if(b) b.focus({preventScroll:false}); }
+    return;
+  }
+  if(t.dataset.edrm){ if(state.edit){ state.edit.draft.ex.splice(+t.dataset.edrm, 1); renderEditor(); } return; }
+  if(t.dataset.edreset){ edConfirm('reset'); return; }
+  if(t.dataset.edarchive){ edConfirm('archive'); return; }
+  if(t.dataset.edconfirm){ edApplyConfirm(t.dataset.edconfirm); return; }
   if(t.dataset.active){ showActiveSheet(); return; }
   if(t.dataset.pickprog){ showPickProgram(); return; }
   if(t.dataset.export){ exportData(); return; }
@@ -5826,7 +6468,7 @@ document.addEventListener('click', function(ev){
     showSkins();
     const selectedSkin = document.querySelector('[data-setskin="' + skin + '"]');
     if(selectedSkin) selectedSkin.focus({preventScroll:true});
-    if(state.view === 'history' && state.tab === 'kehitys' && document.getElementById('chartbox')) drawChart();
+    if(state.view === 'history' || state.view === 'together') renderAll();
     return;
   }
   if(t.dataset.finish){ finishSession(); return; }
