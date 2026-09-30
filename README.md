@@ -1,7 +1,7 @@
 # Saliohjelma
 
-Iidiksen ja Matin salitreeniohjelmat yhtenä selainsovelluksena. Ei riippuvuuksia, ei palvelinta:
-koko sovellus on yhdessä `index.html`-tiedostossa, ja kirjaukset tallentuvat selaimeen.
+Iidiksen ja Matin salitreeniohjelmat yhtenä selainsovelluksena. Koko sovellus on yhdessä
+`index.html`-tiedostossa; kirjaukset tallentuvat puhelimeen ja synkronoituvat Firebaseen.
 
 **Sovellus:** https://hurjamies.github.io/saliohjelma/
 
@@ -30,11 +30,21 @@ koko sovellus on yhdessä `index.html`-tiedostossa, ja kirjaukset tallentuvat se
 3. Sovellus avautuu omalla kuvakkeella ilman selaimen osoiteriviä ja toimii ilman verkkoa
    ensimmäisen latauksen jälkeen (service worker).
 
-## Tietojen tallennus
+## Tietojen tallennus ja synkronointi
 
-Kirjaukset tallentuvat laitteen selaimeen (`localStorage`). Ne eivät siirry laitteiden välillä
-automaattisesti – käytä **Ohjeet → Varmuuskopio → Vie data / Tuo data**, jos vaihdat laitetta.
-Sovellus ei lähetä tietoja mihinkään.
+Kirjaukset tallentuvat ensin puhelimeen, joten sovellus toimii myös ilman verkkoa.
+Kirjautuneena (sähköposti + salasana) valmiit treenit synkronoituvat Firebase Firestoreen ja
+näkyvät molempien puhelimissa reaaliajassa. Ilman verkkoa tehdyt kirjaukset lähtevät, kun yhteys palaa.
+
+- Tietomalli: jokainen treeni on oma dokumenttinsa `saliohjelma/{iida|matti}/sessions/{id}`.
+- Kesken oleva treeni pysyy puhelimessa, kunnes se tallennetaan.
+- Pääsy: `firestore.rules` sallii lukemisen ja kirjoittamisen vain kahdelle tunnukselle (UID).
+  Sääntöjä muutetaan Firebase-konsolissa kohdassa *Firestore Database → Rules*.
+- Firebase-kirjastot (versio 12.19.0) ovat kansiossa `firebase/`, jotta sovellus käynnistyy
+  ilman verkkoa. `firebaseConfig` on koodissa tarkoituksella: se vain tunnistaa projektin,
+  ja pääsy on rajattu kirjautumisella ja säännöillä.
+
+Varmuuskopio: **Ohjeet → Varmuuskopio → Vie data / Tuo data**.
 
 ## Ohjelmien tausta
 

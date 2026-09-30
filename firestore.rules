@@ -4,7 +4,7 @@ service cloud.firestore {
     // Vain Matti ja Iidis. UID:t: Firebase-konsoli -> Authentication -> Users.
     function member() {
       return request.auth != null
-        && request.auth.uid in ['__UID_MATTI__', '__UID_IIDIS__'];
+        && request.auth.uid in ['2lmYopAnmgamam0mzRDdkVFhvdm2', 'xbkdPmnhUdc4bdmDAwlnzA3S3kM2'];
     }
     // Jokainen treeni on oma dokumenttinsa: saliohjelma/{iida|matti}/sessions/{id}
     match /saliohjelma/{person}/sessions/{sid} {
