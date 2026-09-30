@@ -38,8 +38,13 @@ näkyvät molempien puhelimissa reaaliajassa. Ilman verkkoa tehdyt kirjaukset l�
 
 - Tietomalli: jokainen treeni on oma dokumenttinsa `saliohjelma/{iida|matti}/sessions/{id}`.
 - Kesken oleva treeni pysyy puhelimessa, kunnes se tallennetaan.
-- Pääsy: `firestore.rules` sallii lukemisen ja kirjoittamisen vain kahdelle tunnukselle (UID).
-  Sääntöjä muutetaan Firebase-konsolissa kohdassa *Firestore Database → Rules*.
+- Treenikaverit: kirjautunut käyttäjä näkee oletuksena vain oman profiilinsa. **Kutsu treenikaveri**
+  luo kertakäyttöisen, 7 päivää voimassa olevan kutsun (`invites/{koodi}`), joka lähetetään linkkinä.
+  Hyväksynnän jälkeen molemmat näkevät toistensa treenit (`profiles/{henkilö}.sharedWith`), ja
+  **Yhdessä**-näkymä näyttää yhteiset treenipäivät ja yhteisten liikkeiden kehityksen.
+  Jakamisen lopettaminen ei poista treenejä.
+- Pääsy: `firestore.rules` – kukin näkee aina omat treeninsä ja kaverin treenit vain hyväksytyn kutsun
+  kautta. Sääntöjä muutetaan Firebase-konsolissa kohdassa *Firestore Database → Rules*.
 - Firebase-kirjastot (versio 12.19.0) ovat kansiossa `firebase/`, jotta sovellus käynnistyy
   ilman verkkoa. `firebaseConfig` on koodissa tarkoituksella: se vain tunnistaa projektin,
   ja pääsy on rajattu kirjautumisella ja säännöillä.

@@ -23,7 +23,7 @@
 </style>
 </head>
 <body>
-<title>Saliohjelma 8.0</title>
+<title>Saliohjelma 9.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Josefin+Sans:wght@400;600;700&family=Poiret+One&display=swap">
@@ -138,6 +138,24 @@
     display:grid;place-items:center;color:var(--ink-2);flex:none;
   }
 
+  .pdot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px;vertical-align:baseline;flex:none}
+  .toglegend{display:flex;flex-wrap:wrap;gap:14px;padding:4px 6px 8px;font-size:13px;color:var(--ink-2)}
+  .toglegend b{color:var(--ink);font-weight:600;margin-left:2px}
+  .togbtn{margin-top:10px}
+  .togtable{padding:4px 0}
+  .togrow{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr) minmax(0,1fr);gap:8px;align-items:center;
+    width:100%;text-align:left;padding:9px 14px;border:0;border-bottom:1px solid var(--line);background:none;color:var(--ink);font:inherit;font-size:13px}
+  .togrow:last-child{border-bottom:0}
+  .togrow.on{background:var(--surface-2)}
+  .togrow span{min-width:0;overflow:hidden;text-overflow:ellipsis}
+  .togrow small{display:block;font-size:11px;color:var(--ink-3)}
+  .togrow.tghead{font-size:11px;color:var(--ink-3);font-weight:600;letter-spacing:.04em;cursor:default}
+  .togday{padding:12px 14px;border-bottom:1px solid var(--line)}
+  .togday:last-child{border-bottom:0}
+  .togday .det{font-size:12.5px;color:var(--ink-2);margin:4px 0 6px}
+  #togchart{position:relative}
+  .invcode{font-size:30px;font-weight:700;letter-spacing:.22em;text-align:center;padding:14px 8px;margin:10px 0 12px;
+    border:1.5px dashed var(--line-2);border-radius:12px;background:var(--surface-2);color:var(--ink)}
   .syncbtn{position:relative}
   .syncbtn .sdot{position:absolute;right:3px;top:3px;width:8px;height:8px;border-radius:50%;
     background:var(--ink-3);border:1.5px solid var(--surface)}
@@ -955,6 +973,7 @@
 <main id="view-history" class="wrap" hidden></main>
 <main id="view-calendar" class="wrap" hidden></main>
 <main id="view-guide" class="wrap" hidden></main>
+<main id="view-together" class="wrap" hidden></main>
 <div id="bottom"></div>
 <div id="overlay"></div>
 
@@ -1273,6 +1292,7 @@ const sync = {
   ready: {iida:false, matti:false},
   pending: {iida:{}, matti:{}},   /* id -> hash, lähetetty mutta ei vielä vahvistettu */
   unsub: [], pushTimer: {iida:null, matti:null},
+  me: null, partners: {}, shareTo: [], profileReady: false, sessUnsub: {},
   base: {iida:{}, matti:{}}
 };
 try{
@@ -1321,14 +1341,18 @@ function syncStart(){
         const prev = sync.user;
         sync.user = user;
         syncStop();
-        if(!user){ sync.status = 'signedout'; syncRender(); if(state.view === 'home' && !overlayEl.innerHTML) renderAll(); return; }
-        if(!prev && FB.members && FB.members[user.uid] && sync.justSignedIn){
-          state.person = FB.members[user.uid];
+        sync.me = user && FB.members ? (FB.members[user.uid] || null) : null;
+        if(!user){ sync.status = 'signedout'; syncRender(); refreshPersons(); if(state.view === 'home' && !overlayEl.innerHTML) renderAll(); return; }
+        if(!prev && sync.me && sync.justSignedIn){
+          state.person = sync.me;
           try{ localStorage.setItem('salikirja-person', state.person); }catch(e){}
         }
         sync.justSignedIn = false;
+        if(!sync.me){ sync.status = 'noprofile'; syncRender(); refreshPersons(); return; }
         syncListen();
+        refreshPersons();
         if(state.view === 'home' && !overlayEl.innerHTML) renderAll();
+        pendingInviteCheck();
       });
     })
     .catch(function(){
@@ -1341,28 +1365,255 @@ function syncStart(){
 function syncStop(){
   sync.unsub.forEach(function(u){ try{ u(); }catch(e){} });
   sync.unsub = [];
-  PERSONS.forEach(function(p){ sync.ready[p] = false; sync.pending[p] = {}; });
+  PERSONS.forEach(function(p){ stopSessions(p); sync.ready[p] = false; sync.pending[p] = {}; });
+  sync.partners = {};
+  sync.shareTo = [];
+  sync.profileReady = false;
+}
+
+/* ---- profiilit ja treenikaverit ----
+   profiles/{henkilö} = {owner, person, sharedWith:[uid, ...]}.
+   Näet oman profiilisi ja ne, joiden sharedWith sisältää sinut.
+   Piilossa olevan profiilin tiedot pysyvät puhelimessa ja palvelimella koskemattomina. */
+function visiblePersons(){
+  if(!sync.enabled || !sync.user || !sync.me) return PERSONS.slice();
+  const out = [sync.me];
+  PERSONS.forEach(function(p){ if(p !== sync.me && sync.partners[p]) out.push(p); });
+  return out;
+}
+function refreshPersons(){
+  const vis = visiblePersons();
+  const seg = document.getElementById('personseg');
+  if(seg){
+    seg.innerHTML = vis.map(function(p){
+      return '<button type="button" data-person="' + p + '" aria-pressed="' + (p === state.person) + '">' + esc(personName(p)) + '</button>';
+    }).join('');
+    seg.hidden = vis.length < 2;
+  }
+  if(vis.indexOf(state.person) < 0){
+    state.person = vis[0];
+    try{ localStorage.setItem('salikirja-person', state.person); }catch(e){}
+    progDom = null;
+    if(state.view === 'program') setView('home'); else renderAll();
+  }
+  /* synkronoi vain näkyvät profiilit */
+  PERSONS.forEach(function(p){
+    if(vis.indexOf(p) >= 0 && sync.user && sync.me) startSessions(p);
+    else if(sync.sessUnsub && sync.sessUnsub[p]) stopSessions(p);
+  });
 }
 function syncListen(){
   const F = sync.api.F;
+  const uid = sync.user.uid;
   sync.status = 'connecting'; syncRender();
-  PERSONS.forEach(function(p){
-    const u = F.onSnapshot(F.collection(sync.fs, 'saliohjelma', p, 'sessions'), {includeMetadataChanges:true},
-      function(snap){
-        if(snap.metadata.fromCache){
-          if(!sync.ready.iida || !sync.ready.matti){ sync.status = navigator.onLine === false ? 'offline' : 'connecting'; syncRender(); }
-          else if(navigator.onLine === false){ sync.status = 'offline'; syncRender(); }
-          return;
-        }
-        reconcile(p, snap);
-      },
-      function(err){
+  /* viimeksi tunnetut treenikaverit, jotta ne näkyvät myös ilman verkkoa */
+  try{
+    const c = JSON.parse(localStorage.getItem('salikirja-partners-' + uid) || 'null');
+    if(c && typeof c === 'object') sync.partners = c;
+  }catch(e){}
+  const myRef = F.doc(sync.fs, 'profiles', sync.me);
+  /* oma profiili: luodaan ensimmäisellä kerralla (ei koske treenidataan) */
+  F.getDoc(myRef).then(function(snap){
+    if(snap.exists()) return null;
+    return F.setDoc(myRef, {owner:uid, person:sync.me, sharedWith:[], created:F.Timestamp.now()});
+  }).catch(function(){ /* ilman verkkoa – yritetään seuraavalla kerralla */ }).then(function(){
+    if(!sync.user || sync.user.uid !== uid) return;
+    sync.unsub.push(F.onSnapshot(myRef, function(snap){
+      const d = snap.exists() ? snap.data() : {};
+      sync.shareTo = Array.isArray(d.sharedWith) ? d.sharedWith.slice() : [];
+      if(state.view === 'guide' || document.getElementById('partner-list')) syncRender();
+    }, function(){}));
+    const q = F.query(F.collection(sync.fs, 'profiles'), F.where('sharedWith', 'array-contains', uid));
+    sync.unsub.push(F.onSnapshot(q, function(snap){
+      if(snap.metadata.fromCache && !sync.profileReady) return;
+      const partners = {};
+      snap.docs.forEach(function(d){
+        const x = d.data();
+        if(PERSONS.indexOf(d.id) >= 0 && d.id !== sync.me) partners[d.id] = x.owner || '';
+      });
+      const changed = JSON.stringify(partners) !== JSON.stringify(sync.partners || {}) || !sync.profileReady;
+      sync.partners = partners;
+      sync.profileReady = true;
+      try{ localStorage.setItem('salikirja-partners-' + uid, JSON.stringify(partners)); }catch(e){}
+      refreshPersons();
+      if(changed){ renderAll(); }
+      syncRender();
+    }, function(err){
+      sync.status = (err && err.code === 'permission-denied') ? 'denied' : 'error';
+      sync.error = err && (err.code || err.message) || '';
+      /* ilman profiilitietoja synkronoidaan silti oma data */
+      sync.profileReady = true; refreshPersons(); syncRender();
+    }));
+  });
+}
+function startSessions(p){
+  const F = sync.api.F;
+  if(!sync.sessUnsub) sync.sessUnsub = {};
+  if(sync.sessUnsub[p]) return;
+  sync.sessUnsub[p] = F.onSnapshot(F.collection(sync.fs, 'saliohjelma', p, 'sessions'), {includeMetadataChanges:true},
+    function(snap){
+      if(snap.metadata.fromCache){
+        if(navigator.onLine === false){ sync.status = 'offline'; syncRender(); }
+        return;
+      }
+      reconcile(p, snap);
+    },
+    function(err){
+      /* esim. jakaminen lopetettiin: paikallinen kopio jää koskemattomaksi */
+      stopSessions(p);
+      if(p === sync.me){
         sync.status = (err && err.code === 'permission-denied') ? 'denied' : 'error';
         sync.error = err && (err.code || err.message) || '';
-        syncRender();
-      });
-    sync.unsub.push(u);
+      }
+      syncRender();
+    });
+}
+function stopSessions(p){
+  if(sync.sessUnsub && sync.sessUnsub[p]){ try{ sync.sessUnsub[p](); }catch(e){} delete sync.sessUnsub[p]; }
+  sync.ready[p] = false;
+}
+function allReady(){
+  return visiblePersons().every(function(p){ return sync.ready[p]; });
+}
+
+/* ---- kutsut ---- */
+const INVITE_CHARS = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+function newInviteCode(){
+  const a = new Uint32Array(6);
+  (window.crypto || window.msCrypto).getRandomValues(a);
+  let s = '';
+  for(let i = 0; i < 6; i++) s += INVITE_CHARS.charAt(a[i] % INVITE_CHARS.length);
+  return s;
+}
+function inviteLink(code){
+  return location.origin + location.pathname + '?kutsu=' + code;
+}
+function createInvite(tries){
+  const F = sync.api.F;
+  const code = newInviteCode();
+  const now = Date.now();
+  return F.setDoc(F.doc(sync.fs, 'invites', code), {
+    from: sync.user.uid, person: sync.me, name: personName(sync.me),
+    created: F.Timestamp.fromMillis(now), expires: F.Timestamp.fromMillis(now + 7 * 864e5), acceptedBy: null
+  }).then(function(){ return code; }, function(err){
+    if((tries || 0) < 3) return createInvite((tries || 0) + 1);   /* koodi oli jo käytössä */
+    throw err;
   });
+}
+function showInvite(){
+  if(!sync.user || !sync.me){ showSignIn('Kirjaudu ensin, niin voit kutsua treenikaverin.'); return; }
+  overlayEl.innerHTML = '<div class="ov"><div class="sheet" role="dialog" aria-label="Kutsu treenikaveri">' +
+    '<h3>👥 Kutsu treenikaveri</h3><p>Luodaan kutsukoodi…</p>' +
+    '<div class="sticky-cta"><button class="btn primary" data-close="1">Sulje</button></div></div></div>';
+  createInvite(0).then(function(code){
+    const link = inviteLink(code);
+    const msg = personName(sync.me) + ' kutsuu sinut treenikaveriksi Saliohjelmaan 💪\n' +
+      'Avaa linkki ja kirjaudu: ' + link + '\n' +
+      'Tai kirjoita sovelluksessa kutsukoodi: ' + code + ' (Ohjelman ohjeet → Synkronointi → Liity kutsukoodilla)';
+    waMessage = msg;
+    overlayEl.innerHTML = '<div class="ov"><div class="sheet" role="dialog" aria-label="Kutsu treenikaveri">' +
+      '<h3>👥 Kutsu treenikaveri</h3>' +
+      '<p>Kun kaverisi hyväksyy kutsun, näette toistenne treenit ja yhteisen kehityksen. Kutsu on voimassa 7 päivää ja käy kerran.</p>' +
+      '<div class="invcode mono" aria-label="Kutsukoodi">' + code + '</div>' +
+      '<div class="bkopts">' +
+        '<a class="btn accent" href="' + esc('https://wa.me/?text=' + encodeURIComponent(msg)) + '" target="_blank" rel="noopener">💬 Lähetä WhatsAppilla</a>' +
+        '<button type="button" class="btn ghost" data-wacopy="1">📋 Kopioi kutsu</button>' +
+      '</div>' +
+      '<p class="note" id="bk-msg" hidden></p>' +
+      '<textarea id="wa-text" class="pick" rows="3" readonly aria-label="Kutsuviesti" style="font-size:12px;margin-top:10px">' + esc(msg) + '</textarea>' +
+      '<div class="sticky-cta"><button class="btn primary" data-close="1">Valmis</button></div></div></div>';
+  }, function(err){
+    overlayEl.innerHTML = '<div class="ov"><div class="sheet" role="dialog" aria-label="Kutsu treenikaveri">' +
+      '<h3>Kutsua ei voitu luoda</h3><p>' + (err && err.code === 'permission-denied'
+        ? 'Palvelimen säännöt eivät vielä salli kutsuja. Päivitä Firestoren säännöt (ohje README-tiedostossa).'
+        : 'Tarkista verkkoyhteys ja yritä uudelleen.') + '</p>' +
+      '<div class="sticky-cta"><button class="btn primary" data-close="1">Sulje</button></div></div></div>';
+  });
+}
+function pendingInviteCheck(){
+  let code = '';
+  try{ code = sessionStorage.getItem('salikirja-invite') || ''; }catch(e){}
+  if(code && sync.user && sync.me) showAcceptInvite(code);
+}
+function showAcceptInvite(code){
+  code = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, '');
+  if(!sync.user){ showSignIn('Kirjaudu, niin voit hyväksyä treenikaverikutsun.'); return; }
+  const F = sync.api.F;
+  const done = function(title, text){
+    try{ sessionStorage.removeItem('salikirja-invite'); }catch(e){}
+    overlayEl.innerHTML = '<div class="ov"><div class="sheet" role="dialog" aria-label="Kutsu">' +
+      '<h3>' + esc(title) + '</h3><p>' + esc(text) + '</p>' +
+      '<div class="sticky-cta"><button class="btn primary" data-close="1">Valmis</button></div></div></div>';
+  };
+  if(code.length !== 6){ done('Kutsukoodi ei kelpaa', 'Koodissa on 6 merkkiä, esim. K7M2QX.'); return; }
+  F.getDoc(F.doc(sync.fs, 'invites', code)).then(function(snap){
+    if(!snap.exists()){ done('Kutsua ei löytynyt', 'Tarkista koodi. Kutsu voi myös olla jo poistettu.'); return; }
+    const inv = snap.data();
+    if(inv.from === sync.user.uid){ done('Tämä on oma kutsusi', 'Lähetä koodi treenikaverillesi – hän hyväksyy sen omassa sovelluksessaan.'); return; }
+    if(inv.acceptedBy){ done(inv.acceptedBy === sync.user.uid ? 'Kutsu on jo hyväksytty' : 'Kutsu on jo käytetty',
+      inv.acceptedBy === sync.user.uid ? 'Olette jo treenikavereita.' : 'Pyydä uusi kutsu.'); return; }
+    if(inv.expires && inv.expires.toMillis() < Date.now()){ done('Kutsu on vanhentunut', 'Pyydä uusi kutsu – kutsu on voimassa 7 päivää.'); return; }
+    overlayEl.innerHTML = '<div class="ov"><div class="sheet" role="dialog" aria-label="Hyväksy kutsu">' +
+      '<h3>👥 ' + esc(inv.name || 'Treenikaveri') + ' kutsuu sinut</h3>' +
+      '<p>Hyväksymällä näette toistenne treenit ja yhteisen kehityksen. Jakamisen voi lopettaa milloin tahansa. Mitään treenejä ei poisteta.</p>' +
+      '<div class="bkopts"><button type="button" class="btn accent" data-acceptinv="' + code + '">Hyväksy kutsu</button></div>' +
+      '<p class="note" id="bk-msg" hidden></p>' +
+      '<div class="sticky-cta"><button class="btn primary" data-close="1">Ei nyt</button></div></div></div>';
+  }, function(err){
+    done('Kutsua ei voitu tarkistaa', err && err.code === 'permission-denied'
+      ? 'Palvelimen säännöt eivät vielä salli kutsuja.' : 'Tarkista verkkoyhteys ja yritä uudelleen.');
+  });
+}
+function acceptInvite(code){
+  const F = sync.api.F;
+  const uid = sync.user.uid;
+  const invRef = F.doc(sync.fs, 'invites', code);
+  F.getDoc(invRef).then(function(snap){
+    const inv = snap.data();
+    const b = F.writeBatch(sync.fs);
+    b.update(invRef, {acceptedBy:uid, acceptedPerson:sync.me, acceptedAt:F.Timestamp.now()});
+    b.update(F.doc(sync.fs, 'profiles', inv.person), {sharedWith:F.arrayUnion(uid), joinedVia:code});
+    b.set(F.doc(sync.fs, 'profiles', sync.me), {owner:uid, person:sync.me, sharedWith:F.arrayUnion(inv.from)}, {merge:true});
+    return b.commit().then(function(){ return inv; });
+  }).then(function(inv){
+    try{ sessionStorage.removeItem('salikirja-invite'); }catch(e){}
+    overlayEl.innerHTML = '<div class="ov"><div class="sheet" role="dialog" aria-label="Kutsu hyväksytty">' +
+      '<h3>Olette nyt treenikavereita 💪</h3><p>' + esc(inv.name || 'Kaverisi') + ' näkyy yläpalkin valinnassa, ja yhteinen kehitys löytyy etusivun Yhdessä-näkymästä.</p>' +
+      '<div class="sticky-cta"><button class="btn primary" data-close="1">Valmis</button></div></div></div>';
+  }, function(err){
+    bkNotice('Hyväksyminen ei onnistunut (' + (err && err.code || 'virhe') + '). Kutsu voi olla vanhentunut tai jo käytetty.', true);
+  });
+}
+function removePartner(p){
+  const F = sync.api.F;
+  const uid = sync.user.uid;
+  const partnerUid = sync.partners[p] || '';
+  const b = F.writeBatch(sync.fs);
+  if(partnerUid) b.update(F.doc(sync.fs, 'profiles', sync.me), {sharedWith:F.arrayRemove(partnerUid)});
+  b.update(F.doc(sync.fs, 'profiles', p), {sharedWith:F.arrayRemove(uid)});
+  return b.commit();
+}
+function partnerListHtml(){
+  if(!sync.user || !sync.me) return '';
+  const ps = visiblePersons().filter(function(p){ return p !== sync.me; });
+  let h = '<div id="partner-list"><p class="eyebrow" style="margin:14px 0 6px">Treenikaverit</p>';
+  if(!ps.length) h += '<p class="muted" style="font-size:12.5px;margin:0 0 8px">Ei vielä treenikavereita. Kutsu kaveri, niin näette toistenne treenit ja yhteisen kehityksen.</p>';
+  ps.forEach(function(p){
+    h += '<div class="row spread" style="padding:6px 0;border-bottom:1px solid var(--line)"><b>' + esc(personName(p)) + '</b>' +
+      '<button type="button" class="minibtn" data-unshare="' + p + '">Lopeta jakaminen</button></div>';
+  });
+  h += '<div class="pickrow" style="margin-top:10px"><button type="button" class="btn accent" data-invite="1">👥 Kutsu treenikaveri</button></div>' +
+    '<div class="row" style="gap:8px;margin-top:10px"><input class="pick" id="join-code" maxlength="6" placeholder="Kutsukoodi" ' +
+      'autocapitalize="characters" autocomplete="off" style="flex:1;text-transform:uppercase;letter-spacing:.12em">' +
+      '<button type="button" class="btn ghost" data-joincode="1">Liity</button></div></div>';
+  return h;
+}
+function showUnshare(p){
+  overlayEl.innerHTML = '<div class="ov"><div class="sheet" role="dialog" aria-label="Lopeta jakaminen">' +
+    '<h3>Lopetetaanko jakaminen?</h3>' +
+    '<p>' + esc(personName(p)) + ' ei enää näe sinun treenejäsi, etkä sinä hänen. Kummankaan treenejä ei poisteta – ne säilyvät omistajallaan, ja jakamisen voi aloittaa uudelleen uudella kutsulla.</p>' +
+    '<div class="row"><button class="btn ghost" data-close="1" style="flex:1">Peruuta</button>' +
+    '<button class="btn primary" data-unshareok="' + p + '" style="flex:1">Lopeta jakaminen</button></div></div></div>';
 }
 
 /* palvelimen ja paikallisen tilan yhdistäminen */
@@ -1406,8 +1657,7 @@ function reconcile(p, snap){
   writes.forEach(function(l){ pushOne(p, l); });
   dels.forEach(function(id){ delOne(p, id); });
   const anyPending = Object.keys(pend).length || writes.length || dels.length;
-  sync.status = (navigator.onLine === false) ? 'offline' : (anyPending ? 'connecting' : 'synced');
-  if(sync.ready.iida && sync.ready.matti && !anyPending) sync.status = 'synced';
+  sync.status = (navigator.onLine === false) ? 'offline' : ((anyPending || !allReady()) ? 'connecting' : 'synced');
   if(before !== after) syncRenderData(); else syncRender();
 }
 function pushOne(p, l){
@@ -1470,6 +1720,8 @@ function syncRender(){
   }
   const sh = document.getElementById('sync-sheet-status');
   if(sh) sh.textContent = syncLabel();
+  const pl = document.getElementById('partner-list');
+  if(pl && state.view !== 'guide'){ const tmp = document.createElement('div'); tmp.innerHTML = partnerListHtml(); if(tmp.firstChild) pl.replaceWith(tmp.firstChild); }
 }
 function syncRenderData(){
   /* data muuttui toiselta laitteelta: piirretään uudelleen, mutta ei kesken treenin kirjausta */
@@ -1485,7 +1737,8 @@ function syncLabel(){
     case 'connecting': return 'Synkronoidaan…';
     case 'synced': return 'Synkronoitu' + (sync.user && sync.user.email ? ' · ' + sync.user.email : '');
     case 'offline': return 'Ei yhteyttä – muutokset lähetetään, kun yhteys palaa';
-    case 'denied': return 'Tällä tunnuksella ei ole pääsyä yhteisiin treeneihin';
+    case 'denied': return 'Tällä tunnuksella ei ole pääsyä treeneihin';
+    case 'noprofile': return 'Tälle tunnukselle ei ole omaa ohjelmaa';
     case 'error': return 'Synkronointivirhe' + (sync.error ? ' (' + sync.error + ')' : '');
     default: return 'Ei käytössä';
   }
@@ -1505,7 +1758,8 @@ function syncCardHtml(){
   if(sync.user){
     h += '<p class="muted" style="font-size:12.5px;margin:0 0 10px">Valmiit treenit tallentuvat palvelimelle ja näkyvät molempien puhelimissa. ' +
       'Kesken oleva treeni pysyy tässä puhelimessa, kunnes se tallennetaan.</p>' +
-      '<div class="pickrow"><button type="button" class="btn ghost" data-signout="1">Kirjaudu ulos</button></div>';
+      partnerListHtml() +
+      '<div class="pickrow" style="margin-top:14px"><button type="button" class="btn ghost" data-signout="1">Kirjaudu ulos</button></div>';
   }else if(sync.status !== 'loading'){
     h += '<div class="pickrow"><button type="button" class="btn accent" data-signin="1">Kirjaudu</button></div>';
   }
@@ -1518,7 +1772,8 @@ function showSyncSheet(){
     '<p id="sync-sheet-status">' + esc(syncLabel()) + '</p>' +
     '<p class="muted" style="font-size:13px">Valmiit treenit tallentuvat palvelimelle ja näkyvät molempien puhelimissa. ' +
     'Ilman nettiä kirjaukset säilyvät puhelimessa ja lähtevät, kun yhteys palaa. Kesken oleva treeni pysyy tässä puhelimessa, kunnes se tallennetaan.</p>' +
-    '<div class="bkopts"><button type="button" class="btn ghost" data-signout="1">Kirjaudu ulos</button>' +
+    partnerListHtml() +
+    '<div class="bkopts" style="margin-top:14px"><button type="button" class="btn ghost" data-signout="1">Kirjaudu ulos</button>' +
     '<p class="bkhint">Uloskirjautuminen ei poista treenejä tästä puhelimesta eikä palvelimelta.</p></div>' +
     '<div class="sticky-cta"><button class="btn primary" data-close="1">Valmis</button></div></div></div>';
 }
@@ -1547,6 +1802,7 @@ function showSignIn(msg){
     sync.api.U.signInWithEmailAndPassword(sync.auth, email, pass).then(function(){
       overlayEl.innerHTML = '';
       renderAll(); syncRender();
+      setTimeout(pendingInviteCheck, 300);
     }, function(err){
       sync.justSignedIn = false;
       btn.disabled = false; btn.textContent = 'Kirjaudu';
@@ -1996,7 +2252,8 @@ const views = {
   program: document.getElementById('view-program'),
   history: document.getElementById('view-history'),
   calendar: document.getElementById('view-calendar'),
-  guide: document.getElementById('view-guide')
+  guide: document.getElementById('view-guide'),
+  together: document.getElementById('view-together')
 };
 const bottomEl = document.getElementById('bottom');
 const overlayEl = document.getElementById('overlay');
@@ -2020,7 +2277,281 @@ function renderAll(){
   else if(state.view === 'history') renderHistory();
   else if(state.view === 'calendar') renderCalendar();
   else if(state.view === 'guide') renderGuide();
+  else if(state.view === 'together') renderTogether();
   renderBottom();
+}
+
+/* ---------------- YHDESSÄ ----------------
+   Kahden treenikaverin yhteiset treenipäivät ja yhteisten liikkeiden kehitys.
+   Kehitys = paras sarja arvioituna maksimina (paino × (1 + toistot / 30)),
+   ilmoitettuna prosentteina omasta ensimmäisestä kirjauksesta. Näin eri
+   kuormilla treenaavien kehitys on samalla asteikolla. */
+const PAIR_COLORS = {light:['#2a78d6', '#eb6834'], dark:['#3987e5', '#d95926']};
+function pairColors(pair){
+  let dark = false;
+  try{
+    const c = getComputedStyle(document.body).getPropertyValue('--surface').trim() ||
+      getComputedStyle(document.body).backgroundColor;
+    const m = c.match(/^#([0-9a-f]{6})$/i);
+    let r, g, b;
+    if(m){ r = parseInt(m[1].slice(0,2),16); g = parseInt(m[1].slice(2,4),16); b = parseInt(m[1].slice(4,6),16); }
+    else { const n = c.match(/\d+(\.\d+)?/g) || [255,255,255]; r = +n[0]; g = +n[1]; b = +n[2]; }
+    dark = (0.2126*r + 0.7152*g + 0.0722*b) < 128;
+  }catch(e){}
+  const set = dark ? PAIR_COLORS.dark : PAIR_COLORS.light;
+  /* väri seuraa henkilöä, ei järjestystä */
+  const out = {};
+  pair.forEach(function(p){ out[p] = set[PERSONS.indexOf(p) === 1 ? 0 : 1]; });
+  return out;
+}
+function togetherPair(){
+  const v = visiblePersons();
+  return v.length >= 2 ? [v[0], v[1]] : null;
+}
+function exKeysOf(p){
+  const out = [];
+  progsFor(p).forEach(function(pr){ pr.ex.forEach(function(e){ if(out.indexOf(e.key) < 0) out.push(e.key); }); });
+  return out;
+}
+function sharedKeys2(a, b){
+  const kb = exKeysOf(b);
+  return exKeysOf(a).filter(function(k){ return kb.indexOf(k) >= 0; });
+}
+function exNameShort(key){
+  let n = key;
+  PERSONS.some(function(p){ return progsFor(p).some(function(pr){ return pr.ex.some(function(e){ if(e.key === key){ n = e.name; return true; } return false; }); }); });
+  return String(n).split(/ tai |,| \/ /)[0].trim();
+}
+function est1rm(kg, reps){ return kg > 0 ? kg * (1 + reps / 30) : reps; }
+function exPoints(p, key){
+  const pts = [];
+  strengthSessions(p).slice().reverse().forEach(function(s){
+    const arr = s.entries && s.entries[key];
+    if(!arr) return;
+    let best = null;
+    arr.forEach(function(x){
+      const kg = num(x.kg), reps = num(x.reps);
+      if(reps <= 0) return;
+      const v = est1rm(kg, reps);
+      if(!best || v > best.v) best = {kg:kg, reps:reps, v:v};
+    });
+    if(best) pts.push({end:s.end, t:new Date(s.end).getTime(), pid:s.pid, kg:best.kg, reps:best.reps, v:best.v});
+  });
+  pts.forEach(function(q){ q.pct = pts[0].v > 0 ? (q.v / pts[0].v - 1) * 100 : 0; });
+  return pts;
+}
+function pctText(v){
+  const r = Math.round(v);
+  return (r > 0 ? '+' : r < 0 ? '−' : '±') + Math.abs(r) + ' %';
+}
+function gymDaysMap(p, fromMs){
+  const m = {};
+  strengthSessions(p).forEach(function(s){
+    if(new Date(s.end).getTime() < fromMs) return;
+    const k = isoDay(new Date(s.end));
+    (m[k] = m[k] || []).push(s);
+  });
+  return m;
+}
+
+function renderTogether(){
+  const pair = togetherPair();
+  let h = '<div class="phead"><button class="back" type="button" data-view="home">← Alkuvalikko</button><h1>Yhdessä</h1>';
+  if(!pair){
+    h += '<p class="muted" style="font-size:13.5px;margin:6px 0 0">Yhteinen näkymä avautuu, kun sinulla on treenikaveri.</p></div>' +
+      '<div class="card" style="padding:16px"><p style="margin:0 0 12px">Kutsu treenikaveri, niin näette toistenne treenit ja yhteisen kehityksen.</p>' +
+      '<button type="button" class="btn accent" data-invite="1">👥 Kutsu treenikaveri</button></div>';
+    views.together.innerHTML = h;
+    return;
+  }
+  const A = pair[0], B = pair[1];
+  const col = pairColors(pair);
+  const dot = function(p){ return '<i class="pdot" style="background:' + col[p] + '"></i>'; };
+  h += '<p class="muted" style="font-size:13.5px;margin:6px 0 0">' + dot(A) + esc(personName(A)) + ' &amp; ' + dot(B) + esc(personName(B)) + '</p></div>';
+
+  /* luvut: viimeiset 30 päivää */
+  const from30 = Date.now() - 30 * 864e5;
+  const dA = gymDaysMap(A, from30), dB = gymDaysMap(B, from30);
+  const nA = Object.keys(dA).reduce(function(t, k){ return t + dA[k].length; }, 0);
+  const nB = Object.keys(dB).reduce(function(t, k){ return t + dB[k].length; }, 0);
+  const same30 = Object.keys(dA).filter(function(k){ return dB[k]; }).length;
+  h += '<p class="eyebrow" style="margin:16px 0 8px">Viimeiset 30 päivää</p>' +
+    '<div class="stats tight">' +
+    '<div class="stat"><b class="mono">' + nA + '</b><span>' + dot(A) + esc(personName(A)) + ' · salitreeniä</span></div>' +
+    '<div class="stat"><b class="mono">' + nB + '</b><span>' + dot(B) + esc(personName(B)) + ' · salitreeniä</span></div>' +
+    '<div class="stat"><b class="mono">' + same30 + '</b><span>päivää samana päivänä</span></div>' +
+    '</div>';
+
+  /* kehitys yhteisissä liikkeissä */
+  const keys = sharedKeys2(A, B).filter(function(k){ return exPoints(A, k).length || exPoints(B, k).length; });
+  h += '<p class="eyebrow" style="margin:18px 0 8px">Yhteisten liikkeiden kehitys</p>';
+  if(!keys.length){
+    h += '<div class="card" style="padding:16px"><p class="muted" style="margin:0">Kehitys piirtyy, kun yhteisiä liikkeitä on kirjattu.</p></div>';
+  }else{
+    if(!state.togKey || keys.indexOf(state.togKey) < 0){
+      /* oletuksena liike, jossa on eniten kummankin kirjauksia */
+      state.togKey = keys.slice().sort(function(x, y){
+        return (Math.min(exPoints(A, y).length, exPoints(B, y).length) - Math.min(exPoints(A, x).length, exPoints(B, x).length));
+      })[0];
+    }
+    h += '<select class="pick" id="togpick" aria-label="Valitse liike">' + keys.map(function(k){
+      return '<option value="' + k + '"' + (k === state.togKey ? ' selected' : '') + '>' + esc(exNameShort(k)) + '</option>';
+    }).join('') + '</select>';
+    h += '<div class="card chartbox" id="togchart" style="margin-top:10px"></div>';
+    h += '<p class="muted" style="font-size:11.5px;margin:6px 2px 0;line-height:1.4">Muutos omaan ensimmäiseen kirjaukseen. Mittarina paras sarja ' +
+      'arvioituna maksimina (paino × (1 + toistot/30)), joten sekä painon että toistojen nousu näkyy. Oman painon liikkeissä mittarina toistot.</p>';
+
+    /* taulukko kaikista yhteisistä liikkeistä */
+    h += '<div class="card togtable" style="margin-top:12px"><div class="togrow tghead"><span>Liike</span>' +
+      '<span>' + dot(A) + esc(personName(A)) + '</span><span>' + dot(B) + esc(personName(B)) + '</span></div>';
+    keys.forEach(function(k){
+      const cell = function(p){
+        const pts = exPoints(p, k);
+        if(!pts.length) return '<span class="muted">–</span>';
+        const l = pts[pts.length - 1];
+        return '<span><b class="mono">' + (pts.length > 1 ? pctText(l.pct) : '1 kirjaus') + '</b>' +
+          '<small class="mono">' + (l.kg > 0 ? fmtKg(l.kg) + ' kg × ' : '') + l.reps + '</small></span>';
+      };
+      h += '<button type="button" class="togrow' + (k === state.togKey ? ' on' : '') + '" data-togkey="' + k + '">' +
+        '<span>' + esc(exNameShort(k)) + '</span>' + cell(A) + cell(B) + '</button>';
+    });
+    h += '</div>';
+  }
+
+  /* yhteiset treenipäivät */
+  const all = gymDaysMap(A, 0), allB = gymDaysMap(B, 0);
+  const common = Object.keys(all).filter(function(k){ return allB[k]; }).sort().reverse();
+  h += '<p class="eyebrow" style="margin:18px 0 8px">Yhteiset treenipäivät' + (common.length ? ' · ' + common.length : '') + '</p>';
+  if(!common.length){
+    h += '<div class="card" style="padding:16px"><p class="muted" style="margin:0">Ei vielä päiviä, jolloin molemmat olisivat treenanneet. Ne ilmestyvät tähän.</p></div>';
+  }else{
+    h += '<div class="card">';
+    common.slice(0, 12).forEach(function(k){
+      /* saman päivän treenit yhdistetään (esim. kaksi treeniä samana päivänä) */
+      const merge = function(list){
+        const e = {};
+        list.forEach(function(x){ Object.keys(x.entries || {}).forEach(function(key){ if(!e[key]) e[key] = x.entries[key]; }); });
+        return e;
+      };
+      const names = function(list){ return list.map(function(x){ const pr = progById(x.pid); return pr ? pr.name : ''; }).join(' + '); };
+      const sa = {entries:merge(all[k])}, sb = {entries:merge(allB[k])};
+      const pa = {name:names(all[k])}, pb = {name:names(allB[k])};
+      const shared = sharedKeys2(A, B).filter(function(key){ return sa.entries[key] && sb.entries[key]; });
+      const d = new Date(k + 'T12:00:00');
+      h += '<div class="togday"><div class="row spread" style="gap:8px"><b>' + DAYNAMES[d.getDay()].slice(0,2).replace(/^./, function(c){ return c.toUpperCase(); }) +
+        ' ' + d.getDate() + '.' + (d.getMonth()+1) + '.' + d.getFullYear() + '</b>' +
+        '<span class="muted" style="font-size:12px">' + shared.length + ' yhteistä liikettä</span></div>' +
+        '<p class="det">' + dot(A) + esc(personName(A)) + ': ' + esc(pa ? pa.name : '') + ' &nbsp;·&nbsp; ' +
+        dot(B) + esc(personName(B)) + ': ' + esc(pb ? pb.name : '') + '</p>';
+      shared.slice(0, 4).forEach(function(key){
+        const ta = topOf(sa.entries[key]), tb = topOf(sb.entries[key]);
+        h += '<div class="sumrow"><span>' + esc(exNameShort(key)) + '</span><span class="mono" style="white-space:nowrap">' +
+          (ta ? (num(ta.kg) > 0 ? fmtKg(num(ta.kg)) + '×' : '') + num(ta.reps) : '–') + ' / ' +
+          (tb ? (num(tb.kg) > 0 ? fmtKg(num(tb.kg)) + '×' : '') + num(tb.reps) : '–') + '</span></div>';
+      });
+      h += '</div>';
+    });
+    h += '</div>';
+  }
+  views.together.innerHTML = h;
+  if(document.getElementById('togchart')) drawTogetherChart(pair, col);
+}
+
+function drawTogetherChart(pair, col){
+  const box = document.getElementById('togchart');
+  const key = state.togKey;
+  const series = pair.map(function(p){ return {p:p, pts:exPoints(p, key)}; });
+  const cs = getComputedStyle(document.body);
+  const ink3 = cs.getPropertyValue('--ink-3').trim() || '#78828F';
+  const ink2 = cs.getPropertyValue('--ink-2').trim() || '#4B5563';
+  const line = cs.getPropertyValue('--line').trim() || '#D9DFE8';
+  const surf = cs.getPropertyValue('--surface').trim() || '#fff';
+  const w = Math.max(260, box.clientWidth - 12);
+  const h = 200, padL = 42, padR = 64, padT = 16, padB = 26;
+  const allPts = series.reduce(function(a, s){ return a.concat(s.pts); }, []);
+  if(!allPts.length){ box.innerHTML = '<p class="muted" style="margin:6px">Ei kirjauksia tästä liikkeestä.</p>'; return; }
+  let t0 = Math.min.apply(null, allPts.map(function(q){ return q.t; }));
+  let t1 = Math.max.apply(null, allPts.map(function(q){ return q.t; }));
+  if(t0 === t1){ t0 -= 864e5 * 3; t1 += 864e5 * 3; }
+  let lo = Math.min(0, Math.min.apply(null, allPts.map(function(q){ return q.pct; })));
+  let hi = Math.max(0, Math.max.apply(null, allPts.map(function(q){ return q.pct; })));
+  if(hi - lo < 10){ hi += (10 - (hi - lo)) / 2; lo -= (10 - (hi - lo)) / 2; if(lo > 0) lo = 0; }
+  const x = function(t){ return padL + (t - t0) / (t1 - t0) * (w - padL - padR); };
+  const y = function(v){ return padT + (1 - (v - lo) / (hi - lo)) * (h - padT - padB); };
+  let svg = '<svg width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + ' ' + h + '" role="img" aria-label="Kehitys prosentteina: ' +
+    esc(exNameShort(key)) + '">';
+  /* ruudukko: 0 % korostettuna */
+  const step = (hi - lo) > 40 ? 20 : (hi - lo) > 20 ? 10 : 5;
+  for(let v = Math.ceil(lo / step) * step; v <= hi; v += step){
+    svg += '<line x1="' + padL + '" y1="' + y(v).toFixed(1) + '" x2="' + (w - padR) + '" y2="' + y(v).toFixed(1) + '" stroke="' + line +
+      '" stroke-width="' + (v === 0 ? 1.5 : 1) + '"' + (v === 0 ? '' : ' stroke-dasharray="2 3"') + '/>';
+    svg += '<text x="' + (padL - 7) + '" y="' + (y(v) + 4).toFixed(1) + '" text-anchor="end" font-size="11" fill="' + ink3 +
+      '" font-family="IBM Plex Mono, monospace">' + (v > 0 ? '+' : '') + v + '%</text>';
+  }
+  const labels = [];
+  series.forEach(function(s){
+    const c = col[s.p];
+    if(s.pts.length > 1){
+      let d = '';
+      s.pts.forEach(function(q, i){ d += (i ? ' L' : 'M') + x(q.t).toFixed(1) + ' ' + y(q.pct).toFixed(1); });
+      svg += '<path d="' + d + '" fill="none" stroke="' + c + '" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+    }
+    s.pts.forEach(function(q, i){
+      const last = i === s.pts.length - 1;
+      svg += '<circle cx="' + x(q.t).toFixed(1) + '" cy="' + y(q.pct).toFixed(1) + '" r="' + (last ? 5 : 4) + '" fill="' + (last ? c : surf) +
+        '" stroke="' + (last ? surf : c) + '" stroke-width="2"/>';
+    });
+    if(s.pts.length){
+      const l = s.pts[s.pts.length - 1];
+      labels.push({y:y(l.pct), x:x(l.t), txt:personName(s.p) + ' ' + pctText(l.pct), c:c});
+    }
+  });
+  /* suorat nimilaput viivojen päihin, ei päällekkäin */
+  labels.sort(function(a, b){ return a.y - b.y; });
+  for(let i = 1; i < labels.length; i++) if(labels[i].y - labels[i-1].y < 14) labels[i].y = labels[i-1].y + 14;
+  labels.forEach(function(l){
+    svg += '<text x="' + (w - padR + 6) + '" y="' + (l.y + 4).toFixed(1) + '" font-size="11" font-weight="600" fill="' + ink2 +
+      '" font-family="IBM Plex Mono, monospace">' + esc(l.txt.split(' ')[0].slice(0, 7)) + '</text>';
+  });
+  svg += '<text x="' + padL + '" y="' + (h - 7) + '" font-size="11" fill="' + ink3 + '" font-family="IBM Plex Mono, monospace">' + fmtDate(new Date(t0)) + '</text>';
+  svg += '<text x="' + (w - padR) + '" y="' + (h - 7) + '" text-anchor="end" font-size="11" fill="' + ink3 + '" font-family="IBM Plex Mono, monospace">' + fmtDate(new Date(t1)) + '</text>';
+  svg += '<line id="tog-x" x1="0" y1="' + padT + '" x2="0" y2="' + (h - padB) + '" stroke="' + ink3 + '" stroke-width="1" visibility="hidden"/>';
+  svg += '</svg>';
+  /* selite: aina näkyvissä, identiteetti myös tekstinä */
+  let legend = '<div class="toglegend">';
+  series.forEach(function(s){
+    const l = s.pts[s.pts.length - 1];
+    legend += '<span><i class="pdot" style="background:' + col[s.p] + '"></i>' + esc(personName(s.p)) +
+      (l ? ' <b class="mono">' + (s.pts.length > 1 ? pctText(l.pct) : 'lähtötaso') + '</b>' : ' <span class="muted">ei kirjauksia</span>') + '</span>';
+  });
+  legend += '</div>';
+  box.innerHTML = legend + svg;
+  const tip = document.createElement('div');
+  tip.className = 'tt'; tip.hidden = true;
+  box.appendChild(tip);
+  const svgEl = box.querySelector('svg');
+  const xl = box.querySelector('#tog-x');
+  box.onpointermove = function(ev){
+    const r = svgEl.getBoundingClientRect();
+    const px = ev.clientX - r.left;
+    let best = null;
+    allPts.forEach(function(q){ const d = Math.abs(x(q.t) - px); if(!best || d < best.d) best = {d:d, t:q.t}; });
+    if(!best) return;
+    let html = '<b>' + fmtDate(new Date(best.t)) + '</b>';
+    series.forEach(function(s){
+      let near = null;
+      s.pts.forEach(function(q){ if(q.t <= best.t + 36e5 * 12 && (!near || q.t > near.t)) near = q; });
+      html += '<br><i class="pdot" style="background:' + col[s.p] + '"></i>' + esc(personName(s.p)) + ': ' +
+        (near ? '<b class="mono">' + (near.kg > 0 ? fmtKg(near.kg) + ' kg × ' : '') + near.reps + '</b> ' + pctText(near.pct) +
+          (near.t < best.t - 36e5 * 12 ? ' <span class="muted">(' + fmtDate(near.end) + ')</span>' : '') : '<span class="muted">–</span>');
+    });
+    tip.innerHTML = html; tip.hidden = false;
+    const tx = x(best.t);
+    xl.setAttribute('x1', tx); xl.setAttribute('x2', tx); xl.setAttribute('visibility', 'visible');
+    tip.style.left = Math.min(tx + 10, w - 170) + 'px';
+    tip.style.top = '36px';
+  };
+  box.onpointerleave = function(){ tip.hidden = true; xl.setAttribute('visibility', 'hidden'); };
 }
 
 /* ---------------- YLEISNÄKYMÄ ---------------- */
@@ -2121,6 +2652,18 @@ function renderHome(){
       '<span class="chev" aria-hidden="true">›</span></button>';
   }
   h += lastSessionButton(person);
+  if(togetherPair()){
+    const tp = togetherPair();
+    h += '<button type="button" class="lastbtn togbtn" data-view="together">' +
+      '<span style="min-width:0"><b>👥 Yhdessä · ' + esc(personName(tp[0])) + ' &amp; ' + esc(personName(tp[1])) + '</b>' +
+      '<small>Yhteiset treenipäivät ja yhteisten liikkeiden kehitys</small></span>' +
+      '<span class="chev" aria-hidden="true">›</span></button>';
+  }else if(sync.enabled && sync.user && sync.me && sync.profileReady){
+    h += '<button type="button" class="lastbtn togbtn" data-invite="1">' +
+      '<span style="min-width:0"><b>👥 Kutsu treenikaveri</b>' +
+      '<small>Näette toistenne treenit ja yhteisen kehityksen</small></span>' +
+      '<span class="chev" aria-hidden="true">›</span></button>';
+  }
 
   /* viikkorytmi */
   const awk = adaptiveWeek(person);
@@ -4981,10 +5524,11 @@ function aiCopy(btn){
    ============================================================ */
 
 document.addEventListener('click', function(ev){
-  const t = ev.target.closest('[data-person],[data-open],[data-view],[data-tab],[data-cardio],[data-finish],[data-close],[data-savecardio],[data-discard],[data-discard-ask],[data-setskin],[data-rest],[data-ckind],[data-cmin],[data-ckindfilter],[data-timer],[data-calmove],[data-calday],[data-editsets],[data-del],[data-delok],[data-backtoday],[data-addcardio],[data-addrest],[data-abort],[data-clearsets],[data-weekday],[data-active],[data-pickprog],[data-hidebar],[data-showbar],[data-export],[data-import],[data-importtext],[data-copybk],[data-bkselect],[data-signin],[data-signout],[data-resetpw],[data-syncsheet],[data-whatsapp],[data-wacopy],[data-washare],[data-importclip],[data-bkshare],[data-bkdl],[data-session],[data-replaceok],[data-ai],[data-airange],[data-aicopy],[data-aitxt],[data-aijson]');
+  const t = ev.target.closest('[data-person],[data-open],[data-view],[data-tab],[data-cardio],[data-finish],[data-close],[data-savecardio],[data-discard],[data-discard-ask],[data-setskin],[data-rest],[data-ckind],[data-cmin],[data-ckindfilter],[data-timer],[data-calmove],[data-calday],[data-editsets],[data-del],[data-delok],[data-backtoday],[data-addcardio],[data-addrest],[data-abort],[data-clearsets],[data-weekday],[data-active],[data-pickprog],[data-hidebar],[data-showbar],[data-export],[data-import],[data-importtext],[data-copybk],[data-bkselect],[data-signin],[data-signout],[data-togkey],[data-invite],[data-joincode],[data-acceptinv],[data-unshare],[data-unshareok],[data-resetpw],[data-syncsheet],[data-whatsapp],[data-wacopy],[data-washare],[data-importclip],[data-bkshare],[data-bkdl],[data-session],[data-replaceok],[data-ai],[data-airange],[data-aicopy],[data-aitxt],[data-aijson]');
   if(!t) return;
 
   if(t.dataset.person){
+    if(visiblePersons().indexOf(t.dataset.person) < 0) return;
     state.person = t.dataset.person;
     try{ localStorage.setItem('salikirja-person', state.person); }catch(e){}
     progDom = null;
@@ -5002,6 +5546,29 @@ document.addEventListener('click', function(ev){
   }
   if(t.dataset.whatsapp){ showWhatsApp(); return; }
   if(t.dataset.signin){ showSignIn(); return; }
+  if(t.dataset.togkey){ state.togKey = t.dataset.togkey; renderTogether(); const c = document.getElementById('togchart'); if(c) c.scrollIntoView({block:'center', behavior:'smooth'}); return; }
+  if(t.dataset.invite){ showInvite(); return; }
+  if(t.dataset.joincode){
+    const inp = document.getElementById('join-code');
+    showAcceptInvite(inp ? inp.value : '');
+    return;
+  }
+  if(t.dataset.acceptinv){ t.disabled = true; t.textContent = 'Hyväksytään…'; acceptInvite(t.dataset.acceptinv); return; }
+  if(t.dataset.unshare){ showUnshare(t.dataset.unshare); return; }
+  if(t.dataset.unshareok){
+    const p = t.dataset.unshareok;
+    t.disabled = true;
+    removePartner(p).then(function(){
+      overlayEl.innerHTML = '';
+      if(state.view === 'together') setView('home'); else renderAll();
+      syncRender();
+    }, function(err){
+      overlayEl.innerHTML = '<div class="ov"><div class="sheet" role="dialog" aria-label="Virhe"><h3>Jakamista ei voitu lopettaa</h3>' +
+        '<p>Tarkista verkkoyhteys ja yritä uudelleen. (' + esc(err && err.code || 'virhe') + ')</p>' +
+        '<div class="sticky-cta"><button class="btn primary" data-close="1">Sulje</button></div></div></div>';
+    });
+    return;
+  }
   if(t.dataset.syncsheet){ showSyncSheet(); return; }
   if(t.dataset.signout){
     if(sync.api && sync.auth){
@@ -5269,6 +5836,7 @@ document.addEventListener('input', function(ev){
 });
 
 document.addEventListener('change', function(ev){
+  if(ev.target.id === 'togpick'){ state.togKey = ev.target.value; renderTogether(); }
   if(ev.target.id === 'chartpick'){ state.chartKey = ev.target.value; drawChart(); }
   if(ev.target.id === 'progpick'){ progChartKey = ev.target.value; drawProgChart(); }
   const sw = ev.target.getAttribute && ev.target.getAttribute('data-swap');
@@ -5326,7 +5894,19 @@ window.addEventListener('resize', function(){
    7. KÄYNNISTYS
    ============================================================ */
 
+function captureInviteParam(){
+  try{
+    const u = new URL(location.href);
+    const c = u.searchParams.get('kutsu');
+    if(c){
+      sessionStorage.setItem('salikirja-invite', c.toUpperCase().replace(/[^A-Z0-9]/g, ''));
+      u.searchParams.delete('kutsu');
+      history.replaceState(null, '', u.pathname + (u.search || '') + u.hash);
+    }
+  }catch(e){}
+}
 function boot(snap){
+  captureInviteParam();
   applySkin(skin);
   loadLocal();
   if(snap && snap.person && PERSONS.indexOf(snap.person) >= 0) state.person = snap.person;
@@ -5336,6 +5916,11 @@ function boot(snap){
   connect();
   syncStart();
   syncRender();
+  refreshPersons();
+  if(sync.enabled){
+    let c = ''; try{ c = sessionStorage.getItem('salikirja-invite') || ''; }catch(e){}
+    if(c && !overlayEl.innerHTML) setTimeout(function(){ if(!sync.user && !overlayEl.innerHTML) showSignIn('Kirjaudu, niin voit hyväksyä treenikaverikutsun.'); }, 2500);
+  }
 }
 if(window.claude && window.claude.hot){
   window.claude.hot.snapshot(function(){ return {person:state.person, view:state.view, pid:state.pid}; });

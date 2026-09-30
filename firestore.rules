@@ -1,19 +1,86 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Vain Matti ja Iidis. UID:t: Firebase-konsoli -> Authentication -> Users.
-    function member() {
-      return request.auth != null
-        && request.auth.uid in ['2lmYopAnmgamam0mzRDdkVFhvdm2', 'xbkdPmnhUdc4bdmDAwlnzA3S3kM2'];
+    // Tunnukset ja niiden omat profiilit. UID:t: Firebase-konsoli -> Authentication -> Users.
+    function signedIn() { return request.auth != null; }
+    function ownerOf(p) {
+      return signedIn() && (
+        (p == 'matti' && request.auth.uid == '2lmYopAnmgamam0mzRDdkVFhvdm2') ||
+        (p == 'iida'  && request.auth.uid == 'xbkdPmnhUdc4bdmDAwlnzA3S3kM2'));
     }
-    // Jokainen treeni on oma dokumenttinsa: saliohjelma/{iida|matti}/sessions/{id}
+    function knownUser() {
+      return signedIn() && request.auth.uid in ['2lmYopAnmgamam0mzRDdkVFhvdm2', 'xbkdPmnhUdc4bdmDAwlnzA3S3kM2'];
+    }
+    function profile(p) { return /databases/$(database)/documents/profiles/$(p); }
+    // Treenikaveri: profiilin omistaja on jakanut profiilinsa tälle tunnukselle.
+    function partnerOf(p) {
+      return signedIn() && exists(profile(p))
+        && request.auth.uid in get(profile(p)).data.sharedWith;
+    }
+    function canAccess(p) { return p in ['iida', 'matti'] && (ownerOf(p) || partnerOf(p)); }
+
+    // Treenit: jokainen treeni on oma dokumenttinsa.
     match /saliohjelma/{person}/sessions/{sid} {
-      allow read, delete: if member() && person in ['iida', 'matti'];
-      allow create, update: if member() && person in ['iida', 'matti']
+      allow read, delete: if canAccess(person);
+      allow create, update: if canAccess(person)
         && request.resource.data.id == sid
         && request.resource.data.pid is string
         && request.resource.data.end is string;
     }
-    // Kaikki muu on suljettu.
+
+    // Profiilit: kenelle omat treenit on jaettu.
+    match /profiles/{person} {
+      allow read: if ownerOf(person)
+        || (signedIn() && request.auth.uid in resource.data.sharedWith);
+      allow create: if ownerOf(person)
+        && request.resource.data.owner == request.auth.uid
+        && request.resource.data.sharedWith is list
+        && request.resource.data.sharedWith.size() <= 10;
+      allow update: if (ownerOf(person)
+          && request.resource.data.owner == request.auth.uid
+          && request.resource.data.sharedWith is list
+          && request.resource.data.sharedWith.size() <= 10)
+        || joinViaInvite()
+        || leaveSelf();
+      allow delete: if false;
+    }
+    // Kaveri lisää itsensä kutsun kautta (samassa erässä kuin kutsun hyväksyntä).
+    function joinViaInvite() {
+      let added = request.resource.data.sharedWith.toSet().difference(resource.data.sharedWith.toSet());
+      let removed = resource.data.sharedWith.toSet().difference(request.resource.data.sharedWith.toSet());
+      let inv = getAfter(/databases/$(database)/documents/invites/$(request.resource.data.joinedVia)).data;
+      return knownUser()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['sharedWith', 'joinedVia'])
+        && added == [request.auth.uid].toSet() && removed.size() == 0
+        && inv.acceptedBy == request.auth.uid && inv.from == resource.data.owner;
+    }
+    // Kaveri poistaa vain itsensä (jakamisen lopetus).
+    function leaveSelf() {
+      let added = request.resource.data.sharedWith.toSet().difference(resource.data.sharedWith.toSet());
+      let removed = resource.data.sharedWith.toSet().difference(request.resource.data.sharedWith.toSet());
+      return signedIn()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['sharedWith'])
+        && removed == [request.auth.uid].toSet() && added.size() == 0;
+    }
+
+    // Kutsut: 7 päivää voimassa, käy kerran.
+    match /invites/{code} {
+      allow get: if knownUser();
+      allow list: if false;
+      allow create: if knownUser()
+        && request.resource.data.from == request.auth.uid
+        && ownerOf(request.resource.data.person)
+        && request.resource.data.acceptedBy == null
+        && request.resource.data.expires is timestamp
+        && request.resource.data.expires < request.time + duration.value(8, 'd');
+      allow update: if knownUser()
+        && resource.data.acceptedBy == null
+        && request.auth.uid != resource.data.from
+        && request.time < resource.data.expires
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['acceptedBy', 'acceptedPerson', 'acceptedAt'])
+        && request.resource.data.acceptedBy == request.auth.uid
+        && ownerOf(request.resource.data.acceptedPerson);
+      allow delete: if signedIn() && resource.data.from == request.auth.uid;
+    }
   }
 }

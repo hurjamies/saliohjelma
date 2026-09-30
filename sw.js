@@ -3,7 +3,7 @@
    Versionumeroa nostamalla vanha välimuisti korvautuu.
    Firebasen yhteyksiin (kirjautuminen, Firestore) ei kosketa: ne kulkevat
    aina suoraan verkkoon, jotta reaaliaikainen synkronointi toimii. */
-const CACHE = 'saliohjelma-v8.0.0';
+const CACHE = 'saliohjelma-v9.0.0';
 const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-180.png',
   './firebase/firebase-app.js', './firebase/firebase-auth.js', './firebase/firebase-firestore.js'];
 const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
