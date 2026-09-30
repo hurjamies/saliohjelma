@@ -3,8 +3,8 @@
    Versionumeroa nostamalla vanha välimuisti korvautuu.
    Firebasen yhteyksiin (kirjautuminen, Firestore) ei kosketa: ne kulkevat
    aina suoraan verkkoon, jotta reaaliaikainen synkronointi toimii. */
-const CACHE = 'saliohjelma-v10.2.2-theme-views';
-const SHELL = ['./', './index.html', './themes.css?v=10.2.2', './assets/hero-neon.webp', './assets/hero-deco.webp', './assets/hero-mono.webp', './assets/hero-nature.webp', './assets/hero-dark.webp', './assets/hero-light.webp', './manifest.json', './icon-192.png', './icon-512.png', './icon-180.png', './icon-maskable-512.png',
+const CACHE = 'saliohjelma-v10.2.3-home-icon';
+const SHELL = ['./', './index.html', './themes.css?v=10.2.3', './assets/hero-neon.webp', './assets/hero-deco.webp', './assets/hero-mono.webp', './assets/hero-nature.webp', './assets/hero-dark.webp', './assets/hero-light.webp', './manifest.json?v=10.2.3', './favicon.ico?v=10.2.3', './icon-48.png?v=10.2.3', './icon-192.png?v=10.2.3', './icon-512.png?v=10.2.3', './icon-180.png?v=10.2.3', './icon-maskable-512.png?v=10.2.3',
   './firebase/firebase-app.js', './firebase/firebase-auth.js', './firebase/firebase-firestore.js'];
 const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
 
