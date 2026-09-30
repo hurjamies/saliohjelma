@@ -23,7 +23,7 @@
 </style>
 </head>
 <body>
-<title>Saliohjelma 10.1</title>
+<title>Saliohjelma 10.2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Josefin+Sans:wght@400;600;700&family=Poiret+One&display=swap">
@@ -154,6 +154,9 @@
   .togday:last-child{border-bottom:0}
   .togday .det{font-size:12.5px;color:var(--ink-2);margin:4px 0 6px}
   #togchart{position:relative}
+  .cmpbar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin:12px 0 0;font-size:13px}
+  .cmpchip{min-height:36px;padding:6px 12px;font-size:13px;cursor:pointer;font-family:inherit}
+  .cmpchip.on{background:var(--surface);color:var(--ink);border-color:var(--line-2)}
   .invcode{font-size:30px;font-weight:700;letter-spacing:.22em;text-align:center;padding:14px 8px;margin:10px 0 12px;
     border:1.5px dashed var(--line-2);border-radius:12px;background:var(--surface-2);color:var(--ink)}
   .syncbtn{position:relative}
@@ -1742,7 +1745,7 @@ function acceptInvite(code){
   }).then(function(inv){
     try{ sessionStorage.removeItem('salikirja-invite'); }catch(e){}
     overlayEl.innerHTML = '<div class="ov"><div class="sheet" role="dialog" aria-label="Kutsu hyväksytty">' +
-      '<h3>Olette nyt treenikavereita 💪</h3><p>' + esc(inv.name || 'Kaverisi') + ' näkyy yläpalkin valinnassa, ja yhteinen kehitys löytyy etusivun Yhdessä-näkymästä.</p>' +
+      '<h3>Olette nyt treenikavereita 💪</h3><p>' + esc(inv.name || 'Kaverisi') + ' näkyy yläpalkin valinnassa, ja voit lisätä hänet vertailuun etusivun Kehitys-näkymässä.</p>' +
       '<div class="sticky-cta"><button class="btn primary" data-close="1">Valmis</button></div></div></div>';
   }, function(err){
     bkNotice('Hyväksyminen ei onnistunut (' + (err && err.code || 'virhe') + '). Kutsu voi olla vanhentunut tai jo käytetty.', true);
@@ -2456,13 +2459,14 @@ function renderAll(){
   renderBottom();
 }
 
-/* ---------------- YHDESSÄ ----------------
-   Kahden treenikaverin yhteiset treenipäivät ja yhteisten liikkeiden kehitys.
+/* ---------------- KEHITYS (oma + treenikaverit) ----------------
+   Ensisijaisesti oma kehitys. Treenikaverit (kutsutut, näkyvät profiilit) voi lisätä
+   vertailuun; valinta muistetaan tässä laitteessa.
    Kehitys = paras sarja arvioituna maksimina (paino × (1 + toistot / 30)),
    ilmoitettuna prosentteina omasta ensimmäisestä kirjauksesta. Näin eri
    kuormilla treenaavien kehitys on samalla asteikolla. */
-const PAIR_COLORS = {light:['#2a78d6', '#eb6834'], dark:['#3987e5', '#d95926']};
-function pairColors(pair){
+const PAIR_COLORS = {light:['#2a78d6', '#eb6834', '#2e9e6b', '#8a5cd6'], dark:['#3987e5', '#d95926', '#3fb07c', '#9d74e0']};
+function pairColors(list){
   let dark = false;
   try{
     const c = getComputedStyle(document.body).getPropertyValue('--surface').trim() ||
@@ -2474,23 +2478,38 @@ function pairColors(pair){
     dark = (0.2126*r + 0.7152*g + 0.0722*b) < 128;
   }catch(e){}
   const set = dark ? PAIR_COLORS.dark : PAIR_COLORS.light;
-  /* väri seuraa henkilöä, ei järjestystä */
+  /* väri seuraa henkilöä, ei järjestystä: Matti sininen, Iidis oranssi */
   const out = {};
-  pair.forEach(function(p){ out[p] = set[PERSONS.indexOf(p) === 1 ? 0 : 1]; });
+  list.forEach(function(p){
+    const i = PERSONS.indexOf(p);
+    out[p] = set[(i === 1 ? 0 : i === 0 ? 1 : i) % set.length];
+  });
   return out;
 }
-function togetherPair(){
-  const v = visiblePersons();
-  return v.length >= 2 ? [v[0], v[1]] : null;
+/* "minä": kirjautuneena oma tunnus, muuten valittuna oleva profiili */
+function progressMe(){ return (sync.enabled && sync.user && sync.me) ? sync.me : state.person; }
+function progressFriends(){
+  const me = progressMe();
+  return visiblePersons().filter(function(p){ return p !== me; });
 }
+function cmpKey(){ return 'salikirja-cmp-' + progressMe(); }
+function cmpSelected(){
+  const fr = progressFriends();
+  let a = [];
+  try{ a = JSON.parse(localStorage.getItem(cmpKey()) || '[]'); }catch(e){}
+  return (Array.isArray(a) ? a : []).filter(function(p){ return fr.indexOf(p) >= 0; });
+}
+function cmpToggle(p){
+  const cur = cmpSelected();
+  const i = cur.indexOf(p);
+  if(i >= 0) cur.splice(i, 1); else cur.push(p);
+  try{ localStorage.setItem(cmpKey(), JSON.stringify(cur)); }catch(e){}
+}
+function progressGroup(){ return [progressMe()].concat(cmpSelected()); }
 function exKeysOf(p){
   const out = [];
   progsFor(p).forEach(function(pr){ pr.ex.forEach(function(e){ if(out.indexOf(e.key) < 0) out.push(e.key); }); });
   return out;
-}
-function sharedKeys2(a, b){
-  const kb = exKeysOf(b);
-  return exKeysOf(a).filter(function(k){ return kb.indexOf(k) >= 0; });
 }
 function exNameShort(key){
   let n = key;
@@ -2528,57 +2547,95 @@ function gymDaysMap(p, fromMs){
   });
   return m;
 }
+/* etusivun ja Kehitys-välilehden kortti */
+function progressCardHtml(extraStyle){
+  const grp = progressGroup(), fr = progressFriends();
+  let sub;
+  if(grp.length > 1) sub = 'Vertailussa: ' + grp.map(function(p){ return p === progressMe() ? 'sinä' : personName(p); }).join(', ');
+  else if(fr.length) sub = 'Oma kehityksesi liikkeittäin · lisää treenikaveri vertailuun';
+  else sub = 'Oma kehityksesi liikkeittäin';
+  return '<button type="button" class="lastbtn togbtn" data-view="together"' + (extraStyle ? ' style="' + extraStyle + '"' : '') + '>' +
+    '<span class="lbico" aria-hidden="true">📈</span><span style="min-width:0"><b>Kehitys</b>' +
+    '<small>' + esc(sub) + '</small></span>' +
+    '<span class="chev" aria-hidden="true">›</span></button>';
+}
 
 function renderTogether(){
-  const pair = togetherPair();
-  let h = '<div class="phead"><button class="back" type="button" data-view="home">← Alkuvalikko</button><h1>Yhdessä</h1>';
-  if(!pair){
-    h += '<p class="muted" style="font-size:13.5px;margin:6px 0 0">Yhteinen näkymä avautuu, kun sinulla on treenikaveri.</p></div>' +
-      '<div class="card" style="padding:16px"><p style="margin:0 0 12px">Kutsu treenikaveri, niin näette toistenne treenit ja yhteisen kehityksen.</p>' +
-      '<button type="button" class="btn accent" data-invite="1">👥 Kutsu treenikaveri</button></div>';
-    views.together.innerHTML = h;
-    return;
-  }
-  const A = pair[0], B = pair[1];
-  const col = pairColors(pair);
+  const me = progressMe();
+  const fr = progressFriends();
+  const grp = progressGroup();
+  const cmp = grp.length > 1;
+  const col = pairColors(grp.concat(fr.filter(function(p){ return grp.indexOf(p) < 0; })));
   const dot = function(p){ return '<i class="pdot" style="background:' + col[p] + '"></i>'; };
-  h += '<p class="muted" style="font-size:13.5px;margin:6px 0 0">' + dot(A) + esc(personName(A)) + ' &amp; ' + dot(B) + esc(personName(B)) + '</p></div>';
+  const who = function(p){ return esc(personName(p)); };
+  let h = '<div class="phead"><button class="back" type="button" data-view="home">← Alkuvalikko</button><h1>Kehitys</h1>' +
+    '<p class="muted" style="font-size:13.5px;margin:6px 0 0">' +
+    (cmp ? grp.map(function(p){ return dot(p) + who(p); }).join(' &nbsp;·&nbsp; ') : dot(me) + who(me) + ' · oma kehitys') + '</p></div>';
+
+  /* vertailuun lisättävät treenikaverit */
+  if(fr.length){
+    h += '<div class="cmpbar" role="group" aria-label="Vertailu"><span class="muted">Vertaa:</span>';
+    fr.forEach(function(p){
+      const on = grp.indexOf(p) >= 0;
+      h += '<button type="button" class="chip cmpchip' + (on ? ' on' : '') + '" data-cmp="' + p + '" aria-pressed="' + on + '">' +
+        (on ? dot(p) + who(p) + ' <span aria-hidden="true">✕</span>' : '＋ ' + who(p)) + '</button>';
+    });
+    h += '</div>';
+  }else if(sync.enabled && sync.user && sync.me && sync.profileReady && !sync.shareBlocked){
+    h += '<div class="cmpbar"><button type="button" class="chip cmpchip" data-invite="1">＋ Kutsu treenikaveri vertailuun</button></div>';
+  }
 
   /* luvut: viimeiset 30 päivää */
   const from30 = Date.now() - 30 * 864e5;
-  const dA = gymDaysMap(A, from30), dB = gymDaysMap(B, from30);
-  const nA = Object.keys(dA).reduce(function(t, k){ return t + dA[k].length; }, 0);
-  const nB = Object.keys(dB).reduce(function(t, k){ return t + dB[k].length; }, 0);
-  const same30 = Object.keys(dA).filter(function(k){ return dB[k]; }).length;
-  h += '<p class="eyebrow" style="margin:16px 0 8px">Viimeiset 30 päivää</p>' +
-    '<div class="stats tight">' +
-    '<div class="stat"><b class="mono">' + nA + '</b><span>' + dot(A) + esc(personName(A)) + ' · salitreeniä</span></div>' +
-    '<div class="stat"><b class="mono">' + nB + '</b><span>' + dot(B) + esc(personName(B)) + ' · salitreeniä</span></div>' +
-    '<div class="stat"><b class="mono">' + same30 + '</b><span>päivää samana päivänä</span></div>' +
-    '</div>';
+  const days30 = {};
+  grp.forEach(function(p){ days30[p] = gymDaysMap(p, from30); });
+  const cnt = function(p){ return Object.keys(days30[p]).reduce(function(t, k){ return t + days30[p][k].length; }, 0); };
+  const allKeys = exKeysOf(me);
+  grp.slice(1).forEach(function(p){ exKeysOf(p).forEach(function(k){ if(allKeys.indexOf(k) < 0) allKeys.push(k); }); });
+  const keys = allKeys.filter(function(k){ return grp.some(function(p){ return exPoints(p, k).length; }); });
+  h += '<p class="eyebrow" style="margin:16px 0 8px">Viimeiset 30 päivää</p><div class="stats tight">';
+  if(cmp){
+    grp.forEach(function(p){
+      h += '<div class="stat"><b class="mono">' + cnt(p) + '</b><span>' + dot(p) + who(p) + ' · salitreeniä</span></div>';
+    });
+    const same30 = Object.keys(days30[me]).filter(function(k){ return grp.slice(1).some(function(p){ return days30[p][k]; }); }).length;
+    h += '<div class="stat"><b class="mono">' + same30 + '</b><span>päivää samana päivänä</span></div>';
+  }else{
+    let sets = 0;
+    Object.keys(days30[me]).forEach(function(k){ days30[me][k].forEach(function(s){
+      Object.keys(s.entries || {}).forEach(function(key){ (s.entries[key] || []).forEach(function(x){ if(num(x.reps) > 0) sets++; }); });
+    }); });
+    const rising = keys.filter(function(k){ const pts = exPoints(me, k); return pts.length > 1 && Math.round(pts[pts.length - 1].pct) > 0; }).length;
+    h += '<div class="stat"><b class="mono">' + cnt(me) + '</b><span>salitreeniä</span></div>' +
+      '<div class="stat"><b class="mono">' + sets + '</b><span>kirjattua sarjaa</span></div>' +
+      '<div class="stat"><b class="mono">' + rising + '</b><span>liikettä nousussa</span></div>';
+  }
+  h += '</div>';
 
-  /* kehitys yhteisissä liikkeissä */
-  const keys = sharedKeys2(A, B).filter(function(k){ return exPoints(A, k).length || exPoints(B, k).length; });
-  h += '<p class="eyebrow" style="margin:18px 0 8px">Yhteisten liikkeiden kehitys</p>';
+  /* liikkeiden kehitys */
+  h += '<p class="eyebrow" style="margin:18px 0 8px">' + (cmp ? 'Liikkeiden kehitys rinnakkain' : 'Liikkeiden kehitys') + '</p>';
   if(!keys.length){
-    h += '<div class="card" style="padding:16px"><p class="muted" style="margin:0">Kehitys piirtyy, kun yhteisiä liikkeitä on kirjattu.</p></div>';
+    h += '<div class="card" style="padding:16px"><p class="muted" style="margin:0">Kehitys piirtyy, kun liikkeitä on kirjattu.</p></div>';
   }else{
     if(!state.togKey || keys.indexOf(state.togKey) < 0){
-      /* oletuksena liike, jossa on eniten kummankin kirjauksia */
-      state.togKey = keys.slice().sort(function(x, y){
-        return (Math.min(exPoints(A, y).length, exPoints(B, y).length) - Math.min(exPoints(A, x).length, exPoints(B, x).length));
-      })[0];
+      /* oletuksena liike, jossa on eniten kirjauksia (vertailussa: kaikilla) */
+      const score = function(k){
+        const n = grp.map(function(p){ return exPoints(p, k).length; });
+        return Math.min.apply(null, n) * 1000 + n[0];
+      };
+      state.togKey = keys.slice().sort(function(x, y){ return score(y) - score(x); })[0];
     }
     h += '<select class="pick" id="togpick" aria-label="Valitse liike">' + keys.map(function(k){
       return '<option value="' + k + '"' + (k === state.togKey ? ' selected' : '') + '>' + esc(exNameShort(k)) + '</option>';
     }).join('') + '</select>';
     h += '<div class="card chartbox" id="togchart" style="margin-top:10px"></div>';
-    h += '<p class="muted" style="font-size:11.5px;margin:6px 2px 0;line-height:1.4">Muutos omaan ensimmäiseen kirjaukseen. Mittarina paras sarja ' +
-      'arvioituna maksimina (paino × (1 + toistot/30)), joten sekä painon että toistojen nousu näkyy. Oman painon liikkeissä mittarina toistot.</p>';
+    h += '<p class="muted" style="font-size:11.5px;margin:6px 2px 0;line-height:1.4">Muutos ' + (cmp ? 'kunkin omaan' : 'omaan') +
+      ' ensimmäiseen kirjaukseen. Mittarina paras sarja arvioituna maksimina (paino × (1 + toistot/30)), ' +
+      'joten sekä painon että toistojen nousu näkyy. Oman painon liikkeissä mittarina toistot.</p>';
 
-    /* taulukko kaikista yhteisistä liikkeistä */
-    h += '<div class="card togtable" style="margin-top:12px"><div class="togrow tghead"><span>Liike</span>' +
-      '<span>' + dot(A) + esc(personName(A)) + '</span><span>' + dot(B) + esc(personName(B)) + '</span></div>';
+    const gridCols = 'grid-template-columns:minmax(0,1.3fr) repeat(' + grp.length + ',minmax(0,1fr))';
+    h += '<div class="card togtable" style="margin-top:12px"><div class="togrow tghead" style="' + gridCols + '"><span>Liike</span>' +
+      grp.map(function(p){ return '<span>' + (cmp ? dot(p) + who(p) : 'Muutos · viimeisin') + '</span>'; }).join('') + '</div>';
     keys.forEach(function(k){
       const cell = function(p){
         const pts = exPoints(p, k);
@@ -2587,49 +2644,53 @@ function renderTogether(){
         return '<span><b class="mono">' + (pts.length > 1 ? pctText(l.pct) : '1 kirjaus') + '</b>' +
           '<small class="mono">' + (l.kg > 0 ? fmtKg(l.kg) + ' kg × ' : '') + l.reps + '</small></span>';
       };
-      h += '<button type="button" class="togrow' + (k === state.togKey ? ' on' : '') + '" data-togkey="' + k + '">' +
-        '<span>' + esc(exNameShort(k)) + '</span>' + cell(A) + cell(B) + '</button>';
+      h += '<button type="button" class="togrow' + (k === state.togKey ? ' on' : '') + '" style="' + gridCols + '" data-togkey="' + k + '">' +
+        '<span>' + esc(exNameShort(k)) + '</span>' + grp.map(cell).join('') + '</button>';
     });
     h += '</div>';
   }
 
-  /* yhteiset treenipäivät */
-  const all = gymDaysMap(A, 0), allB = gymDaysMap(B, 0);
-  const common = Object.keys(all).filter(function(k){ return allB[k]; }).sort().reverse();
-  h += '<p class="eyebrow" style="margin:18px 0 8px">Yhteiset treenipäivät' + (common.length ? ' · ' + common.length : '') + '</p>';
-  if(!common.length){
-    h += '<div class="card" style="padding:16px"><p class="muted" style="margin:0">Ei vielä päiviä, jolloin molemmat olisivat treenanneet. Ne ilmestyvät tähän.</p></div>';
-  }else{
-    h += '<div class="card">';
-    common.slice(0, 12).forEach(function(k){
+  /* yhteiset treenipäivät: päivät, jolloin sinä ja ainakin yksi vertailtava treenasitte */
+  if(cmp){
+    const all = {};
+    grp.forEach(function(p){ all[p] = gymDaysMap(p, 0); });
+    const common = Object.keys(all[me]).filter(function(k){ return grp.slice(1).some(function(p){ return all[p][k]; }); }).sort().reverse();
+    h += '<p class="eyebrow" style="margin:18px 0 8px">Yhteiset treenipäivät' + (common.length ? ' · ' + common.length : '') + '</p>';
+    if(!common.length){
+      h += '<div class="card" style="padding:16px"><p class="muted" style="margin:0">Ei vielä päiviä, jolloin olisitte treenanneet samana päivänä. Ne ilmestyvät tähän.</p></div>';
+    }else{
       /* saman päivän treenit yhdistetään (esim. kaksi treeniä samana päivänä) */
       const merge = function(list){
         const e = {};
-        list.forEach(function(x){ Object.keys(x.entries || {}).forEach(function(key){ if(!e[key]) e[key] = x.entries[key]; }); });
+        (list || []).forEach(function(x){ Object.keys(x.entries || {}).forEach(function(key){ if(!e[key]) e[key] = x.entries[key]; }); });
         return e;
       };
-      const names = function(list){ return list.map(function(x){ const pr = progById(x.pid); return pr ? pr.name : ''; }).join(' + '); };
-      const sa = {entries:merge(all[k])}, sb = {entries:merge(allB[k])};
-      const pa = {name:names(all[k])}, pb = {name:names(allB[k])};
-      const shared = sharedKeys2(A, B).filter(function(key){ return sa.entries[key] && sb.entries[key]; });
-      const d = new Date(k + 'T12:00:00');
-      h += '<div class="togday"><div class="row spread" style="gap:8px"><b>' + DAYNAMES[d.getDay()].slice(0,2).replace(/^./, function(c){ return c.toUpperCase(); }) +
-        ' ' + d.getDate() + '.' + (d.getMonth()+1) + '.' + d.getFullYear() + '</b>' +
-        '<span class="muted" style="font-size:12px">' + shared.length + ' yhteistä liikettä</span></div>' +
-        '<p class="det">' + dot(A) + esc(personName(A)) + ': ' + esc(pa ? pa.name : '') + ' &nbsp;·&nbsp; ' +
-        dot(B) + esc(personName(B)) + ': ' + esc(pb ? pb.name : '') + '</p>';
-      shared.slice(0, 4).forEach(function(key){
-        const ta = topOf(sa.entries[key]), tb = topOf(sb.entries[key]);
-        h += '<div class="sumrow"><span>' + esc(exNameShort(key)) + '</span><span class="mono" style="white-space:nowrap">' +
-          (ta ? (num(ta.kg) > 0 ? fmtKg(num(ta.kg)) + '×' : '') + num(ta.reps) : '–') + ' / ' +
-          (tb ? (num(tb.kg) > 0 ? fmtKg(num(tb.kg)) + '×' : '') + num(tb.reps) : '–') + '</span></div>';
+      const names = function(list){ return (list || []).map(function(x){ const pr = progById(x.pid); return pr ? pr.name : ''; }).join(' + '); };
+      h += '<div class="card">';
+      common.slice(0, 12).forEach(function(k){
+        const present = grp.filter(function(p){ return all[p][k]; });
+        const ent = {};
+        present.forEach(function(p){ ent[p] = merge(all[p][k]); });
+        const shared = Object.keys(ent[me]).filter(function(key){ return present.slice(1).some(function(p){ return ent[p][key]; }); });
+        const d = new Date(k + 'T12:00:00');
+        h += '<div class="togday"><div class="row spread" style="gap:8px"><b>' + DAYNAMES[d.getDay()].slice(0,2).replace(/^./, function(c){ return c.toUpperCase(); }) +
+          ' ' + d.getDate() + '.' + (d.getMonth()+1) + '.' + d.getFullYear() + '</b>' +
+          '<span class="muted" style="font-size:12px">' + shared.length + ' yhteistä liikettä</span></div>' +
+          '<p class="det">' + present.map(function(p){ return dot(p) + who(p) + ': ' + esc(names(all[p][k])); }).join(' &nbsp;·&nbsp; ') + '</p>';
+        shared.slice(0, 4).forEach(function(key){
+          h += '<div class="sumrow"><span>' + esc(exNameShort(key)) + '</span><span class="mono" style="white-space:nowrap">' +
+            present.map(function(p){
+              const t = ent[p][key] ? topOf(ent[p][key]) : null;
+              return t ? (num(t.kg) > 0 ? fmtKg(num(t.kg)) + '×' : '') + num(t.reps) : '–';
+            }).join(' / ') + '</span></div>';
+        });
+        h += '</div>';
       });
       h += '</div>';
-    });
-    h += '</div>';
+    }
   }
   views.together.innerHTML = h;
-  if(document.getElementById('togchart')) drawTogetherChart(pair, col);
+  if(document.getElementById('togchart')) drawTogetherChart(grp, col);
 }
 
 function drawTogetherChart(pair, col){
@@ -2906,13 +2967,8 @@ function renderHome(){
       '<span class="chev" aria-hidden="true">›</span></button>';
   }
   h += lastSessionButton(person);
-  if(togetherPair()){
-    const tp = togetherPair();
-    h += '<button type="button" class="lastbtn togbtn" data-view="together">' +
-      '<span class="lbico" aria-hidden="true">👥</span><span style="min-width:0"><b>Yhdessä · ' + esc(personName(tp[0])) + ' &amp; ' + esc(personName(tp[1])) + '</b>' +
-      '<small>Yhteiset treenipäivät ja yhteisten liikkeiden kehitys</small></span>' +
-      '<span class="chev" aria-hidden="true">›</span></button>';
-  }else if(sync.enabled && sync.user && sync.me && sync.profileReady && !sync.shareBlocked){
+  h += progressCardHtml();
+  if(!progressFriends().length && sync.enabled && sync.user && sync.me && sync.profileReady && !sync.shareBlocked){
     h += '<button type="button" class="lastbtn togbtn" data-invite="1">' +
       '<span class="lbico" aria-hidden="true">👥</span><span style="min-width:0"><b>Kutsu treenikaveri</b>' +
       '<small>Näette toistenne treenit ja yhteisen kehityksen</small></span>' +
@@ -3580,9 +3636,7 @@ function renderHistory(){
   h += '<div class="phead"><button class="back" type="button" data-view="home">← Kaikki ohjelmat</button>' +
        '<h1>Kehitys</h1></div>';
   h += aiCardHtml();
-  if(togetherPair()) h += '<button type="button" class="lastbtn togbtn" data-view="together" style="margin-bottom:14px">' +
-    '<span class="lbico" aria-hidden="true">👥</span><span style="min-width:0"><b>Yhdessä</b>' +
-    '<small>Yhteiset treenipäivät ja yhteisten liikkeiden kehitys</small></span><span class="chev" aria-hidden="true">›</span></button>';
+  h += progressCardHtml('margin-bottom:14px');
   h += '<div class="tabs">' +
     '<button type="button" data-tab="historia" aria-pressed="' + (state.tab === 'historia') + '">Treenit</button>' +
     '<button type="button" data-tab="kehitys" aria-pressed="' + (state.tab === 'kehitys') + '">Kehitys</button>' +
@@ -5788,7 +5842,7 @@ function aiCopy(btn){
    ============================================================ */
 
 document.addEventListener('click', function(ev){
-  const t = ev.target.closest('[data-person],[data-open],[data-view],[data-tab],[data-cardio],[data-finish],[data-close],[data-savecardio],[data-discard],[data-discard-ask],[data-setskin],[data-rest],[data-ckind],[data-cmin],[data-ckindfilter],[data-timer],[data-calmove],[data-calday],[data-editsets],[data-del],[data-delok],[data-backtoday],[data-addcardio],[data-addrest],[data-abort],[data-clearsets],[data-weekday],[data-active],[data-pickprog],[data-hidebar],[data-showbar],[data-export],[data-import],[data-importtext],[data-copybk],[data-bkselect],[data-signin],[data-signout],[data-togkey],[data-invite],[data-joincode],[data-acceptinv],[data-unshare],[data-unshareok],[data-resetpw],[data-syncsheet],[data-whatsapp],[data-wacopy],[data-washare],[data-importclip],[data-bkshare],[data-bkdl],[data-session],[data-replaceok],[data-ai],[data-airange],[data-aicopy],[data-aitxt],[data-aijson]');
+  const t = ev.target.closest('[data-person],[data-open],[data-view],[data-tab],[data-cardio],[data-finish],[data-close],[data-savecardio],[data-discard],[data-discard-ask],[data-setskin],[data-rest],[data-ckind],[data-cmin],[data-ckindfilter],[data-timer],[data-calmove],[data-calday],[data-editsets],[data-del],[data-delok],[data-backtoday],[data-addcardio],[data-addrest],[data-abort],[data-clearsets],[data-weekday],[data-active],[data-pickprog],[data-hidebar],[data-showbar],[data-export],[data-import],[data-importtext],[data-copybk],[data-bkselect],[data-signin],[data-signout],[data-togkey],[data-cmp],[data-invite],[data-joincode],[data-acceptinv],[data-unshare],[data-unshareok],[data-resetpw],[data-syncsheet],[data-whatsapp],[data-wacopy],[data-washare],[data-importclip],[data-bkshare],[data-bkdl],[data-session],[data-replaceok],[data-ai],[data-airange],[data-aicopy],[data-aitxt],[data-aijson]');
   if(!t) return;
 
   if(t.dataset.person){
@@ -5810,6 +5864,7 @@ document.addEventListener('click', function(ev){
   }
   if(t.dataset.whatsapp){ showWhatsApp(); return; }
   if(t.dataset.signin){ showSignIn(); return; }
+  if(t.dataset.cmp){ cmpToggle(t.dataset.cmp); renderTogether(); return; }
   if(t.dataset.togkey){ state.togKey = t.dataset.togkey; renderTogether(); const c = document.getElementById('togchart'); if(c) c.scrollIntoView({block:'center', behavior:'smooth'}); return; }
   if(t.dataset.invite){ showInvite(); return; }
   if(t.dataset.joincode){
@@ -5824,7 +5879,7 @@ document.addEventListener('click', function(ev){
     t.disabled = true;
     removePartner(p).then(function(){
       overlayEl.innerHTML = '';
-      if(state.view === 'together') setView('home'); else renderAll();
+      renderAll();
       syncRender();
     }, function(err){
       overlayEl.innerHTML = '<div class="ov"><div class="sheet" role="dialog" aria-label="Virhe"><h3>Jakamista ei voitu lopettaa</h3>' +
