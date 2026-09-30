@@ -1,7 +1,8 @@
 # Saliohjelma
 
-Iidiksen ja Matin salitreeniohjelmat yhtenä selainsovelluksena. Koko sovellus on yhdessä
-`index.html`-tiedostossa; kirjaukset tallentuvat puhelimeen ja synkronoituvat Firebaseen.
+Iidiksen ja Matin salitreeniohjelmat yhtenä selainsovelluksena. Sovelluslogiikka on
+`index.html`-tiedostossa ja teemojen viimeistely `themes.css`-tiedostossa;
+kirjaukset tallentuvat puhelimeen ja synkronoituvat Firebaseen.
 
 **Sovellus:** https://hurjamies.github.io/saliohjelma/
 
@@ -21,6 +22,9 @@ Iidiksen ja Matin salitreeniohjelmat yhtenä selainsovelluksena. Koko sovellus o
 - **Kehityskäyrät** – liikkeen paras työsarja ensisijaisena mittarina, kokonaiskuorma sekundäärisenä.
   A- ja B-päivien historia pidetään erillään.
 - **Kuusi väriteemaa** – Neon Synth, Art Deco, Mustavalkopunainen, Luonto, Tumma, Vaalea.
+  **Laitteen mukaan** seuraa järjestelmän vaaleaa tai tummaa tilaa myös käytön aikana.
+  Teemavalitsin näyttää pienet käyttöliittymäesikatselut. Selaimen yläpalkin väri
+  seuraa valittua teemaa sitä tukevissa selaimissa.
 - **Varmuuskopio** – vie ja tuo kaikki kirjaukset JSON-tiedostona.
 
 ## Asennus puhelimeen
@@ -50,6 +54,23 @@ näkyvät molempien puhelimissa reaaliajassa. Ilman verkkoa tehdyt kirjaukset l�
   ja pääsy on rajattu kirjautumisella ja säännöillä.
 
 Varmuuskopio: **Ohjeet → Varmuuskopio → Vie data / Tuo data**.
+
+## Teemojen kuvataustat
+
+Päivän salitreenikortissa on valitun teeman mukainen käsipaino ja saliympäristö.
+Kuvat vaihtuvat myös laitteen vaalean/tumman asetuksen mukana:
+
+- Neon Synth: violetti valaistus ja neonheijastukset.
+- Art Deco: lämmin norsunluu, messinki ja vanhan urheiluklubin tunnelma.
+- Mustavalkopunainen: mustavalkoinen sali ja punainen saliteline.
+- Luonto: puu, kasvit ja lämmin luonnonvalo.
+- Tumma: grafiitinharmaa sali ja hillitty teräksensininen valo.
+- Vaalea: valoisa sali ja kevyet salvianvihreät yksityiskohdat.
+
+Kuvat sijaitsevat `assets/hero-{teema}.webp`-tiedostoissa. Ne on luotu
+OpenAI ImageGenillä käyttäjän antaman tyyliviitteen pohjalta. Teematyylit
+ja kaikki kuusi kuvataustaa kuuluvat service workerin offline-välimuistiin.
+Kuvat ovat koristeita; tekstien luettavuus säilytetään erillisellä pehmeällä häivytyksellä.
 
 ## Ohjelmien tausta
 

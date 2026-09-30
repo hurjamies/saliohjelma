@@ -425,7 +425,6 @@
   body[data-skin="nature"] .prlabel, body[data-skin="mono"] .prlabel{color:var(--m3)}
   body[data-skin="light"] .prbox-h, body[data-skin="deco"] .prbox-h,
   body[data-skin="nature"] .prbox-h, body[data-skin="mono"] .prbox-h{color:var(--gold-3)}
-  body[data-skin="neon"] .prbadge{box-shadow:0 0 30px -14px rgba(231,200,103,.9)}
   body[data-skin="deco"] .prbadge{border-radius:4px}
   body[data-skin="deco"] .prmedal{border-radius:2px}
 
@@ -534,7 +533,6 @@
   .stat b{display:block;font-size:24px;font-weight:600;line-height:1.1;letter-spacing:-.02em}
   .stat span{display:block;font-size:11.5px;color:var(--ink-3);margin-top:3px}
   body[data-skin="deco"] .stat{border-radius:4px}
-  body[data-skin="neon"] .stat b{color:var(--silver);text-shadow:0 0 14px rgba(203,211,230,.45)}
   .tt{
     position:absolute;pointer-events:none;background:var(--surface);border:1px solid var(--line-2);border-radius:9px;
     padding:6px 9px;font-size:12px;box-shadow:var(--shadow);white-space:nowrap;transform:translate(-50%,-115%);z-index:5;
@@ -594,8 +592,6 @@
   body[data-skin="deco"] .calday{border-radius:3px}
   body[data-skin="deco"] .dayitem{border-radius:4px}
   body[data-skin="nature"] .calday{border-radius:13px}
-  body[data-skin="neon"] .calday.has{box-shadow:0 0 16px -10px var(--up)}
-  body[data-skin="neon"] .calday.is-today{border-color:var(--up);box-shadow:0 0 0 1px var(--up), 0 0 22px -8px var(--up)}
   /* ---------- overlay ---------- */
   .ov{
     position:fixed;inset:0;z-index:60;background:rgba(10,13,18,.5);display:flex;padding:16px;
@@ -643,283 +639,7 @@
   .setlog span.top{border-color:var(--ink-3);color:var(--ink);font-weight:600}
   .vex .prbadge{margin-top:10px}
 
-  /* ============ TEEMAT ============ */
-  /* Tokenit määritellään bodylle, jolloin ne voittavat :root-oletukset molemmissa järjestelmätiloissa. */
-
-  body[data-skin="light"]{
-    --bg:#F4F2EE;--surface:#FFFFFF;--surface-2:#F7F6F2;--line:#E5E2DA;--line-2:#CAC6BC;
-    --ink:#1F2328;--ink-2:#4E545A;--ink-3:#6B6F74;
-    --up:#436B86;--up-soft:#E4ECF2;--low:#5F7A5F;--low-soft:#E6EDE3;
-    --ok:#4A7A52;--ok-soft:#E4EFE3;--warn:#8E6A28;--warn-soft:#F5EDDC;--bad:#A55146;
-    --on-acc:#FFFFFF;--rest:#6F6D67;--cardio:#96592F;--cardio-soft:#F3E7DC;--shadow:0 1px 2px rgba(34,30,22,.05), 0 10px 26px -16px rgba(34,30,22,.28);
-  }
-  body[data-skin="dark"]{
-    --bg:#0D1015;--surface:#161B22;--surface-2:#1D232C;--line:#2A313C;--line-2:#3A4351;
-    --ink:#E7EBF1;--ink-2:#AAB4C1;--ink-3:#7D8895;
-    --up:#9B95FF;--up-soft:#232244;--low:#3FC7B4;--low-soft:#123430;
-    --ok:#5CCB8E;--ok-soft:#14301F;--warn:#E0A44A;--warn-soft:#332616;--bad:#F0837C;
-    --on-acc:#0D1015;--rest:#8D97A8;--cardio:#E8A94E;--cardio-soft:#3A2A12;--shadow:0 1px 2px rgba(0,0,0,.4), 0 10px 30px -14px rgba(0,0,0,.7);
-  }
-
-  /* --- Tumma neon synth --- */
-  body[data-skin="neon"]{
-    --bg:#09060F;--surface:#150F24;--surface-2:#1F1834;--line:#342C4E;--line-2:#5C5B7E;
-    --ink:#F6F3FF;--ink-2:#C6CBDE;--ink-3:#99A1BA;
-    --up:#C08BFF;--up-soft:#2E1B4C;--low:#3DEBD0;--low-soft:#0F3430;
-    --ok:#5BEA97;--ok-soft:#0F3325;--warn:#FFC85C;--warn-soft:#352810;--bad:#FF7BA6;
-    --on-acc:#09060F;--rest:#9AA3BE;--cardio:#2FE3C6;--cardio-soft:#0F3430;
-    --silver:#CBD3E6;--silver-dim:#8E97AE;
-    --shadow:0 1px 2px rgba(0,0,0,.6), 0 14px 38px -18px rgba(0,0,0,.95), inset 0 1px 0 rgba(203,211,230,.09);
-    background-image:
-      radial-gradient(900px 480px at 50% -15%, rgba(120,60,220,.30) 0%, rgba(120,60,220,0) 70%),
-      radial-gradient(700px 420px at 90% 110%, rgba(61,235,208,.12) 0%, rgba(61,235,208,0) 70%);
-    background-attachment:fixed;
-  }
-  body[data-skin="neon"] .topbar{border-bottom-color:rgba(203,211,230,.22);box-shadow:0 1px 14px -6px rgba(192,139,255,.55)}
-  body[data-skin="neon"] .brand{color:var(--silver);text-shadow:0 0 16px rgba(192,139,255,.65)}
-  body[data-skin="neon"] .brand span{color:var(--up);text-shadow:0 0 14px rgba(192,139,255,.8)}
-  body[data-skin="neon"] .eyebrow{color:var(--silver-dim);letter-spacing:.18em;text-shadow:0 0 12px rgba(203,211,230,.35)}
-  body[data-skin="neon"] .today .date,
-  body[data-skin="neon"] .pcard .day{letter-spacing:.18em;text-shadow:0 0 12px currentColor}
-  body[data-skin="neon"] .card,
-  body[data-skin="neon"] .ex,
-  body[data-skin="neon"] .pcard,
-  body[data-skin="neon"] .wd,
-  body[data-skin="neon"] .sheet{border-color:rgba(203,211,230,.20)}
-  body[data-skin="neon"] .today{
-    border-color:rgba(203,211,230,.28);
-    box-shadow:0 0 0 1px rgba(192,139,255,.18), 0 18px 48px -22px rgba(192,139,255,.55), inset 0 1px 0 rgba(203,211,230,.14);
-  }
-  body[data-skin="neon"] .today h1,
-  body[data-skin="neon"] .phead h1{
-    color:var(--silver);
-    background:linear-gradient(180deg,#FFFFFF 0%,#D8DDEC 45%,#9AA3BD 100%);
-    -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;
-    filter:drop-shadow(0 0 18px rgba(192,139,255,.45));
-  }
-  body[data-skin="neon"] .today::before{width:5px;background:linear-gradient(180deg,var(--acc),rgba(203,211,230,.9));box-shadow:0 0 22px var(--acc)}
-  body[data-skin="neon"] .btn.accent{box-shadow:0 0 26px -4px var(--acc, var(--up)), inset 0 1px 0 rgba(255,255,255,.35)}
-  body[data-skin="neon"] .btn.primary{box-shadow:0 0 24px -6px rgba(203,211,230,.7), inset 0 1px 0 rgba(255,255,255,.4)}
-  body[data-skin="neon"] .btn.cardio{box-shadow:0 0 26px -6px var(--cardio), inset 0 1px 0 rgba(255,255,255,.3)}
-  body[data-skin="neon"] .btn.rest{box-shadow:0 0 22px -8px var(--rest), inset 0 1px 0 rgba(255,255,255,.25)}
-  body[data-skin="neon"] .btn.ghost{border-color:rgba(203,211,230,.35);color:var(--silver);box-shadow:0 0 16px -8px rgba(203,211,230,.8)}
-  body[data-skin="neon"] .iconbtn{border-color:rgba(203,211,230,.30);color:var(--silver);box-shadow:0 0 14px -8px rgba(203,211,230,.9)}
-  body[data-skin="neon"] .seg{border-color:rgba(203,211,230,.24)}
-  body[data-skin="neon"] .seg button[aria-pressed="true"]{box-shadow:0 0 18px -6px rgba(192,139,255,.9), inset 0 1px 0 rgba(203,211,230,.2);color:var(--silver)}
-  body[data-skin="neon"] .chip{border-color:rgba(203,211,230,.22);color:var(--silver-dim)}
-  body[data-skin="neon"] .chip.up,
-  body[data-skin="neon"] .chip.low,
-  body[data-skin="neon"] .chip.ok,
-  body[data-skin="neon"] .chip.warn{box-shadow:0 0 16px -6px currentColor}
-  body[data-skin="neon"] .pcard.rec{box-shadow:0 0 0 1px var(--acc), 0 0 34px -10px var(--acc), 0 0 60px -30px var(--acc)}
-  body[data-skin="neon"] .pcard:hover{border-color:rgba(203,211,230,.45);box-shadow:0 0 24px -12px rgba(203,211,230,.8)}
-  body[data-skin="neon"] .recflag{box-shadow:0 0 22px -4px var(--acc)}
-  body[data-skin="neon"] .wd.is-today{box-shadow:0 0 0 1px var(--up), 0 0 26px -8px var(--up);border-color:var(--up)}
-  body[data-skin="neon"] .wd.is-today b{color:var(--up);text-shadow:0 0 12px var(--up)}
-  body[data-skin="neon"] .wd .dot.done{box-shadow:0 0 12px var(--ok)}
-  body[data-skin="neon"] .ex-n{color:var(--acc);box-shadow:0 0 16px -6px var(--acc), inset 0 0 0 1px rgba(203,211,230,.18)}
-  body[data-skin="neon"] .kgfield,
-  body[data-skin="neon"] .numfield{border-color:rgba(203,211,230,.24)}
-  body[data-skin="neon"] .kgfield input,
-  body[data-skin="neon"] .numfield input{color:var(--silver);text-shadow:0 0 10px rgba(203,211,230,.4)}
-  body[data-skin="neon"] .donebtn[aria-pressed="true"]{box-shadow:0 0 18px -4px var(--ok)}
-  body[data-skin="neon"] .lastchip{border-color:rgba(203,211,230,.35);color:var(--silver-dim)}
-  body[data-skin="neon"] .timer{border-color:rgba(203,211,230,.24)}
-  body[data-skin="neon"] .timer .t{color:var(--silver);text-shadow:0 0 14px rgba(203,211,230,.6)}
-  body[data-skin="neon"] .timer .bar i{box-shadow:0 0 14px var(--acc, var(--up))}
-  body[data-skin="neon"] .bottom{border-top-color:rgba(203,211,230,.22);box-shadow:0 -1px 16px -6px rgba(192,139,255,.5)}
-  body[data-skin="neon"] .tabs button[aria-pressed="true"]{box-shadow:0 0 20px -6px rgba(203,211,230,.8)}
-  body[data-skin="neon"] .note{border-color:rgba(203,211,230,.18)}
-
-  /* --- Vaalea art deco --- */
-  body[data-skin="deco"]{
-    --bg:#EBE4D6;--surface:#FCFAF4;--surface-2:#F4EEE1;--line:#DFD4BC;--line-2:#C1AE85;
-    --ink:#15130E;--ink-2:#47412F;--ink-3:#7A705E;
-    --up:#8A6A1F;--up-soft:#F2E8CE;--low:#4A5F68;--low-soft:#E1E8EB;
-    --ok:#3D6A47;--ok-soft:#E0EBE1;--warn:#8F5D17;--warn-soft:#F6E8CE;--bad:#8E352E;
-    --on-acc:#FCFAF4;--rest:#4F555B;--cardio:#2F6B63;--cardio-soft:#DCEAE7;
-    --gold:#B08D3F;--gold-lt:#E3CE99;--silver:#9BA3AA;--silver-lt:#D7DBDF;
-    --shadow:0 1px 2px rgba(74,58,24,.07), 0 12px 30px -20px rgba(74,58,24,.4);
-    --font-d:'Josefin Sans','Archivo','Helvetica Neue',Arial,sans-serif;
-    background-image:repeating-linear-gradient(90deg, rgba(176,141,63,.05) 0 1px, rgba(176,141,63,0) 1px 18px);
-    background-attachment:fixed;
-  }
-
-  /* typografia: geometrinen 20-luku */
-  body[data-skin="deco"] .today h1,
-  body[data-skin="deco"] .phead h1,
-  body[data-skin="deco"] .sheet h3{
-    font-family:'Poiret One','Josefin Sans',serif;font-weight:400;letter-spacing:.045em;
-  }
-  body[data-skin="deco"] .pcard h3,
-  body[data-skin="deco"] .ex-t h3,
-  body[data-skin="deco"] h2.sec,
-  body[data-skin="deco"] .gsec h3{font-weight:600;letter-spacing:.015em}
-  body[data-skin="deco"] .today .date,
-  body[data-skin="deco"] .pcard .day{letter-spacing:.24em;font-weight:700}
-
-  /* osioiden otsikkoviiva: vinoneliö + kultainen hiusviiva */
-  body[data-skin="deco"] .eyebrow{display:flex;align-items:center;gap:10px;letter-spacing:.24em;color:var(--ink-3)}
-  body[data-skin="deco"] .eyebrow::before{content:"";width:6px;height:6px;flex:none;background:var(--gold);transform:rotate(45deg)}
-  body[data-skin="deco"] .eyebrow::after{content:"";flex:1;height:1px;background:linear-gradient(90deg,var(--gold),rgba(176,141,63,0))}
-
-  /* yläpalkki: kaksoisviiva */
-  body[data-skin="deco"] .topbar{border-bottom:1px solid var(--gold);box-shadow:0 3px 0 -1px var(--silver-lt)}
-  body[data-skin="deco"] .seg{border-radius:4px;border-color:var(--line-2);background:var(--surface-2)}
-  body[data-skin="deco"] .seg button{border-radius:3px;letter-spacing:.08em}
-  body[data-skin="deco"] .seg button[aria-pressed="true"]{box-shadow:inset 0 0 0 1px var(--gold)}
-  body[data-skin="deco"] .iconbtn{border-radius:4px;border-color:var(--line-2);color:var(--up)}
-
-  /* kortit: yksi hillitty sisäkehys ulkoreunan sijaan */
-  body[data-skin="deco"] .card,
-  body[data-skin="deco"] .ex,
-  body[data-skin="deco"] .pcard{position:relative;border-color:var(--line-2);box-shadow:var(--shadow)}
-  body[data-skin="deco"] .card::before,
-  body[data-skin="deco"] .ex::before,
-  body[data-skin="deco"] .pcard::before{
-    content:"";position:absolute;inset:5px;border:1px solid rgba(176,141,63,.38);border-radius:8px;pointer-events:none;
-  }
-  body[data-skin="deco"] .pcard.rec{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold), var(--shadow)}
-  body[data-skin="deco"] .pcard.rec::before{border-color:var(--silver)}
-
-  /* päivän kortti: kulta–hopea-kehys, porrastettu kulmakoriste ja säteily */
-  body[data-skin="deco"] .today{
-    border:1px solid var(--gold);
-    box-shadow:var(--shadow);
-    background-image:
-      radial-gradient(120% 90% at 100% 0, rgba(176,141,63,.10) 0%, rgba(176,141,63,0) 55%),
-      repeating-linear-gradient(90deg, rgba(176,141,63,.045) 0 1px, rgba(176,141,63,0) 1px 16px);
-  }
-  body[data-skin="deco"] .today::before{
-    width:6px;
-    background:linear-gradient(180deg,var(--gold) 0%,var(--silver) 55%,var(--gold) 100%);
-  }
-  body[data-skin="deco"] .today::after{
-    content:"";position:absolute;top:10px;right:10px;width:64px;height:64px;pointer-events:none;opacity:.9;
-    background:
-      linear-gradient(var(--gold),var(--gold))   top 0    right 0/64px 1px no-repeat,
-      linear-gradient(var(--gold),var(--gold))   top 0    right 0/1px 64px no-repeat,
-      linear-gradient(var(--silver),var(--silver)) top 5px  right 0/46px 1px no-repeat,
-      linear-gradient(var(--silver),var(--silver)) top 0    right 5px/1px 46px no-repeat,
-      linear-gradient(var(--gold),var(--gold))   top 10px right 0/28px 1px no-repeat,
-      linear-gradient(var(--gold),var(--gold))   top 0    right 10px/1px 28px no-repeat;
-  }
-  body[data-skin="deco"] .today .why{border-top:1px solid var(--line);padding-top:10px}
-
-  /* napit: viistotut kulmat */
-  body[data-skin="deco"] .btn{
-    border-radius:0;letter-spacing:.1em;text-transform:uppercase;font-size:12.5px;padding:11px 18px;
-    clip-path:polygon(10px 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%, 0 10px);
-  }
-  body[data-skin="deco"] .btn.ghost{background:var(--surface);border-color:var(--line-2)}
-  body[data-skin="deco"] .btn.primary{background:#171512;border-color:#171512;color:#F0E6CE;box-shadow:inset 0 0 0 1px rgba(176,141,63,.55)}
-  body[data-skin="deco"] .btn.cardio{background:linear-gradient(180deg,#3C8177,#26584F);color:#FCFAF4;border:0}
-  body[data-skin="deco"] .btn.rest{background:linear-gradient(180deg,#5E656B,#454B50);color:#FCFAF4;border:0}
-  body[data-skin="deco"] .btn.accent{background:linear-gradient(180deg,#D3B368,#9C7C2C);color:#211A08;border:0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.35)}
-
-  /* pienet elementit */
-  body[data-skin="deco"] .chip{border-radius:3px;border-color:var(--line-2);letter-spacing:.04em}
-  body[data-skin="deco"] .chip.up{background:var(--up-soft);color:#6F5316}
-  body[data-skin="deco"] .chip.low{background:var(--low-soft);color:#3C4F57}
-  body[data-skin="deco"] .recflag{
-    border-radius:0;background:linear-gradient(90deg,#C8A85C,#8A6A1F);color:#FCFAF4;letter-spacing:.16em;
-    clip-path:polygon(7px 0,100% 0,calc(100% - 7px) 100%,0 100%);padding:3px 14px;
-  }
-  body[data-skin="deco"] .minibtn,
-  body[data-skin="deco"] .lastchip{border-radius:3px;border-color:var(--line-2)}
-  body[data-skin="deco"] .kgfield,
-  body[data-skin="deco"] .numfield,
-  body[data-skin="deco"] .donebtn,
-  body[data-skin="deco"] .pick{border-radius:4px;border-color:var(--line-2)}
-  body[data-skin="deco"] .ex-n{border-radius:3px;background:var(--up-soft);color:#6F5316}
-  body[data-skin="deco"] .note{border-radius:4px;border-left-width:3px}
-
-  /* viikkorytmi: kultainen ylärima, ei laatikkoa */
-  body[data-skin="deco"] .wd{
-    border:0;border-top:1px solid var(--gold);border-bottom:1px solid var(--line);
-    border-radius:0;box-shadow:none;padding:10px 6px;background:var(--surface);
-  }
-  body[data-skin="deco"] .wd.is-today{border-top:3px solid var(--gold);background:var(--surface-2);box-shadow:none}
-  body[data-skin="deco"] .wd.is-today b{color:var(--up)}
-
-  /* alapalkki ja paneelit */
-  body[data-skin="deco"] .bottom{border-top:1px solid var(--gold);box-shadow:0 -3px 0 -1px var(--silver-lt)}
-  body[data-skin="deco"] .timer{border-radius:4px;border-color:var(--line-2)}
-  body[data-skin="deco"] .tabs button{border-radius:3px;letter-spacing:.08em;border-color:var(--line-2)}
-  body[data-skin="deco"] .tabs button[aria-pressed="true"]{background:#171512;border-color:#171512;color:#F0E6CE}
-  body[data-skin="deco"] .sheet{
-    border:1px solid var(--gold);border-radius:6px;
-    box-shadow:inset 0 0 0 4px var(--surface), inset 0 0 0 5px var(--silver-lt), 0 20px 60px -20px rgba(60,48,20,.45);
-  }
-  body[data-skin="deco"] .skinbtn{border-radius:4px;border-color:var(--line-2)}
-
-  /* --- Luonto --- */
-  body[data-skin="nature"]{
-    --bg:#F1ECE1;--surface:#FCFAF5;--surface-2:#EEE8DA;--line:#DED6C4;--line-2:#C0B7A2;
-    --ink:#262A26;--ink-2:#535A51;--ink-3:#837E72;
-    --up:#4C7A2E;--up-soft:#E4EEDA;--low:#4F6975;--low-soft:#DFE8EC;
-    --ok:#3C7238;--ok-soft:#E1EEDD;--warn:#956212;--warn-soft:#F5E9D3;--bad:#A34A3C;
-    --on-acc:#FCFAF5;--rest:#6B7076;--cardio:#A2591F;--cardio-soft:#F4E2D1;
-    --shadow:0 1px 2px rgba(58,50,34,.06), 0 12px 28px -18px rgba(58,50,34,.32);
-    background-image:repeating-linear-gradient(0deg, rgba(120,96,58,.035) 0 1px, rgba(120,96,58,0) 1px 8px);
-    background-attachment:fixed;
-  }
-  body[data-skin="nature"] .card,
-  body[data-skin="nature"] .ex,
-  body[data-skin="nature"] .pcard,
-  body[data-skin="nature"] .today{border-radius:16px}
-  body[data-skin="nature"] .today{
-    border-color:var(--line-2);
-    background-image:radial-gradient(130% 100% at 100% 0, rgba(76,122,46,.09) 0%, rgba(76,122,46,0) 60%);
-  }
-  body[data-skin="nature"] .today::before{width:5px;background:linear-gradient(180deg,#6E9E43,#3F6A28)}
-  body[data-skin="nature"] .wd{border-radius:12px;border-color:var(--line)}
-  body[data-skin="nature"] .wd.is-today{border-color:var(--up);box-shadow:0 0 0 1px var(--up)}
-  body[data-skin="nature"] .wd.is-today b{color:var(--up)}
-  body[data-skin="nature"] .btn{border-radius:12px}
-  body[data-skin="nature"] .btn.accent{background:linear-gradient(180deg,#5D8F38,#446E27)}
-  body[data-skin="nature"] .btn.primary{background:#2C312C;border-color:#2C312C;color:#F3EFE5}
-  body[data-skin="nature"] .btn.cardio{background:linear-gradient(180deg,#B76A28,#8E4C17)}
-  body[data-skin="nature"] .btn.rest{background:linear-gradient(180deg,#797F85,#5C6268)}
-  body[data-skin="nature"] .chip{border-radius:8px}
-  body[data-skin="nature"] .ex-n{background:var(--up-soft);color:#3C6224}
-  body[data-skin="nature"] .recflag{background:linear-gradient(90deg,#6E9E43,#4C7A2E)}
-
-  /* --- Mustavalkoinen --- */
-  body[data-skin="mono"]{
-    --bg:#F4F4F5;--surface:#FFFFFF;--surface-2:#F0F0F1;--line:#E1E1E3;--line-2:#B9BABD;
-    --ink:#1B1D1F;--ink-2:#4A4E52;--ink-3:#8A8F94;
-    --up:#1B1D1F;--up-soft:#EAEAEB;--low:#2B2E31;--low-soft:#EDEDEE;
-    --ok:#22262A;--ok-soft:#ECEDEE;--warn:#55595D;--warn-soft:#EFEFF0;--bad:#C62828;
-    --on-acc:#FFFFFF;--rest:#9CA1A6;--cardio:#C62828;--cardio-soft:#FAE6E6;--red:#C62828;
-    --shadow:0 1px 2px rgba(20,22,24,.06), 0 10px 26px -18px rgba(20,22,24,.45);
-  }
-  body[data-skin="mono"] .today::before{background:var(--ink)}
-  body[data-skin="mono"] .btn.cardio{background:var(--red);color:#fff;border-color:transparent}
-  body[data-skin="mono"] .btn.rest{background:var(--surface);color:var(--ink);border:2px solid var(--ink)}
-  body[data-skin="mono"] .chip.up,
-  body[data-skin="mono"] .chip.low,
-  body[data-skin="mono"] .chip.ok,
-  body[data-skin="mono"] .chip.warn{background:var(--surface-2);color:var(--ink-2);border:1px solid var(--line-2)}
-  body[data-skin="mono"] .chip.cardio{background:var(--cardio-soft);color:var(--red);border:1px solid transparent}
-  body[data-skin="mono"] .recflag{background:var(--red);color:#fff}
-  body[data-skin="mono"] .wd.is-today{border-color:var(--red);box-shadow:0 0 0 1px var(--red)}
-  body[data-skin="mono"] .wd.is-today b{color:var(--red)}
-
-  /* kalenteri: täyttö, raidoitus ja ääriviiva erottavat lajit ilman värisävyjä */
-  body[data-skin="mono"] .calday.k-gym{background:var(--ink);border-color:var(--ink);color:#fff}
-  body[data-skin="mono"] .calday.k-cardio{background:var(--red);border-color:var(--red);color:#fff}
-  body[data-skin="mono"] .calday.k-rest{
-    background:var(--surface);border:2px solid var(--ink);color:var(--ink);
-  }
-  body[data-skin="mono"] .calday.is-today{box-shadow:inset 0 0 0 2px var(--surface), 0 0 0 3px var(--red)}
-  body[data-skin="mono"] .cstripe .s-cardio{background:var(--red)}
-  body[data-skin="mono"] .cstripe .s-rest{background:var(--surface);box-shadow:inset 0 0 0 1.5px var(--ink)}
-  body[data-skin="mono"] .callegend .s-gym{background:var(--ink)}
-  body[data-skin="mono"] .callegend .s-cardio{background:var(--red)}
-  body[data-skin="mono"] .callegend .s-rest{background:var(--surface);border-color:var(--ink);border-width:2px}
-  body[data-skin="mono"] .dot.k-cardio{background:var(--red)}
-  body[data-skin="mono"] .dot.k-rest{background:transparent;box-shadow:inset 0 0 0 2px var(--ink)}
+  /* Teemojen paletit ja viimeistely: themes.css */
 
   /* teemavalitsin */
   .pickrow{display:flex;flex-wrap:wrap;gap:6px}
@@ -929,7 +649,6 @@
   }
   .pickchip[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
   body[data-skin="deco"] .pickchip{border-radius:3px;letter-spacing:.06em}
-  body[data-skin="neon"] .pickchip[aria-pressed="true"]{box-shadow:0 0 20px -6px rgba(203,211,230,.8)}
   .skins{display:flex;flex-direction:column;gap:8px;margin-bottom:16px}
   .skinbtn{
     display:flex;align-items:center;gap:12px;width:100%;text-align:left;
@@ -1116,6 +835,7 @@
     .hello h1{font-size:36px}
   }
 </style>
+<link rel="stylesheet" href="themes.css">
 
 <header class="topbar">
   <div class="topbar-in">
@@ -1985,7 +1705,8 @@ function showSignIn(msg){
 function siMsg(t, warn){
   const m = document.getElementById('si-msg');
   if(!m) return;
-  m.hidden = false; m.textContent = t;
+  m.hidden = false; m.textContent = (warn ? '⚠ ' : '') + t;
+  m.setAttribute('role', warn ? 'alert' : 'status');
   m.style.borderLeftColor = warn ? 'var(--warn)' : 'var(--up)';
 }
 function authErrorText(err){
@@ -2859,7 +2580,8 @@ function renderHome(){
                                             (cell && cell.state === 'done') ? 'done' : 'rest') : 'gym');
   const shownProg = active ? progById(active.pid) : recProg;
   h += '<section class="today hero" style="--acc:' + accentOf(shownProg) + '">';
-  h += '<span class="kicker">' + (active ? 'Kesken' : kind === 'gym' ? 'Suositus' : kind === 'cardio' ? 'Suositus · cardio' :
+  h += '<div class="hero-copy">' + (kind === 'gym' ? '<img class="hero-art" src="assets/hero-' + resolvedSkin(skin) + '.webp" alt="" aria-hidden="true" width="768" height="512">' : '');
+  h += '<span class="kicker' + (kind === 'done' ? ' done' : '') + '">' + (active ? 'Kesken' : kind === 'gym' ? 'Suositus' : kind === 'cardio' ? 'Suositus · cardio' :
        kind === 'done' ? 'Päivä kirjattu' : 'Suositus · lepo') + '</span>';
   if(kind === 'gym'){
     const sets = shownProg.ex.reduce(function(t, e){ return t + e.sets; }, 0);
@@ -2872,6 +2594,7 @@ function renderHome(){
         kind === 'done' ? 'Tämän päivän treeni on kirjattu. Seuraava treeni jatkaa kiertoa.' :
         'Palautuminen on osa ohjelmaa. Salitreeni jatkuu kierrossa seuraavana päivänä.') + '</p>';
   }
+  h += '</div>';
   const first = String(rec.why).split('. ')[0].replace(/\.$/, '');
   const shortWhy = active ? '' : (/^Ei vielä kirjattuja/.test(first) ? 'Aloita kierto tästä.' : first + '.');
   if(shortWhy) h += '<p class="why">' + esc(shortWhy) + '</p>';
@@ -4347,7 +4070,8 @@ function showBackupOptions(txt, fname, note){
 function bkNotice(msg, warn){
   const el = document.getElementById('bk-msg');
   if(!el) return;
-  el.textContent = msg;
+  el.textContent = (warn ? '⚠ ' : '') + msg;
+  el.setAttribute('role', warn ? 'alert' : 'status');
   el.style.borderLeftColor = warn ? 'var(--warn)' : 'var(--up)';
   el.hidden = false;
 }
@@ -4514,7 +4238,7 @@ function applyImport(txt){
   const d = obj && obj.data ? obj.data : obj;
   if(!d || (!d.iida && !d.matti)){
     overlayEl.innerHTML = '<div class="ov"><div class="sheet" role="dialog" aria-label="Tuonti epäonnistui">' +
-      '<h3>Tiedostoa ei tunnistettu</h3><p>Valitse Saliohjelman oma varmuuskopio (JSON).</p>' +
+      '<h3>⚠ Tiedostoa ei tunnistettu</h3><p>Valitse Saliohjelman oma varmuuskopio (JSON).</p>' +
       '<div class="sticky-cta"><button class="btn primary" data-close="1">Sulje</button></div></div></div>';
     return;
   }
@@ -4640,29 +4364,45 @@ function renderGuide(){
 /* ---------------- VÄRITEEMAT ---------------- */
 
 const SKINS = [
-  {id:'neon', name:'Neon Synth', desc:'Musta pohja, hehkuva neonvioletti ja hopea', sw:['#09060F','#C08BFF','#3DEBD0','#CBD3E6']},
-  {id:'deco', name:'Art Deco', desc:'Norsunluu, kultaa ja hopeaa, geometriset koristeet', sw:['#EDE6D6','#C3A253','#A9AEB3','#8A6A1F']},
-  {id:'mono', name:'Mustavalkopunainen', desc:'Valkoinen, charcoal ja yksi punainen aksentti', sw:['#FFFFFF','#1B1D1F','#C62828','#E1E1E3']},
-  {id:'nature', name:'Luonto', desc:'Vaalea puu, harmaa kivi, charcoal ja koivunlehti', sw:['#F1ECE1','#EEE8DA','#4C7A2E','#4F6975']},
-  {id:'dark', name:'Tumma', desc:'Perus tumma tila', sw:['#0D1015','#9B95FF','#3FC7B4','#3A4351']},
-  {id:'light', name:'Vaalea', desc:'Rauhallinen luonnonvalkoinen, savensininen ja salvia', sw:['#F2F1ED','#4F6D7A','#96592F','#CAC6BC']},
-  {id:'auto', name:'Oletus', desc:'Seuraa laitteen vaaleaa tai tummaa tilaa', sw:['#F2F1ED','#4F6D7A','#9B95FF','#0D1015']}
+  {id:'neon', name:'Neon Synth', desc:'Sähköinen violetti ja turkoosi, kohdistettu hehku'},
+  {id:'deco', name:'Art Deco', desc:'Norsunluu, kultainen kehys ja klubin eleganssi'},
+  {id:'mono', name:'Mustavalkopunainen', desc:'Mustaa ja valkoista, punainen päätoiminto'},
+  {id:'nature', name:'Luonto', desc:'Pellava, metsänvihreä ja rauhalliset mattapinnat'},
+  {id:'dark', name:'Tumma', desc:'Grafiitti ja teräksensininen, ilman hehkua'},
+  {id:'light', name:'Vaalea', desc:'Luonnonvalkoinen, savensininen ja salvia'},
+  {id:'auto', name:'Laitteen mukaan', desc:'Vaihtuu laitteen vaalean tai tumman tilan mukana'}
 ];
+const skinMedia = window.matchMedia('(prefers-color-scheme: dark)');
 let skin = 'auto';
-try{ const sv = localStorage.getItem('salikirja-skin'); if(sv) skin = sv; }catch(e){}
+try{ const sv = localStorage.getItem('salikirja-skin'); if(SKINS.some(function(s){ return s.id === sv; })) skin = sv; }catch(e){}
+function resolvedSkin(id){ return id === 'auto' ? (skinMedia.matches ? 'dark' : 'light') : id; }
 function applySkin(id){
-  skin = id;
-  if(id && id !== 'auto') document.body.setAttribute('data-skin', id);
-  else document.body.removeAttribute('data-skin');
-  try{ localStorage.setItem('salikirja-skin', id); }catch(e){}
+  skin = SKINS.some(function(s){ return s.id === id; }) ? id : 'auto';
+  document.body.setAttribute('data-skin', resolvedSkin(skin));
+  document.querySelectorAll('.hero-art').forEach(function(img){ img.src = 'assets/hero-' + resolvedSkin(skin) + '.webp'; });
+  document.documentElement.style.colorScheme = ['dark','neon'].indexOf(resolvedSkin(skin)) >= 0 ? 'dark' : 'light';
+  const color = getComputedStyle(document.body).getPropertyValue('--bg').trim();
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if(meta && color) meta.setAttribute('content', color);
+  try{ localStorage.setItem('salikirja-skin', skin); }catch(e){}
 }
+function onSkinMediaChange(){
+  if(skin === 'auto') applySkin('auto');
+  if(document.querySelector('[data-setskin]')) showSkins();
+}
+if(skinMedia.addEventListener) skinMedia.addEventListener('change', onSkinMediaChange);
+else skinMedia.addListener(onSkinMediaChange);
 function showSkins(){
   let h = '<div class="ov"><div class="sheet" role="dialog" aria-label="Väriteema">' +
-    '<h3>Väriteema</h3><p>Valinta säilyy tällä laitteella.</p><div class="skins">';
+    '<h3>Väriteema</h3><p>Samat tutut toiminnot, eri tunnelma. Valinta säilyy tällä laitteella.</p><div class="skins">';
   SKINS.forEach(function(sk){
-    h += '<button class="skinbtn" type="button" data-setskin="' + sk.id + '" aria-pressed="' + (skin === sk.id) + '">' +
-      '<span class="sw">' + sk.sw.map(function(c){ return '<i style="background:' + c + '"></i>'; }).join('') + '</span>' +
-      '<span>' + esc(sk.name) + '<small>' + esc(sk.desc) + '</small></span></button>';
+    const chosen = skin === sk.id;
+    h += '<button class="skinbtn" type="button" data-setskin="' + sk.id + '" aria-pressed="' + chosen + '">' +
+      '<span class="theme-preview" data-skin="' + resolvedSkin(sk.id) + '" aria-hidden="true">' +
+      '<span class="mini-brand">Saliohjelma</span><span class="mini-card"><span class="mini-title">Ylävartalo A</span>' +
+      '<span class="mini-fields"><i>80 kg</i><i>12 ×</i></span><span class="mini-action">Aloita treeni →</span></span></span>' +
+      '<span class="skin-label">' + esc(sk.name) + (chosen ? '<span class="skin-check" aria-hidden="true">✓</span>' : '') + '</span>' +
+      '<small>' + esc(sk.desc) + '</small></button>';
   });
   h += '</div><div class="sticky-cta"><button class="btn primary" data-close="1">Valmis</button></div></div></div>';
   overlayEl.innerHTML = h;
@@ -5756,7 +5496,8 @@ function aiSaveFile(fname, txt, mime){
 function aiNotice(msg, warn){
   const el = document.getElementById('ai-msg');
   if(!el) return;
-  el.textContent = msg;
+  el.textContent = (warn ? '⚠ ' : '') + msg;
+  el.setAttribute('role', warn ? 'alert' : 'status');
   el.style.borderLeftColor = warn ? 'var(--warn)' : 'var(--up)';
   el.hidden = false;
 }
@@ -5882,7 +5623,7 @@ document.addEventListener('click', function(ev){
       renderAll();
       syncRender();
     }, function(err){
-      overlayEl.innerHTML = '<div class="ov"><div class="sheet" role="dialog" aria-label="Virhe"><h3>Jakamista ei voitu lopettaa</h3>' +
+      overlayEl.innerHTML = '<div class="ov"><div class="sheet" role="dialog" aria-label="Virhe"><h3>⚠ Jakamista ei voitu lopettaa</h3>' +
         '<p>Tarkista verkkoyhteys ja yritä uudelleen. (' + esc(err && err.code || 'virhe') + ')</p>' +
         '<div class="sticky-cta"><button class="btn primary" data-close="1">Sulje</button></div></div></div>';
     });
@@ -6077,6 +5818,8 @@ document.addEventListener('click', function(ev){
   if(t.dataset.setskin){
     applySkin(t.dataset.setskin);
     showSkins();
+    const selectedSkin = document.querySelector('[data-setskin="' + skin + '"]');
+    if(selectedSkin) selectedSkin.focus({preventScroll:true});
     if(state.view === 'history' && state.tab === 'kehitys' && document.getElementById('chartbox')) drawChart();
     return;
   }
