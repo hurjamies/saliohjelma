@@ -3,8 +3,8 @@
    Versionumeroa nostamalla vanha välimuisti korvautuu.
    Firebasen yhteyksiin (kirjautuminen, Firestore) ei kosketa: ne kulkevat
    aina suoraan verkkoon, jotta reaaliaikainen synkronointi toimii. */
-const CACHE = 'saliohjelma-v10.2.1-theme-scenes';
-const SHELL = ['./', './index.html', './themes.css', './assets/hero-neon.webp', './assets/hero-deco.webp', './assets/hero-mono.webp', './assets/hero-nature.webp', './assets/hero-dark.webp', './assets/hero-light.webp', './manifest.json', './icon-192.png', './icon-512.png', './icon-180.png', './icon-maskable-512.png',
+const CACHE = 'saliohjelma-v10.2.2-theme-views';
+const SHELL = ['./', './index.html', './themes.css?v=10.2.2', './assets/hero-neon.webp', './assets/hero-deco.webp', './assets/hero-mono.webp', './assets/hero-nature.webp', './assets/hero-dark.webp', './assets/hero-light.webp', './manifest.json', './icon-192.png', './icon-512.png', './icon-180.png', './icon-maskable-512.png',
   './firebase/firebase-app.js', './firebase/firebase-auth.js', './firebase/firebase-firestore.js'];
 const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
 
@@ -29,7 +29,7 @@ self.addEventListener('fetch', function(e){
     e.respondWith(
       fetch(req).then(function(res){
         const copy = res.clone();
-        caches.open(CACHE).then(function(c){ c.put('./index.html', './themes.css', './assets/hero-neon.webp', './assets/hero-deco.webp', './assets/hero-mono.webp', './assets/hero-nature.webp', './assets/hero-dark.webp', './assets/hero-light.webp', copy); });
+        if(res.ok) e.waitUntil(caches.open(CACHE).then(function(c){ return c.put('./index.html', copy); }));
         return res;
       }).catch(function(){
         return caches.match('./index.html').then(function(m){ return m || caches.match('./'); });
@@ -42,7 +42,7 @@ self.addEventListener('fetch', function(e){
       return hit || fetch(req).then(function(res){
         if(res && (res.ok || res.type === 'opaque')){
           const copy = res.clone();
-          caches.open(CACHE).then(function(c){ c.put(req, copy); });
+          e.waitUntil(caches.open(CACHE).then(function(c){ return c.put(req, copy); }));
         }
         return res;
       });

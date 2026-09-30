@@ -116,6 +116,14 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,summary:focus-vi
 .hero-copy h2 {max-width:440px;text-wrap:balance}
 .hero-copy .sub {max-width:390px}
 .hero-copy .meta {margin-top:10px}
+.workout-hero {position:relative;isolation:isolate;overflow:hidden;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px 14px;min-height:150px;box-shadow:var(--shadow)}
+.workout-hero > .hero-art {width:min(100%,440px);height:100%;right:0;top:0}
+.workout-hero .hero-copy {min-height:112px}
+.workout-hero .ptop-row {position:relative;z-index:1;align-items:flex-start;min-height:112px;padding-right:84px}
+.workout-hero .ptitle {padding-top:6px}
+.workout-hero .kebab {position:absolute;right:0;top:0;background:var(--surface)}
+body[data-skin="deco"] .workout-hero {border-color:var(--gold)}
+@media(max-width:380px) {.workout-hero .ptop-row {padding-right:68px}}
 .hero .kicker {background:none;padding:0;border-radius:0;color:var(--up);letter-spacing:.12em}
 .hero .kicker::before {content:"◆";margin-right:7px;font-size:9px}
 .hero .kicker.done::before {content:"✓"}
