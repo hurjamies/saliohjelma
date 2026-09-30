@@ -3,8 +3,8 @@
    Versionumeroa nostamalla vanha välimuisti korvautuu.
    Firebasen yhteyksiin (kirjautuminen, Firestore) ei kosketa: ne kulkevat
    aina suoraan verkkoon, jotta reaaliaikainen synkronointi toimii. */
-const CACHE = 'saliohjelma-v10.2.0';
-const SHELL = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './icon-180.png', './icon-maskable-512.png',
+const CACHE = 'saliohjelma-v10.0.2-themes';
+const SHELL = ['./', './index.html', './themes.css', './assets/dumbbell.webp', './manifest.json', './icon-192.png', './icon-512.png', './icon-180.png', './icon-maskable-512.png',
   './firebase/firebase-app.js', './firebase/firebase-auth.js', './firebase/firebase-firestore.js'];
 const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
 
@@ -29,7 +29,7 @@ self.addEventListener('fetch', function(e){
     e.respondWith(
       fetch(req).then(function(res){
         const copy = res.clone();
-        caches.open(CACHE).then(function(c){ c.put('./index.html', copy); });
+        caches.open(CACHE).then(function(c){ c.put('./index.html', './themes.css', './assets/dumbbell.webp', copy); });
         return res;
       }).catch(function(){
         return caches.match('./index.html').then(function(m){ return m || caches.match('./'); });

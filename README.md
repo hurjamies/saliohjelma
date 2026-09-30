@@ -1,7 +1,8 @@
 # Saliohjelma
 
-Iidiksen ja Matin salitreeniohjelmat yhtenä selainsovelluksena. Koko sovellus on yhdessä
-`index.html`-tiedostossa; kirjaukset tallentuvat puhelimeen ja synkronoituvat Firebaseen.
+Iidiksen ja Matin salitreeniohjelmat yhtenä selainsovelluksena. Sovelluslogiikka on
+`index.html`-tiedostossa ja teemojen viimeistely `themes.css`-tiedostossa;
+kirjaukset tallentuvat puhelimeen ja synkronoituvat Firebaseen.
 
 **Sovellus:** https://hurjamies.github.io/saliohjelma/
 
@@ -21,6 +22,9 @@ Iidiksen ja Matin salitreeniohjelmat yhtenä selainsovelluksena. Koko sovellus o
 - **Kehityskäyrät** – liikkeen paras työsarja ensisijaisena mittarina, kokonaiskuorma sekundäärisenä.
   A- ja B-päivien historia pidetään erillään.
 - **Kuusi väriteemaa** – Neon Synth, Art Deco, Mustavalkopunainen, Luonto, Tumma, Vaalea.
+  **Laitteen mukaan** seuraa järjestelmän vaaleaa tai tummaa tilaa myös käytön aikana.
+  Teemavalitsin näyttää pienet käyttöliittymäesikatselut. Selaimen yläpalkin väri
+  seuraa valittua teemaa sitä tukevissa selaimissa.
 - **Varmuuskopio** – vie ja tuo kaikki kirjaukset JSON-tiedostona.
 
 ## Asennus puhelimeen
@@ -50,6 +54,17 @@ näkyvät molempien puhelimissa reaaliajassa. Ilman verkkoa tehdyt kirjaukset l�
   ja pääsy on rajattu kirjautumisella ja säännöillä.
 
 Varmuuskopio: **Ohjeet → Varmuuskopio → Vie data / Tuo data**.
+
+## Teemojen kuva
+
+Päivän salitreenikortin koristekuva on `assets/dumbbell.webp` (noin 44 kt).
+Kuva on luotu OpenAI ImageGenillä käyttäjän antaman tyyliviitteen pohjalta.
+Kuva ja teematyylit kuuluvat service workerin offline-välimuistiin.
+
+Kuvaprompti: Yksi klassinen säädettävä metallinen käsipaino, pyöreät tummat
+rautalevyt ja hopeinen karhennettu kahva, kolmen neljäsosan lähikuva, neutraali
+studiovalaistus. Oikealle painottuva sommittelu, vasemmalla tyhjää tilaa,
+läpinäkyvä tausta, ei tekstiä, logoja tai käyttöliittymää.
 
 ## Ohjelmien tausta
 
