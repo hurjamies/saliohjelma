@@ -3,7 +3,7 @@
    Versionumeroa nostamalla vanha välimuisti korvautuu.
    Firebasen yhteyksiin (kirjautuminen, Firestore) ei kosketa: ne kulkevat
    aina suoraan verkkoon, jotta reaaliaikainen synkronointi toimii. */
-const CACHE = 'saliohjelma-v10.0.3-theme-scenes';
+const CACHE = 'saliohjelma-v10.2.1-theme-scenes';
 const SHELL = ['./', './index.html', './themes.css', './assets/hero-neon.webp', './assets/hero-deco.webp', './assets/hero-mono.webp', './assets/hero-nature.webp', './assets/hero-dark.webp', './assets/hero-light.webp', './manifest.json', './icon-192.png', './icon-512.png', './icon-180.png', './icon-maskable-512.png',
   './firebase/firebase-app.js', './firebase/firebase-auth.js', './firebase/firebase-firestore.js'];
 const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
