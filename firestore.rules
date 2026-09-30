@@ -1,0 +1,19 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Vain Matti ja Iidis. UID:t: Firebase-konsoli -> Authentication -> Users.
+    function member() {
+      return request.auth != null
+        && request.auth.uid in ['__UID_MATTI__', '__UID_IIDIS__'];
+    }
+    // Jokainen treeni on oma dokumenttinsa: saliohjelma/{iida|matti}/sessions/{id}
+    match /saliohjelma/{person}/sessions/{sid} {
+      allow read, delete: if member() && person in ['iida', 'matti'];
+      allow create, update: if member() && person in ['iida', 'matti']
+        && request.resource.data.id == sid
+        && request.resource.data.pid is string
+        && request.resource.data.end is string;
+    }
+    // Kaikki muu on suljettu.
+  }
+}

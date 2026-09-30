@@ -138,6 +138,15 @@
     display:grid;place-items:center;color:var(--ink-2);flex:none;
   }
 
+  .syncbtn{position:relative}
+  .syncbtn .sdot{position:absolute;right:3px;top:3px;width:8px;height:8px;border-radius:50%;
+    background:var(--ink-3);border:1.5px solid var(--surface)}
+  .syncbtn[data-state="synced"] .sdot{background:#2E9E5B}
+  .syncbtn[data-state="connecting"] .sdot,.syncbtn[data-state="loading"] .sdot{background:#D9A21B}
+  .syncbtn[data-state="offline"] .sdot{background:#D9A21B}
+  .syncbtn[data-state="signedout"] .sdot{background:var(--ink-3)}
+  .syncbtn[data-state="denied"] .sdot,.syncbtn[data-state="error"] .sdot{background:#D0453A}
+
   /* ---------- generic pieces ---------- */
   .eyebrow{
     font-family:var(--font-d);font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
@@ -934,6 +943,7 @@
       <button type="button" data-person="iida" aria-pressed="true">Iidis</button>
       <button type="button" data-person="matti" aria-pressed="false">Matti</button>
     </div>
+    <button type="button" class="iconbtn syncbtn" id="btn-sync" data-syncsheet="1" hidden data-state="off" aria-label="Synkronointi"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M5.2 14.2h7.9a3.1 3.1 0 0 0 .4-6.2 4.3 4.3 0 0 0-8.3-.9 3.6 3.6 0 0 0 0 7.1z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><i class="sdot"></i></button>
     <button type="button" class="iconbtn" id="btn-cal" title="Kalenteri" aria-label="Kalenteri"><svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"><rect x="2.2" y="3.4" width="13.6" height="12.4" rx="2.4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M2.2 7.2h13.6M6.2 2.2v2.6M11.8 2.2v2.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="5" y="9.6" width="2.4" height="2.4" rx=".7" fill="currentColor"/></svg></button>
     <button type="button" class="iconbtn" id="btn-skin" title="Väriteema" aria-label="Väriteema"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 1.6a6.4 6.4 0 0 1 0 12.8z" fill="currentColor"/></svg></button>
     <button type="button" class="iconbtn" id="btn-guide" title="Ohjeet ja periaatteet" aria-label="Ohjeet">?</button>
@@ -1187,6 +1197,7 @@ function save(p){
   savedAt[p] = Date.now();
   try{ localStorage.setItem(lsKey(p) + '-saved', String(savedAt[p])); }catch(e){}
   writeLocal(p);
+  if(sync.enabled) syncPush(p);
   if(!db) return;
   clearTimeout(pending[p]);
   pending[p] = setTimeout(function(){ flush(p); }, 800);
@@ -1239,6 +1250,327 @@ function mergeSessions(a,b){
   return Object.keys(byId).map(function(k){return byId[k];})
     .sort(function(x,y){ return (x.end||'') < (y.end||'') ? -1 : 1; });
 }
+
+/* ============================================================
+   FIREBASE-SYNKRONOINTI (asennettava GitHub-versio)
+   - Jokainen treeni on oma dokumenttinsa: saliohjelma/{henkilö}/sessions/{id}
+   - Kesken oleva treeni pysyy laitteella; valmiit treenit synkronoituvat.
+   - Kolmen version vertailu: paikallinen tila, palvelimen tila ja viimeksi
+     palvelimen vahvistama tila (base). Näin tiedetään, kummassa päässä
+     treeniä muutettiin tai mistä se poistettiin – myös ilman nettiä
+     tehdyissä muutoksissa. Ristiriidassa palvelimen versio voittaa.
+   - Claude-artefaktissa ja offline-tiedostossa synkronointi ei ole käytössä.
+   ============================================================ */
+
+const FB_SETUP = /*FB_SETUP_START*/null/*FB_SETUP_END*/;
+const FB = window.__SALI_FB || FB_SETUP;   /* testit voivat antaa emulaattoriasetukset */
+const FB_BASE_KEY = 'salikirja-sync-base';
+const sync = {
+  enabled: !!(FB && FB.config && !(window.claude && window.claude.use) && location.protocol.indexOf('http') === 0),
+  api: null, auth: null, fs: null, user: null,
+  status: 'off',            /* off | loading | signedout | connecting | synced | offline | denied | error */
+  error: '',
+  ready: {iida:false, matti:false},
+  pending: {iida:{}, matti:{}},   /* id -> hash, lähetetty mutta ei vielä vahvistettu */
+  unsub: [], pushTimer: {iida:null, matti:null},
+  base: {iida:{}, matti:{}}
+};
+try{
+  const b = JSON.parse(localStorage.getItem(FB_BASE_KEY) || 'null');
+  if(b && b.iida && b.matti) sync.base = b;
+}catch(e){}
+function saveBase(){ try{ localStorage.setItem(FB_BASE_KEY, JSON.stringify(sync.base)); }catch(e){} }
+
+/* kanoninen tunniste: kenttien järjestys ja _-alkuiset metakentät eivät vaikuta */
+function canon(v){
+  if(Array.isArray(v)) return '[' + v.map(canon).join(',') + ']';
+  if(v && typeof v === 'object'){
+    return '{' + Object.keys(v).filter(function(k){ return k.charAt(0) !== '_' && v[k] !== undefined; }).sort()
+      .map(function(k){ return JSON.stringify(k) + ':' + canon(v[k]); }).join(',') + '}';
+  }
+  return v === undefined ? 'null' : JSON.stringify(v);
+}
+function shash(o){
+  const s = canon(o);
+  let h = 5381;
+  for(let i = 0; i < s.length; i++) h = ((h << 5) + h + s.charCodeAt(i)) | 0;
+  return (h >>> 0).toString(36) + '.' + s.length;
+}
+function stripMeta(o){
+  const out = {};
+  Object.keys(o).forEach(function(k){ if(k.charAt(0) !== '_') out[k] = o[k]; });
+  return out;
+}
+
+function syncStart(){
+  if(!sync.enabled) return;
+  sync.status = 'loading';
+  const dir = new URL('firebase/', document.baseURI).href;
+  Promise.all([import(dir + 'firebase-app.js'), import(dir + 'firebase-auth.js'), import(dir + 'firebase-firestore.js')])
+    .then(function(m){
+      const A = m[0], U = m[1], F = m[2];
+      sync.api = {U:U, F:F};
+      const app = A.initializeApp(FB.config);
+      sync.auth = U.getAuth(app);
+      sync.fs = F.initializeFirestore(app, {ignoreUndefinedProperties:true});
+      if(FB.emulator){
+        U.connectAuthEmulator(sync.auth, FB.emulator.auth, {disableWarnings:true});
+        F.connectFirestoreEmulator(sync.fs, FB.emulator.host, FB.emulator.port);
+      }
+      U.onAuthStateChanged(sync.auth, function(user){
+        const prev = sync.user;
+        sync.user = user;
+        syncStop();
+        if(!user){ sync.status = 'signedout'; syncRender(); if(state.view === 'home' && !overlayEl.innerHTML) renderAll(); return; }
+        if(!prev && FB.members && FB.members[user.uid] && sync.justSignedIn){
+          state.person = FB.members[user.uid];
+          try{ localStorage.setItem('salikirja-person', state.person); }catch(e){}
+        }
+        sync.justSignedIn = false;
+        syncListen();
+        if(state.view === 'home' && !overlayEl.innerHTML) renderAll();
+      });
+    })
+    .catch(function(){
+      /* kirjasto ei latautunut (esim. ei verkkoa ensimmäisellä kerralla) – sovellus toimii paikallisesti */
+      sync.status = 'offline'; syncRender();
+    });
+  window.addEventListener('online', function(){ if(sync.user) syncRender(); });
+  window.addEventListener('offline', function(){ if(sync.user){ sync.status = 'offline'; syncRender(); } });
+}
+function syncStop(){
+  sync.unsub.forEach(function(u){ try{ u(); }catch(e){} });
+  sync.unsub = [];
+  PERSONS.forEach(function(p){ sync.ready[p] = false; sync.pending[p] = {}; });
+}
+function syncListen(){
+  const F = sync.api.F;
+  sync.status = 'connecting'; syncRender();
+  PERSONS.forEach(function(p){
+    const u = F.onSnapshot(F.collection(sync.fs, 'saliohjelma', p, 'sessions'), {includeMetadataChanges:true},
+      function(snap){
+        if(snap.metadata.fromCache){
+          if(!sync.ready.iida || !sync.ready.matti){ sync.status = navigator.onLine === false ? 'offline' : 'connecting'; syncRender(); }
+          else if(navigator.onLine === false){ sync.status = 'offline'; syncRender(); }
+          return;
+        }
+        reconcile(p, snap);
+      },
+      function(err){
+        sync.status = (err && err.code === 'permission-denied') ? 'denied' : 'error';
+        sync.error = err && (err.code || err.message) || '';
+        syncRender();
+      });
+    sync.unsub.push(u);
+  });
+}
+
+/* palvelimen ja paikallisen tilan yhdistäminen */
+function reconcile(p, snap){
+  const F = sync.api.F;
+  const S = {}, pend = {};
+  snap.docs.forEach(function(d){
+    S[d.id] = stripMeta(d.data());
+    if(d.metadata.hasPendingWrites) pend[d.id] = true;
+  });
+  const L = {};
+  (store[p].sessions || []).forEach(function(x){ if(x && x.id) L[x.id] = x; });
+  const B = sync.base[p];
+  const ids = {};
+  [S, L, B].forEach(function(o){ Object.keys(o).forEach(function(k){ ids[k] = 1; }); });
+  const out = [], writes = [], dels = [];
+  Object.keys(ids).forEach(function(id){
+    const s = S[id], l = L[id], b = B[id];
+    const hs = s ? shash(s) : null, hl = l ? shash(l) : null;
+    if(s && l){
+      if(hs === hl){ out.push(l); if(!pend[id]) B[id] = hs; }
+      else if(hl === b){ out.push(s); if(!pend[id]) B[id] = hs; }     /* muutettu toisella laitteella */
+      else if(hs === b){ out.push(l); writes.push(l); }                /* muutettu tällä laitteella */
+      else { out.push(s); if(!pend[id]) B[id] = hs; }                  /* ristiriita: palvelin voittaa */
+    }else if(s){
+      if(b && b === hs && !pend[id]) dels.push(id);                    /* poistettu tällä laitteella */
+      else { out.push(s); if(!pend[id]) B[id] = hs; }                  /* uusi toiselta laitteelta */
+    }else if(l){
+      if(b && b === hl) delete B[id];                                  /* poistettu toisella laitteella */
+      else { out.push(l); writes.push(l); }                            /* uusi tai muutettu tällä laitteella */
+    }else{
+      delete B[id];
+    }
+  });
+  const before = (store[p].sessions || []).map(shash).join('|');
+  store[p].sessions = out.sort(function(x, y){ return (x.end || '') < (y.end || '') ? -1 : ((x.end || '') > (y.end || '') ? 1 : 0); });
+  const after = store[p].sessions.map(shash).join('|');
+  saveBase();
+  writeLocal(p);
+  sync.ready[p] = true;
+  writes.forEach(function(l){ pushOne(p, l); });
+  dels.forEach(function(id){ delOne(p, id); });
+  const anyPending = Object.keys(pend).length || writes.length || dels.length;
+  sync.status = (navigator.onLine === false) ? 'offline' : (anyPending ? 'connecting' : 'synced');
+  if(sync.ready.iida && sync.ready.matti && !anyPending) sync.status = 'synced';
+  if(before !== after) syncRenderData(); else syncRender();
+}
+function pushOne(p, l){
+  const F = sync.api.F;
+  const h = shash(l);
+  if(sync.pending[p][l.id] === h) return;
+  sync.pending[p][l.id] = h;
+  const data = Object.assign({}, l, {_t: Date.now(), _by: sync.user ? sync.user.uid : ''});
+  F.setDoc(F.doc(sync.fs, 'saliohjelma', p, 'sessions', l.id), data).then(function(){
+    if(sync.pending[p][l.id] === h) delete sync.pending[p][l.id];
+  }, function(err){
+    delete sync.pending[p][l.id];
+    sync.status = (err && err.code === 'permission-denied') ? 'denied' : 'error';
+    sync.error = err && (err.code || err.message) || '';
+    syncRender();
+  });
+}
+function delOne(p, id){
+  const F = sync.api.F;
+  if(sync.pending[p][id] === 'DEL') return;
+  sync.pending[p][id] = 'DEL';
+  F.deleteDoc(F.doc(sync.fs, 'saliohjelma', p, 'sessions', id)).then(function(){
+    if(sync.pending[p][id] === 'DEL') delete sync.pending[p][id];
+  }, function(err){
+    delete sync.pending[p][id];
+    sync.status = 'error'; sync.error = err && (err.code || err.message) || ''; syncRender();
+  });
+}
+/* kutsutaan save()-funktiosta: lähetetään muuttuneet ja poistetut treenit */
+function syncPush(p){
+  if(!sync.user || !sync.ready[p]) return;
+  clearTimeout(sync.pushTimer[p]);
+  sync.pushTimer[p] = setTimeout(function(){
+    const B = sync.base[p];
+    const L = {};
+    (store[p].sessions || []).forEach(function(x){
+      if(!x || !x.id) return;
+      L[x.id] = 1;
+      if(shash(x) !== B[x.id]) pushOne(p, x);
+    });
+    Object.keys(B).forEach(function(id){ if(!L[id]) delOne(p, id); });
+  }, 500);
+}
+
+function syncRender(){
+  const el = document.getElementById('btn-sync');
+  if(el){
+    el.hidden = !sync.enabled;
+    el.setAttribute('data-state', sync.status);
+    el.setAttribute('aria-label', 'Synkronointi: ' + syncLabel());
+    el.title = syncLabel();
+  }
+  if(state.view === 'home'){
+    const f = document.getElementById('save-note');
+    if(f) f.textContent = homeSaveText();
+  }
+  if(state.view === 'guide'){
+    const g = document.getElementById('sync-card');
+    if(g) g.outerHTML = syncCardHtml();
+  }
+  const sh = document.getElementById('sync-sheet-status');
+  if(sh) sh.textContent = syncLabel();
+}
+function syncRenderData(){
+  /* data muuttui toiselta laitteelta: piirretään uudelleen, mutta ei kesken treenin kirjausta */
+  if(state.view === 'program'){ syncRender(); return; }
+  if(overlayEl.innerHTML && /data-note=|id="ai-text"|id="imp-text"|id="bk-text"|id="wa-text"/.test(overlayEl.innerHTML)){ syncRender(); return; }
+  renderAll();
+  syncRender();
+}
+function syncLabel(){
+  switch(sync.status){
+    case 'loading': return 'Käynnistetään…';
+    case 'signedout': return 'Ei kirjautunut – treenit ovat vain tässä puhelimessa';
+    case 'connecting': return 'Synkronoidaan…';
+    case 'synced': return 'Synkronoitu' + (sync.user && sync.user.email ? ' · ' + sync.user.email : '');
+    case 'offline': return 'Ei yhteyttä – muutokset lähetetään, kun yhteys palaa';
+    case 'denied': return 'Tällä tunnuksella ei ole pääsyä yhteisiin treeneihin';
+    case 'error': return 'Synkronointivirhe' + (sync.error ? ' (' + sync.error + ')' : '');
+    default: return 'Ei käytössä';
+  }
+}
+function homeSaveText(){
+  if(sync.enabled){
+    if(sync.user) return syncLabel() + '.';
+    return 'Treenit ovat vain tässä puhelimessa. Kirjaudu, niin ne synkronoituvat molempien puhelimiin.';
+  }
+  return db ? 'Tiedot tallentuvat pilveen – sama näkymä molempien laitteilla.' :
+    (saveNote || 'Tiedot tallentuvat tähän selaimeen.');
+}
+function syncCardHtml(){
+  if(!sync.enabled) return '<span id="sync-card" hidden></span>';
+  let h = '<section class="card gsec" id="sync-card"><h3>Synkronointi</h3>' +
+    '<p class="muted" style="font-size:13px;margin:0 0 10px">' + esc(syncLabel()) + '</p>';
+  if(sync.user){
+    h += '<p class="muted" style="font-size:12.5px;margin:0 0 10px">Valmiit treenit tallentuvat palvelimelle ja näkyvät molempien puhelimissa. ' +
+      'Kesken oleva treeni pysyy tässä puhelimessa, kunnes se tallennetaan.</p>' +
+      '<div class="pickrow"><button type="button" class="btn ghost" data-signout="1">Kirjaudu ulos</button></div>';
+  }else if(sync.status !== 'loading'){
+    h += '<div class="pickrow"><button type="button" class="btn accent" data-signin="1">Kirjaudu</button></div>';
+  }
+  return h + '</section>';
+}
+function showSyncSheet(){
+  if(!sync.user){ showSignIn(); return; }
+  overlayEl.innerHTML = '<div class="ov"><div class="sheet" role="dialog" aria-label="Synkronointi">' +
+    '<h3>Synkronointi</h3>' +
+    '<p id="sync-sheet-status">' + esc(syncLabel()) + '</p>' +
+    '<p class="muted" style="font-size:13px">Valmiit treenit tallentuvat palvelimelle ja näkyvät molempien puhelimissa. ' +
+    'Ilman nettiä kirjaukset säilyvät puhelimessa ja lähtevät, kun yhteys palaa. Kesken oleva treeni pysyy tässä puhelimessa, kunnes se tallennetaan.</p>' +
+    '<div class="bkopts"><button type="button" class="btn ghost" data-signout="1">Kirjaudu ulos</button>' +
+    '<p class="bkhint">Uloskirjautuminen ei poista treenejä tästä puhelimesta eikä palvelimelta.</p></div>' +
+    '<div class="sticky-cta"><button class="btn primary" data-close="1">Valmis</button></div></div></div>';
+}
+function showSignIn(msg){
+  overlayEl.innerHTML = '<div class="ov"><div class="sheet" role="dialog" aria-label="Kirjaudu">' +
+    '<h3>Kirjaudu synkronointiin</h3>' +
+    '<p>Kirjautuneena treenit tallentuvat palvelimelle ja näkyvät molempien puhelimissa. Tässä puhelimessa olevat treenit siirtyvät mukaan.</p>' +
+    (msg ? '<div class="note" style="border-left-color:var(--warn)">' + esc(msg) + '</div>' : '') +
+    '<form id="signin-form" autocomplete="on">' +
+      '<label class="daylbl">Sähköposti<input class="pick" id="si-email" type="email" autocomplete="username" inputmode="email" required></label>' +
+      '<label class="daylbl">Salasana<input class="pick" id="si-pass" type="password" autocomplete="current-password" required></label>' +
+      '<div class="bkopts"><button type="submit" class="btn accent" id="si-go">Kirjaudu</button>' +
+      '<button type="button" class="btn ghost" data-resetpw="1">Unohtuiko salasana?</button></div>' +
+    '</form>' +
+    '<p class="note" id="si-msg" hidden></p>' +
+    '<div class="sticky-cta"><button class="btn primary" data-close="1">Myöhemmin</button></div></div></div>';
+  const f = document.getElementById('signin-form');
+  f.addEventListener('submit', function(ev){
+    ev.preventDefault();
+    const email = document.getElementById('si-email').value.trim();
+    const pass = document.getElementById('si-pass').value;
+    const btn = document.getElementById('si-go');
+    if(!sync.api){ siMsg('Kirjautuminen ei ole vielä valmis. Tarkista verkkoyhteys ja yritä uudelleen.', true); return; }
+    btn.disabled = true; btn.textContent = 'Kirjaudutaan…';
+    sync.justSignedIn = true;
+    sync.api.U.signInWithEmailAndPassword(sync.auth, email, pass).then(function(){
+      overlayEl.innerHTML = '';
+      renderAll(); syncRender();
+    }, function(err){
+      sync.justSignedIn = false;
+      btn.disabled = false; btn.textContent = 'Kirjaudu';
+      siMsg(authErrorText(err), true);
+    });
+  });
+}
+function siMsg(t, warn){
+  const m = document.getElementById('si-msg');
+  if(!m) return;
+  m.hidden = false; m.textContent = t;
+  m.style.borderLeftColor = warn ? 'var(--warn)' : 'var(--up)';
+}
+function authErrorText(err){
+  const c = err && err.code || '';
+  if(c === 'auth/invalid-credential' || c === 'auth/wrong-password' || c === 'auth/user-not-found' || c === 'auth/invalid-login-credentials')
+    return 'Sähköposti tai salasana on väärin.';
+  if(c === 'auth/invalid-email') return 'Sähköpostiosoite ei kelpaa.';
+  if(c === 'auth/too-many-requests') return 'Liian monta yritystä. Odota hetki ja yritä uudelleen.';
+  if(c === 'auth/network-request-failed') return 'Ei verkkoyhteyttä. Kirjautuminen vaatii yhteyden.';
+  if(c === 'auth/user-disabled') return 'Tunnus on poistettu käytöstä.';
+  return 'Kirjautuminen ei onnistunut (' + (c || 'tuntematon virhe') + ').';
+}
+
 
 /* ============================================================
    3. APUFUNKTIOT
@@ -1782,6 +2114,12 @@ function renderHome(){
   h += '</div></section>';
 
   /* viimeisin treeni */
+  if(sync.enabled && sync.status === 'signedout' && !sync.promptHidden){
+    h += '<button type="button" class="lastbtn signinbtn" data-signin="1">' +
+      '<span style="min-width:0"><b>☁️ Kirjaudu synkronointiin</b>' +
+      '<small>Treenit tallentuvat palvelimelle ja näkyvät molempien puhelimissa</small></span>' +
+      '<span class="chev" aria-hidden="true">›</span></button>';
+  }
   h += lastSessionButton(person);
 
   /* viikkorytmi */
@@ -1898,9 +2236,7 @@ function renderHome(){
   h += '<button class="btn ghost" data-view="history">Historia ja kehitys</button>';
   h += '<button class="btn ghost" data-view="guide">Ohjelman ohjeet</button>';
   h += '</div>';
-  const cloud = db ? 'Tiedot tallentuvat pilveen – sama näkymä molempien laitteilla.' :
-    (saveNote || 'Tiedot tallentuvat tähän selaimeen.');
-  h += '<p class="muted" style="font-size:12px;margin-top:14px">' + esc(cloud) + '</p>';
+  h += '<p class="muted" id="save-note" style="font-size:12px;margin-top:14px">' + esc(homeSaveText()) + '</p>';
 
   views.home.innerHTML = h;
 }
@@ -3425,6 +3761,7 @@ function renderGuide(){
     sec.items.forEach(function(it){ h += '<li>' + esc(it) + '</li>'; });
     h += '</ul></section>';
   });
+  h += syncCardHtml();
   h += '<section class="card gsec"><h3>Varmuuskopio</h3>' +
     '<p class="muted" style="font-size:13px;margin:0 0 10px">Lähetä treenit toiselle laitteelle WhatsAppilla, ' +
     'vie ne tiedostoksi tai tuo takaisin. Näin treenihistoria ei ole pelkän yhden puhelimen varassa.</p>' +
@@ -4644,7 +4981,7 @@ function aiCopy(btn){
    ============================================================ */
 
 document.addEventListener('click', function(ev){
-  const t = ev.target.closest('[data-person],[data-open],[data-view],[data-tab],[data-cardio],[data-finish],[data-close],[data-savecardio],[data-discard],[data-discard-ask],[data-setskin],[data-rest],[data-ckind],[data-cmin],[data-ckindfilter],[data-timer],[data-calmove],[data-calday],[data-editsets],[data-del],[data-delok],[data-backtoday],[data-addcardio],[data-addrest],[data-abort],[data-clearsets],[data-weekday],[data-active],[data-pickprog],[data-hidebar],[data-showbar],[data-export],[data-import],[data-importtext],[data-copybk],[data-bkselect],[data-whatsapp],[data-wacopy],[data-washare],[data-importclip],[data-bkshare],[data-bkdl],[data-session],[data-replaceok],[data-ai],[data-airange],[data-aicopy],[data-aitxt],[data-aijson]');
+  const t = ev.target.closest('[data-person],[data-open],[data-view],[data-tab],[data-cardio],[data-finish],[data-close],[data-savecardio],[data-discard],[data-discard-ask],[data-setskin],[data-rest],[data-ckind],[data-cmin],[data-ckindfilter],[data-timer],[data-calmove],[data-calday],[data-editsets],[data-del],[data-delok],[data-backtoday],[data-addcardio],[data-addrest],[data-abort],[data-clearsets],[data-weekday],[data-active],[data-pickprog],[data-hidebar],[data-showbar],[data-export],[data-import],[data-importtext],[data-copybk],[data-bkselect],[data-signin],[data-signout],[data-resetpw],[data-syncsheet],[data-whatsapp],[data-wacopy],[data-washare],[data-importclip],[data-bkshare],[data-bkdl],[data-session],[data-replaceok],[data-ai],[data-airange],[data-aicopy],[data-aitxt],[data-aijson]');
   if(!t) return;
 
   if(t.dataset.person){
@@ -4664,6 +5001,24 @@ document.addEventListener('click', function(ev){
     return;
   }
   if(t.dataset.whatsapp){ showWhatsApp(); return; }
+  if(t.dataset.signin){ showSignIn(); return; }
+  if(t.dataset.syncsheet){ showSyncSheet(); return; }
+  if(t.dataset.signout){
+    if(sync.api && sync.auth){
+      sync.api.U.signOut(sync.auth).then(function(){ overlayEl.innerHTML = ''; renderAll(); syncRender(); });
+    }
+    return;
+  }
+  if(t.dataset.resetpw){
+    const em = document.getElementById('si-email');
+    const email = em ? em.value.trim() : '';
+    if(!email){ siMsg('Kirjoita ensin sähköpostiosoitteesi yllä olevaan kenttään.', true); if(em) em.focus(); return; }
+    if(!sync.api){ siMsg('Ei yhteyttä palveluun. Yritä hetken päästä.', true); return; }
+    sync.api.U.sendPasswordResetEmail(sync.auth, email).then(function(){
+      siMsg('Salasanan vaihtolinkki lähetettiin osoitteeseen ' + email + '. Tarkista myös roskaposti.', false);
+    }, function(err){ siMsg(authErrorText(err), true); });
+    return;
+  }
   if(t.dataset.wacopy){
     /* linkki (Kopioi ja avaa WhatsApp) jatkaa kopioinnin jälkeen WhatsAppiin */
     const ok = copyFromTextarea('wa-text');
@@ -4840,6 +5195,7 @@ document.addEventListener('click', function(ev){
     return;
   }
   if(t.dataset.finish){ finishSession(); return; }
+  if(t.dataset.close && document.getElementById('signin-form')){ sync.promptHidden = true; }
   if(t.dataset.close){ overlayEl.innerHTML = ''; if(state.view === 'program' && !store[state.person].active) setView('home'); else renderAll(); return; }
   if(t.dataset.discard){
     store[state.person].active = null; progDom = null; save(state.person);
@@ -4978,6 +5334,8 @@ function boot(snap){
   for(const k in views) views[k].hidden = (k !== state.view);
   renderAll();
   connect();
+  syncStart();
+  syncRender();
 }
 if(window.claude && window.claude.hot){
   window.claude.hot.snapshot(function(){ return {person:state.person, view:state.view, pid:state.pid}; });
