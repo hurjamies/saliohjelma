@@ -23,22 +23,22 @@
 </style>
 </head>
 <body>
-<title>Saliohjelma 9.0</title>
+<title>Saliohjelma 10.0</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Josefin+Sans:wght@400;600;700&family=Poiret+One&display=swap">
 <style>
   :root{
-    --bg:#F2F1ED;
+    --bg:#F4F2EE;
     --surface:#FFFFFF;
     --surface-2:#F7F6F2;
     --line:#E5E2DA;
     --line-2:#CAC6BC;
     --ink:#22252A;
     --ink-2:#53585E;
-    --ink-3:#85888B;
-    --up:#4F6D7A;
-    --up-soft:#E5ECEF;
+    --ink-3:#6B6F74;
+    --up:#436B86;
+    --up-soft:#E4ECF2;
     --low:#5F7A5F;
     --low-soft:#E6EDE3;
     --ok:#4A7A52;
@@ -644,9 +644,9 @@
   /* Tokenit määritellään bodylle, jolloin ne voittavat :root-oletukset molemmissa järjestelmätiloissa. */
 
   body[data-skin="light"]{
-    --bg:#F2F1ED;--surface:#FFFFFF;--surface-2:#F7F6F2;--line:#E5E2DA;--line-2:#CAC6BC;
-    --ink:#22252A;--ink-2:#53585E;--ink-3:#85888B;
-    --up:#4F6D7A;--up-soft:#E5ECEF;--low:#5F7A5F;--low-soft:#E6EDE3;
+    --bg:#F4F2EE;--surface:#FFFFFF;--surface-2:#F7F6F2;--line:#E5E2DA;--line-2:#CAC6BC;
+    --ink:#1F2328;--ink-2:#4E545A;--ink-3:#6B6F74;
+    --up:#436B86;--up-soft:#E4ECF2;--low:#5F7A5F;--low-soft:#E6EDE3;
     --ok:#4A7A52;--ok-soft:#E4EFE3;--warn:#8E6A28;--warn-soft:#F5EDDC;--bad:#A55146;
     --on-acc:#FFFFFF;--rest:#6F6D67;--cardio:#96592F;--cardio-soft:#F3E7DC;--shadow:0 1px 2px rgba(34,30,22,.05), 0 10px 26px -16px rgba(34,30,22,.28);
   }
@@ -940,31 +940,189 @@
   input[type=file].pick{padding:9px 10px;font-size:12.5px}
   .skinbtn small{display:block;font-family:var(--font-b);font-weight:400;font-size:12px;color:var(--ink-3);margin-top:1px}
   @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
-  @media (max-width:430px){
-    #btn-guide{display:none}
-    .brand span{display:none}
-  }
-  @media (max-width:389px){
-    .brand{display:none}
+  @media (max-width:369px){
+    .brandbtn .brand{display:none}
   }
   @media (max-width:380px){
     .setrow,.setlabels{grid-template-columns:18px 1fr 64px 34px}
     .setmeta{padding-left:22px}
   }
+
+  /* ============ 10.0: rauhallisempi rakenne ja salikäytettävyys ============ */
+  html{scroll-padding-top:128px;scroll-padding-bottom:150px}
+  .wrap{padding-block:0 170px}
+  .brandbtn{display:flex;align-items:center;gap:8px;border:0;background:none;padding:2px 0;color:var(--ink);flex:1;min-width:0;cursor:pointer;text-align:left}
+  .brandbtn .brandmark{color:var(--up);flex:none}
+  .brandbtn .brand{flex:0 1 auto;font-size:16.5px;margin:0}
+  .seg button{padding:7px 13px;min-height:34px}
+  .iconbtn{width:38px;height:38px;border-radius:11px}
+
+  /* alavalikko */
+  .tabbar{position:fixed;left:0;right:0;bottom:0;z-index:35;
+    background:color-mix(in srgb, var(--surface) 95%, transparent);backdrop-filter:blur(12px);
+    border-top:1px solid var(--line);padding:4px 6px calc(4px + env(safe-area-inset-bottom, 0px))}
+  .tabbar-in{max-width:760px;margin:0 auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr))}
+  .tabbar button{border:0;background:none;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+    min-height:54px;padding:4px 2px;color:var(--ink-3);font-family:var(--font-d);font-size:11.5px;font-weight:600;border-radius:12px}
+  .tabbar button svg{width:23px;height:23px}
+  .tabbar button[aria-current="page"]{color:var(--up)}
+  .tabbar button[aria-current="page"] svg path,.tabbar button[aria-current="page"] svg rect{stroke-width:2.3}
+  .tabbar button:active{background:var(--surface-2)}
+  body.view-program .tabbar{display:none}
+  /* ajastin muissa näkymissä: alavalikon yläpuolelle */
+  body:not(.view-program) .bottom{bottom:calc(62px + env(safe-area-inset-bottom, 0px));background:transparent;border-top:0;
+    backdrop-filter:none;padding-bottom:8px}
+  body:not(.view-program) .bottom .timer{background:var(--surface);box-shadow:var(--shadow)}
+
+  /* etusivu */
+  .hello{margin:18px 2px 12px}
+  .hello .date{font-family:var(--font-d);font-size:12px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-3);margin:0}
+  .hello h1{font-family:var(--font-d);font-size:clamp(27px,7.2vw,34px);font-weight:700;letter-spacing:-.02em;margin:4px 0 0;line-height:1.12}
+  .today.hero{margin-top:12px;padding:20px 18px 14px}
+  .today.hero::before{display:none}
+  .hero .kicker{display:inline-block;font-family:var(--font-d);font-size:11px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--up);background:var(--up-soft);border-radius:999px;padding:5px 11px}
+  .hero h2{font-family:var(--font-d);font-size:clamp(26px,7vw,32px);font-weight:700;letter-spacing:-.02em;margin:12px 0 4px;line-height:1.1}
+  .hero .sub{color:var(--ink-2);font-size:15px;margin:0}
+  .hero .meta{color:var(--ink-3);font-size:14px;margin:6px 0 0}
+  .hero .why{color:var(--ink);font-size:14.5px;margin:12px 0 0}
+  .whymore{margin-top:4px}
+  .whymore summary{font-size:13px;color:var(--ink-3);cursor:pointer;list-style:none;display:inline-block;padding:4px 0}
+  .whymore summary::-webkit-details-marker{display:none}
+  .whymore summary::after{content:" ▾"}
+  .whymore[open] summary::after{content:" ▴"}
+  .whymore p{font-size:13.5px;color:var(--ink-2);margin:4px 0 0;line-height:1.5}
+  .primaryact{display:flex;width:100%;align-items:center;justify-content:center;gap:10px;margin-top:16px;
+    min-height:54px;font-size:17px;border-radius:13px}
+  .secacts{display:flex;justify-content:space-around;gap:6px;margin-top:6px;flex-wrap:wrap}
+  .linkbtn{border:0;background:none;color:var(--up);font-family:var(--font-d);font-weight:600;font-size:14.5px;
+    padding:10px 10px;min-height:44px;border-radius:10px}
+  .linkbtn:active{background:var(--surface-2)}
+  .linkbtn:disabled{color:var(--ink-3);opacity:.8}
+  .todaynote{font-size:13px;color:var(--ink-2);margin:4px 0 2px;text-align:center}
+
+  /* viikko */
+  .wkcard{margin-top:14px;padding:16px 14px 12px}
+  .wkhead{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+  .wkhead h2{font-family:var(--font-d);font-size:18px;font-weight:700;margin:0}
+  .wkcount{font-size:13.5px;color:var(--ink-2)}
+  .wkcount b{color:var(--ink)}
+  .wkrow{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:5px;margin-top:12px}
+  .wk{border:1.5px solid var(--line);border-radius:12px;background:var(--surface);min-height:84px;min-width:0;
+    display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:2px;padding:7px 1px 6px;font:inherit;color:var(--ink-2)}
+  .wk b{font-family:var(--font-d);font-size:11.5px;font-weight:700;color:var(--ink-3)}
+  .wk .dn{font-family:var(--font-m);font-size:14px;font-weight:600;color:var(--ink)}
+  .wk .code{font-family:var(--font-m);font-size:12.5px;font-weight:700;margin-top:3px}
+  .wk .st{font-size:10.5px;line-height:1.2;font-weight:700}
+  .wk.empty .code{color:var(--ink-3)}
+  .wk.done{background:var(--ks);border-color:var(--k)}
+  .wk.done .code,.wk.done .st{color:var(--k)}
+  .wk.plan{border-style:dashed;border-color:color-mix(in srgb, var(--k) 60%, var(--line))}
+  .wk.plan .code{color:var(--k)}
+  .wk.plan .st{color:var(--ink-3);letter-spacing:.1em}
+  .wk.is-today{border-width:2px;border-style:solid;border-color:var(--ink);box-shadow:0 0 0 3px color-mix(in srgb, var(--ink) 10%, transparent)}
+  .wk.is-today .st{color:var(--ink);font-size:9.5px}
+  .wklegend{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-size:12.5px;color:var(--ink-2);align-items:center}
+  .wklegend span{display:inline-flex;align-items:center;gap:5px}
+  .wklegend .lg{font-style:normal;font-size:11px;font-weight:700;display:inline-grid;place-items:center;width:20px;height:16px;border-radius:5px}
+  .wklegend .lg.done{border:1.5px solid var(--up);color:var(--up);background:var(--up-soft)}
+  .wklegend .lg.plan{border:1.5px dashed var(--ink-3);color:var(--ink-3)}
+  .wklegend .lg.now{border:2px solid var(--ink)}
+  .wkmore{margin-top:8px;border-top:1px solid var(--line);padding-top:4px}
+  .wkmore summary{list-style:none;cursor:pointer;color:var(--up);font-family:var(--font-d);font-weight:600;font-size:14px;padding:8px 0;min-height:40px;display:flex;align-items:center}
+  .wkmore summary::-webkit-details-marker{display:none}
+  .wkmore summary::after{content:"→";margin-left:6px;transition:transform .15s}
+  .wkmore[open] summary::after{transform:rotate(90deg)}
+  .wkmore .week{margin-top:4px}
+
+  /* kortit */
+  .lastbtn{min-height:64px;padding:13px 14px;gap:12px;margin-top:10px}
+  .lastbtn b{font-size:15px}
+  .lastbtn small{font-size:12.5px}
+  .lbico{font-size:22px;width:30px;text-align:center;flex:none;line-height:1}
+  .aibtn{margin-top:10px}
+  .homefoot{margin-top:18px;text-align:center}
+  .homefoot p{font-size:12.5px;margin:6px 0 0}
+
+  /* treenin kirjaaminen */
+  .ptop{margin-top:10px}
+  .ptop-row{display:flex;align-items:center;gap:6px}
+  .iconback{width:44px;height:44px;border:0;background:none;color:var(--ink);font-size:30px;line-height:1;margin-left:-10px;border-radius:12px;flex:none}
+  .iconback:active{background:var(--surface-2)}
+  .ptitle{flex:1;min-width:0}
+  .phead .ptitle h1{margin:0;font-size:clamp(22px,6vw,27px);line-height:1.15}
+  .psub{margin:2px 0 0;font-size:13.5px;color:var(--ink-3)}
+  .kebab{font-size:20px;font-weight:700;width:44px;height:44px}
+  details.warm{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-top:12px;box-shadow:var(--shadow)}
+  details.warm summary{list-style:none;cursor:pointer;padding:13px 14px;font-family:var(--font-d);font-weight:600;font-size:14.5px;
+    display:flex;align-items:center;gap:10px;min-height:48px}
+  details.warm summary::-webkit-details-marker{display:none}
+  details.warm summary::before{content:"📋";font-size:16px}
+  details.warm summary::after{content:"▾";margin-left:auto;color:var(--ink-3)}
+  details.warm[open] summary::after{content:"▴"}
+  .warmbody{padding:0 14px 12px;font-size:13.5px;color:var(--ink-2);line-height:1.5}
+  .warmbody p{margin:0 0 8px}
+  .progwrap{position:sticky;top:calc(58px + env(safe-area-inset-top, 0px));z-index:6;display:flex;align-items:center;gap:10px;
+    margin:12px -16px 0;padding:10px 16px;background:color-mix(in srgb, var(--bg) 94%, transparent);backdrop-filter:blur(8px)}
+  .pcount{font-size:15px;font-weight:600;white-space:nowrap;color:var(--ink)}
+  .pbar{flex:1;height:8px;border-radius:4px;background:var(--line);overflow:hidden}
+  .pbar i{display:block;height:100%;width:0;background:var(--up);border-radius:4px;transition:width .25s ease}
+  .exlist{scroll-margin-top:130px}
+  .ex{scroll-margin-top:124px;transition:border-color .15s}
+  .ex.is-active{border-color:color-mix(in srgb, var(--up) 45%, var(--line))}
+  .ex-mini{display:none;font-size:12.5px;color:var(--ink-3);white-space:nowrap;align-self:center}
+  .ex.collapsed .ex-mini{display:block}
+  .ex.collapsed > :not(.ex-h){display:none}
+  .ex.collapsed .ex-h{cursor:pointer;padding:13px 14px;align-items:center}
+  .ex.collapsed .ex-t .prog span:not(.mono),.ex.collapsed .advice,.ex.collapsed .prbadge,.ex.collapsed .chip{display:none}
+  .ex.collapsed .infobtn{display:none}
+  .noprev{margin:0;padding:0 14px 8px;font-size:13px;color:var(--ink-2)}
+  .sets{padding:0 8px 10px;gap:4px}
+  .setblock{padding:6px;border:1.5px solid transparent;border-radius:14px;transition:background .15s,border-color .15s}
+  .setblock.is-cur{background:color-mix(in srgb, var(--up) 7%, var(--surface));border-color:color-mix(in srgb, var(--up) 40%, var(--line))}
+  .setblock.is-done .kgfield,.setblock.is-done .numfield{background:color-mix(in srgb, var(--ok-soft) 70%, var(--surface));border-color:transparent}
+  .setrow,.setlabels{grid-template-columns:22px minmax(0,1fr) 82px 48px;gap:8px}
+  .setlabels{padding:0 14px 2px}
+  .setrow .sn{font-size:14px;font-weight:600;color:var(--ink-2)}
+  .kgfield{border-radius:12px}
+  .kgfield button{width:44px;height:48px;font-size:21px;color:var(--ink-2)}
+  .kgfield input{height:48px;font-size:17px}
+  .numfield{height:48px;border-radius:12px}
+  .numfield input{height:46px;font-size:17px}
+  .donebtn{width:48px;height:48px;border-radius:50%;font-size:19px;border-width:1.5px;border-color:var(--line-2);background:var(--surface)}
+  .donebtn[aria-pressed="true"]{background:var(--ok);border-color:var(--ok);color:#fff}
+  .setmeta{padding:5px 0 1px 30px}
+  .setmeta .tgt{font-size:12px;color:var(--ink-2)}
+  .ex-f .minibtn{min-height:40px;padding:8px 12px}
+  @media (max-width:380px){
+    .setrow,.setlabels{grid-template-columns:18px minmax(0,1fr) 70px 46px;gap:6px}
+    .kgfield button{width:36px}
+    .setmeta{padding-left:24px}
+  }
+  /* toimintopalkki treenissä */
+  .bottom-in{flex-wrap:nowrap}
+  .bottom-in .timer{flex-basis:auto}
+  body.view-program .bottom-in{flex-wrap:wrap}
+  body.view-program .bottom-in .timer{flex-basis:100%}
+  body.view-program .bottom-in .barhide{order:0}
+  .savestate{flex:1;min-width:0;font-size:12.5px;color:var(--ink-2);line-height:1.35}
+  .savestate::before{content:"✓ ";color:var(--ok);font-weight:700}
+  .barfinish{min-height:48px;padding:12px 18px;font-size:15px;white-space:nowrap}
+  @media (pointer:coarse){ body.typing .bottom{display:none} }
+  @media (min-width:900px){
+    .hello h1{font-size:36px}
+  }
 </style>
 
 <header class="topbar">
   <div class="topbar-in">
-    <button type="button" class="iconbtn" id="btn-home" title="Alkuvalikko" aria-label="Alkuvalikko"><svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"><path d="M2.6 8.1 9 2.7l6.4 5.4" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M4.3 8.9v5.3c0 .6.5 1.1 1.1 1.1h7.2c.6 0 1.1-.5 1.1-1.1V8.9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M7.4 15.3v-3.6c0-.5.4-.9.9-.9h1.4c.5 0 .9.4.9.9v3.6" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg></button>
-    <p class="brand">Saliohjelma <span id="brand-sub"></span></p>
+    <button type="button" class="brandbtn" id="btn-home" aria-label="Tänään – etusivu"><svg class="brandmark" width="26" height="26" viewBox="0 0 26 26" aria-hidden="true" fill="currentColor"><rect x="1.5" y="9.5" width="3" height="7" rx="1.2"/><rect x="5" y="6.5" width="4" height="13" rx="1.6"/><rect x="9" y="11.6" width="8" height="2.8" rx="1"/><rect x="17" y="6.5" width="4" height="13" rx="1.6"/><rect x="21.5" y="9.5" width="3" height="7" rx="1.2"/></svg><span class="brand">Saliohjelma</span></button>
     <div class="seg" id="personseg" role="group" aria-label="Valitse henkilö">
       <button type="button" data-person="iida" aria-pressed="true">Iidis</button>
       <button type="button" data-person="matti" aria-pressed="false">Matti</button>
     </div>
     <button type="button" class="iconbtn syncbtn" id="btn-sync" data-syncsheet="1" hidden data-state="off" aria-label="Synkronointi"><svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M5.2 14.2h7.9a3.1 3.1 0 0 0 .4-6.2 4.3 4.3 0 0 0-8.3-.9 3.6 3.6 0 0 0 0 7.1z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg><i class="sdot"></i></button>
-    <button type="button" class="iconbtn" id="btn-cal" title="Kalenteri" aria-label="Kalenteri"><svg width="17" height="17" viewBox="0 0 18 18" aria-hidden="true"><rect x="2.2" y="3.4" width="13.6" height="12.4" rx="2.4" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M2.2 7.2h13.6M6.2 2.2v2.6M11.8 2.2v2.6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><rect x="5" y="9.6" width="2.4" height="2.4" rx=".7" fill="currentColor"/></svg></button>
     <button type="button" class="iconbtn" id="btn-skin" title="Väriteema" aria-label="Väriteema"><svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="6.4" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M8 1.6a6.4 6.4 0 0 1 0 12.8z" fill="currentColor"/></svg></button>
-    <button type="button" class="iconbtn" id="btn-guide" title="Ohjeet ja periaatteet" aria-label="Ohjeet">?</button>
   </div>
 </header>
 
@@ -974,6 +1132,8 @@
 <main id="view-calendar" class="wrap" hidden></main>
 <main id="view-guide" class="wrap" hidden></main>
 <main id="view-together" class="wrap" hidden></main>
+<main id="view-programs" class="wrap" hidden></main>
+<nav class="tabbar" id="tabbar" aria-label="Päävalikko"><div class="tabbar-in"><button type="button" data-view="home" data-nav="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 10.5 12 3.5l8.5 7" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M5.8 9.4v9.3c0 .9.7 1.6 1.6 1.6h9.2c.9 0 1.6-.7 1.6-1.6V9.4" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linejoin="round"/></svg><span>Tänään</span></button><button type="button" data-view="programs" data-nav="programs"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8.5 6.5h12M8.5 12h12M8.5 17.5h12" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><circle cx="4.3" cy="6.5" r="1.3" fill="currentColor"/><circle cx="4.3" cy="12" r="1.3" fill="currentColor"/><circle cx="4.3" cy="17.5" r="1.3" fill="currentColor"/></svg><span>Ohjelmat</span></button><button type="button" data-view="history" data-nav="history"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20v-6M10 20V9M15 20v-8M20 20V4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg><span>Kehitys</span></button><button type="button" data-view="calendar" data-nav="calendar" id="btn-cal"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3" fill="none" stroke="currentColor" stroke-width="1.9"/><path d="M3.5 10h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg><span>Kalenteri</span></button></div></nav>
 <div id="bottom"></div>
 <div id="overlay"></div>
 
@@ -2253,7 +2413,8 @@ const views = {
   history: document.getElementById('view-history'),
   calendar: document.getElementById('view-calendar'),
   guide: document.getElementById('view-guide'),
-  together: document.getElementById('view-together')
+  together: document.getElementById('view-together'),
+  programs: document.getElementById('view-programs')
 };
 const bottomEl = document.getElementById('bottom');
 const overlayEl = document.getElementById('overlay');
@@ -2268,7 +2429,11 @@ function setView(v, pid){
   renderAll();
 }
 function renderAll(){
-  document.getElementById('brand-sub').textContent = '· ' + personName(state.person);
+  document.body.className = document.body.className.replace(/\bview-\S+/g, '').trim() + ' view-' + state.view;
+  const NAV = {home:'home', together:'home', programs:'programs', guide:'programs', history:'history', calendar:'calendar'};
+  Array.prototype.forEach.call(document.querySelectorAll('#tabbar [data-nav]'), function(b){
+    if(b.dataset.nav === NAV[state.view]) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
+  });
   Array.prototype.forEach.call(document.querySelectorAll('#personseg button'), function(b){
     b.setAttribute('aria-pressed', b.dataset.person === state.person ? 'true' : 'false');
   });
@@ -2278,6 +2443,7 @@ function renderAll(){
   else if(state.view === 'calendar') renderCalendar();
   else if(state.view === 'guide') renderGuide();
   else if(state.view === 'together') renderTogether();
+  else if(state.view === 'programs') renderPrograms();
   renderBottom();
 }
 
@@ -2592,22 +2758,20 @@ function renderHome(){
   const rec = recommend(person);
   const recProg = progById(rec.pid);
   const today = new Date();
+  const todayIso = isoDay(today);
   const ws = weekStats(person);
   const active = store[person].active;
-
-  let h = '';
-
-  /* tänään */
-  h += '<section class="today" style="--acc:' + accentOf(recProg) + '">';
-  h += '<span class="todayflag">' + (rec.rest ? 'Suositus · palautuminen' : 'Suositus tänään') + '</span>';
-  h += '<p class="date">' + DAYNAMES[today.getDay()] + ' ' + today.getDate() + '.' + (today.getMonth()+1) + '.</p>';
-  h += '<h1>' + (rec.rest ? 'Lepo tai kevyt cardio' : esc(recProg.name)) + '</h1>';
-  if(!rec.rest) h += '<p class="muted" style="margin:0;font-size:13.5px">' + esc(recProg.sub) + '</p>';
-  h += '<p class="why">' + esc(rec.why) + '</p>';
+  const awk = adaptiveWeek(person);
+  const cell = awk.days.filter(function(c){ return c.iso === todayIso; })[0] || null;
   const tEntries = todayEntries(person);
   const restToday = tEntries.some(function(s){ return s.pid === 'rest'; });
   const cardioToday = tEntries.filter(function(s){ return s.pid === 'cardio'; });
-  const restLabel = restToday ? 'Lepo kirjattu' : 'Lepo';
+
+  let h = '';
+  h += '<div class="hello"><p class="date">' + DAYNAMES[today.getDay()] + ' ' + today.getDate() + '.' + (today.getMonth()+1) + '.</p>' +
+       '<h1>Tänään, ' + esc(personName(person)) + '</h1></div>';
+
+  /* keskeneräinen treeni */
   if(active){
     const ap = progById(active.pid);
     const logged = countLogged(active);
@@ -2616,104 +2780,69 @@ function renderHome(){
       '<span style="min-width:0"><b>Treeni kesken · ' + esc(ap ? ap.name : '') + '</b>' +
       '<small>Aloitettu ' + agoText(active.start) + ' · ' + logged + ' ' + (logged === 1 ? 'sarja' : 'sarjaa') + ' kirjattu' +
       (active.editId ? ' · muokkaat ' + fmtDate(active.forceEnd) + ' treeniä' : '') +
-      ' — napauta: jatka, tyhjennä tai peru</small></span>' +
+      ' · jatka, tyhjennä tai peru</small></span>' +
       '<span class="chev">›</span></button>';
   }
-  h += '<div class="acts">';
-  if(active){
-    const ap2 = progById(active.pid);
-    h += '<button class="btn accent actbtn wide" data-open="' + active.pid + '">Jatka: ' + esc(ap2 ? ap2.name : 'treeni') + '</button>';
-  }else if(rec.rest){
-    h += '<button class="btn cardio actbtn wide" data-cardio="1">Cardio</button>';
+
+  /* päivän suositus: yksi ensisijainen toiminto */
+  const kind = active ? 'gym' : (rec.rest ? ((cell && cell.state === 'suggest' && cell.kind === 'cardio') ? 'cardio' :
+                                            (cell && cell.state === 'done') ? 'done' : 'rest') : 'gym');
+  const shownProg = active ? progById(active.pid) : recProg;
+  h += '<section class="today hero" style="--acc:' + accentOf(shownProg) + '">';
+  h += '<span class="kicker">' + (active ? 'Kesken' : kind === 'gym' ? 'Suositus' : kind === 'cardio' ? 'Suositus · cardio' :
+       kind === 'done' ? 'Päivä kirjattu' : 'Suositus · lepo') + '</span>';
+  if(kind === 'gym'){
+    const sets = shownProg.ex.reduce(function(t, e){ return t + e.sets; }, 0);
+    h += '<h2>' + esc(shownProg.name) + '</h2>' +
+      '<p class="sub">' + esc(shownProg.sub) + '</p>' +
+      '<p class="meta">' + shownProg.ex.length + ' liikettä · ' + sets + ' työsarjaa</p>';
   }else{
-    h += '<button class="btn accent actbtn wide" data-open="' + recProg.id + '">Aloita ' + esc(recProg.name) + '</button>';
+    h += '<h2>' + (kind === 'cardio' ? 'Cardio tai lepo' : kind === 'done' ? 'Hyvää työtä' : 'Lepopäivä') + '</h2>' +
+      '<p class="sub">' + (kind === 'cardio' ? 'Kevyt cardio tukee palautumista. Salitreeni jatkuu kierrossa seuraavana päivänä.' :
+        kind === 'done' ? 'Tämän päivän treeni on kirjattu. Seuraava treeni jatkaa kiertoa.' :
+        'Palautuminen on osa ohjelmaa. Salitreeni jatkuu kierrossa seuraavana päivänä.') + '</p>';
   }
-  h += '<button class="btn ghost actbtn wide" data-pickprog="1">Aloita muu ohjelma</button>';
-  if(!rec.rest || active) h += '<button class="btn cardio actbtn" data-cardio="1">Cardio</button>';
-  h += '<button class="btn rest actbtn' + ((rec.rest && !active) ? '' : '') + '" data-rest="1"' +
-       (restToday ? ' disabled' : '') + '>' + restLabel + '</button>';
-  if(rec.rest && !active) h += '<button class="btn cardio actbtn" data-cardio="1">Cardio</button>';
-  h += '</div>';
-  h += '<div class="badgeline">';
-  h += '<span class="chip">Tämä viikko: ' + ws.gym.length + '/4 treeniä</span>';
-  h += '<span class="chip">Cardio: ' + ws.cardio.length + '</span>';
+  const first = String(rec.why).split('. ')[0].replace(/\.$/, '');
+  const shortWhy = active ? '' : (/^Ei vielä kirjattuja/.test(first) ? 'Aloita kierto tästä.' : first + '.');
+  if(shortWhy) h += '<p class="why">' + esc(shortWhy) + '</p>';
+  if(!active) h += '<details class="whymore"><summary>Miksi tämä?</summary><p>' + esc(rec.why) + '</p></details>';
+
+  let primary = '';
+  if(active){
+    primary = '<button class="btn accent primaryact" data-open="' + active.pid + '">Jatka treeniä <span aria-hidden="true">→</span></button>';
+  }else if(kind === 'gym'){
+    primary = '<button class="btn accent primaryact" data-open="' + recProg.id + '">Aloita treeni <span aria-hidden="true">→</span></button>';
+  }else if(kind === 'cardio'){
+    primary = '<button class="btn cardio primaryact" data-cardio="1">Kirjaa cardio</button>';
+  }else if(kind === 'rest'){
+    primary = restToday
+      ? '<button class="btn ghost primaryact" disabled>Lepopäivä kirjattu ✓</button>'
+      : '<button class="btn rest primaryact" data-rest="1">Kirjaa lepopäivä</button>';
+  }else{
+    primary = '<button class="btn ghost primaryact" data-pickprog="1">Aloita uusi treeni</button>';
+  }
+  h += primary;
+  /* toissijaiset: ei kahdenneta ensisijaista */
+  const sec = [];
+  if(kind !== 'done') sec.push('<button type="button" class="linkbtn" data-pickprog="1">Vaihda ohjelmaa</button>');
+  if(kind !== 'cardio') sec.push('<button type="button" class="linkbtn" data-cardio="1">Cardio</button>');
+  if(kind !== 'rest') sec.push('<button type="button" class="linkbtn" data-rest="1"' + (restToday ? ' disabled' : '') + '>' + (restToday ? 'Lepo kirjattu' : 'Lepo') + '</button>');
+  h += '<div class="secacts">' + sec.join('') + '</div>';
   if(cardioToday.length){
     const cmin = cardioToday.reduce(function(a,c){ return a + (num(c.minutes) || 0); }, 0);
-    h += '<span class="chip cardio">Tänään ' + esc(cardioToday.map(function(c){ return c.kind || 'cardio'; }).join(', ')) + ' ' + cmin + ' min</span>';
+    h += '<p class="todaynote">Tänään kirjattu: ' + esc(cardioToday.map(function(c){ return c.kind || 'cardio'; }).join(', ')) + ' ' + cmin + ' min</p>';
   }
-  if(restToday) h += '<span class="chip">Lepopäivä kirjattu</span>';
-  h += '</div></section>';
+  h += '</section>';
 
-  /* viimeisin treeni */
-  if(sync.enabled && sync.status === 'signedout' && !sync.promptHidden){
-    h += '<button type="button" class="lastbtn signinbtn" data-signin="1">' +
-      '<span style="min-width:0"><b>☁️ Kirjaudu synkronointiin</b>' +
-      '<small>Treenit tallentuvat palvelimelle ja näkyvät molempien puhelimissa</small></span>' +
-      '<span class="chev" aria-hidden="true">›</span></button>';
-  }
-  h += lastSessionButton(person);
-  if(togetherPair()){
-    const tp = togetherPair();
-    h += '<button type="button" class="lastbtn togbtn" data-view="together">' +
-      '<span style="min-width:0"><b>👥 Yhdessä · ' + esc(personName(tp[0])) + ' &amp; ' + esc(personName(tp[1])) + '</b>' +
-      '<small>Yhteiset treenipäivät ja yhteisten liikkeiden kehitys</small></span>' +
-      '<span class="chev" aria-hidden="true">›</span></button>';
-  }else if(sync.enabled && sync.user && sync.me && sync.profileReady){
-    h += '<button type="button" class="lastbtn togbtn" data-invite="1">' +
-      '<span style="min-width:0"><b>👥 Kutsu treenikaveri</b>' +
-      '<small>Näette toistenne treenit ja yhteisen kehityksen</small></span>' +
-      '<span class="chev" aria-hidden="true">›</span></button>';
-  }
-
-  /* viikkorytmi */
-  const awk = adaptiveWeek(person);
-
-  /* --- Viikko - runko --- */
-  h += '<div style="margin-top:22px"><p class="eyebrow">Viikko – runko</p>';
-  h += '<div class="week">';
-  WEEKPLAN.forEach(function(w, i){
-    const dayDate = new Date(ws.monday); dayDate.setDate(ws.monday.getDate() + i);
-    const isToday = isoDay(dayDate) === isoDay(today);
-    let label = '', kind = 'rest';
-    if(w.rot === 'cardio'){ label = 'Cardio tai lepo'; kind = 'cardio'; }
-    else if(w.rot === 'rest'){ label = 'Lepo'; kind = 'rest'; }
-    else { label = progsFor(person)[w.rot].name.replace('Ylävartalo','Ylä').replace('Alavartalo','Ala'); kind = 'gym'; }
-    h += '<div class="wd planday k-' + kind + (isToday ? ' is-today' : '') +
-         '" style="--k:' + KIND_STRONG[kind] + ';--ks:' + KIND_SOFT[kind] + '">' +
-         '<b>' + w.d + '</b><span class="plan">' + esc(label) + '</span></div>';
-  });
-  h += '</div>';
-
-  /* --- Viikko - suositus (mukautuva) --- */
-  h += '<p class="eyebrow" style="margin-top:18px">Viikko – suositus</p>';
-  h += '<div class="week">';
+  /* yksi yhdistetty viikkonäkymä: toteutunut + tulevat suositukset */
+  h += '<section class="card wkcard"><div class="wkhead"><h2>Tämä viikko</h2>' +
+    '<span class="wkcount"><b class="mono">' + ws.gym.length + ' / 4</b> treeniä' +
+    (ws.cardio.length ? ' · cardio ' + ws.cardio.length : '') + '</span></div>';
+  h += '<div class="wkrow">';
   awk.days.forEach(function(c, i){
     const dayDate = new Date(ws.monday); dayDate.setDate(ws.monday.getDate() + i);
-    const isToday = c.iso === isoDay(today);
-    const k = c.kind;
-    const cls = 'calday wd2 sugg' + (k ? ' has k-' + k : ' isempty') + (isToday ? ' is-today' : '') +
-                (c.state === 'done' ? ' isdone' : '');
-    const style = k ? ('--k:' + KIND_STRONG[k] + ';--ks:' + KIND_SOFT[k]) : '';
-    const title = c.state === 'done' ? 'Tehty: ' + c.label : (c.state === 'empty' ? 'Ei kirjausta' : c.label + (c.why ? ' – ' + c.why : ''));
-    h += '<div class="' + cls + '" style="' + style + '" title="' + esc(title) + '">' +
-         '<b>' + WEEKPLAN[i].d + '</b>' +
-         '<span class="code">' + esc(c.code) + '</span>' +
-         '<span class="sstate">' + (c.state === 'done' ? '✓' : (c.state === 'empty' ? '' : '›')) + '</span>' +
-         '</div>';
-  });
-  h += '</div>';
-  h += '<p class="muted" style="font-size:11.5px;margin:7px 2px 0;line-height:1.4">' +
-    'Kierto ratkaisee, ei kalenteri: Ylä A → Ala A → Ylä B → Ala B jatkuu siitä mihin jäit, eikä viikko nollaudu ' +
-    'maanantaina. Runko ehdottaa päivän, saman alueen treenien väliin jää vähintään 2 vrk.</p>';
-
-  /* --- Viikko - toteutunut --- */
-  h += '<div class="eyerow" style="margin-top:18px"><p class="eyebrow" style="margin:0">Viikko – toteutunut</p>' +
-       '<button type="button" class="minibtn" data-view="calendar">Kalenteri →</button></div>';
-  h += '<div class="week">';
-  WEEKPLAN.forEach(function(w, i){
-    const dayDate = new Date(ws.monday); dayDate.setDate(ws.monday.getDate() + i);
     const iso = isoDay(dayDate);
-    const isToday = iso === isoDay(today);
+    const isToday = iso === todayIso;
     const logs = sessionsOn(person, iso);
     const tags = [], kinds = [];
     logs.forEach(function(sx){
@@ -2723,28 +2852,83 @@ function renderHome(){
       if(kinds.indexOf(tg.k) < 0) kinds.push(tg.k);
     });
     const ord = sortKinds(kinds);
-    const codes = tags.slice(0,2).map(function(tg){ return tg.t; }).join('·') + (tags.length > 2 ? '+' : '');
-    let stripe = '';
-    if(ord.length > 1){
-      stripe = '<span class="cstripe">' + ord.slice(1).map(function(k){ return '<i class="s-' + k + '"></i>'; }).join('') + '</span>';
+    let cls = 'wk', code = '–', st = '', k = '', aria = '';
+    if(tags.length){
+      k = ord[0]; cls += ' done';
+      code = tags.slice(0,2).map(function(tg){ return tg.t; }).join('·') + (tags.length > 2 ? '+' : '');
+      st = '✓'; aria = 'tehty ' + code;
+    }else if(c.state === 'suggest' && iso >= todayIso){
+      k = c.kind; cls += ' plan'; code = c.code; st = '···'; aria = 'suunniteltu ' + c.label;
+    }else{
+      cls += ' empty'; aria = 'ei kirjauksia';
     }
-    h += '<button type="button" class="calday wd2' + (isToday ? ' is-today' : '') +
-         (ord.length ? ' has k-' + ord[0] : '') + '" data-weekday="' + iso + '" style="' + dayStyle(ord) + '" ' +
-         'aria-label="' + w.d + ' ' + dayDate.getDate() + '.' + (dayDate.getMonth()+1) + '., ' +
-         (codes ? esc(codes) : 'ei kirjauksia') + '">' +
-         '<b>' + w.d + '</b><span class="dn">' + dayDate.getDate() + '</span>' +
-         '<span class="code">' + (codes ? esc(codes) : '–') + '</span>' + stripe + '</button>';
+    if(isToday) cls += ' is-today';
+    const style = k ? '--k:' + KIND_STRONG[k] + ';--ks:' + KIND_SOFT[k] : '';
+    h += '<button type="button" class="' + cls + '" data-weekday="' + iso + '" style="' + style + '" aria-label="' +
+      WEEKPLAN[i].d + ' ' + dayDate.getDate() + '.' + (dayDate.getMonth()+1) + '., ' + esc(aria) + (isToday ? ', tänään' : '') + '">' +
+      '<b>' + WEEKPLAN[i].d + '</b><span class="dn">' + dayDate.getDate() + '</span>' +
+      '<span class="code">' + esc(code) + '</span><span class="st" aria-hidden="true">' + (isToday && !tags.length ? 'tänään' : st) + '</span></button>';
   });
-  h += '</div></div>';
+  h += '</div>';
+  h += '<div class="wklegend"><span><i class="lg done">✓</i> Tehty</span><span><i class="lg plan">···</i> Suunniteltu</span>' +
+    '<span><i class="lg now"></i> Tänään</span></div>';
+  h += '<details class="wkmore"><summary>Näytä viikkorunko</summary>';
+  h += '<div class="week">';
+  WEEKPLAN.forEach(function(w, i){
+    const dayDate = new Date(ws.monday); dayDate.setDate(ws.monday.getDate() + i);
+    const isToday = isoDay(dayDate) === todayIso;
+    let label = '', kd = 'rest';
+    if(w.rot === 'cardio'){ label = 'Cardio tai lepo'; kd = 'cardio'; }
+    else if(w.rot === 'rest'){ label = 'Lepo'; kd = 'rest'; }
+    else { label = progsFor(person)[w.rot].name.replace('Ylävartalo','Ylä').replace('Alavartalo','Ala'); kd = 'gym'; }
+    h += '<div class="wd planday k-' + kd + (isToday ? ' is-today' : '') +
+         '" style="--k:' + KIND_STRONG[kd] + ';--ks:' + KIND_SOFT[kd] + '">' +
+         '<b>' + w.d + '</b><span class="plan">' + esc(label) + '</span></div>';
+  });
+  h += '</div><p class="muted" style="font-size:12px;margin:8px 2px 0;line-height:1.45">' +
+    'Kierto ratkaisee, ei kalenteri: Ylä A → Ala A → Ylä B → Ala B jatkuu siitä mihin jäit, eikä viikko nollaudu ' +
+    'maanantaina. Runko ehdottaa päivän, saman alueen treenien väliin jää vähintään 2 vrk.</p></details></section>';
 
-  /* AI-kehitysanalyysi */
-  h += '<button type="button" class="lastbtn aibtn" data-ai="1">' +
-    '<span style="min-width:0"><b>✨ AI-kehitysanalyysi</b>' +
-    '<small>Kokoa treenidata ja valmis ohje tekoälylle</small></span>' +
+  /* kirjautuminen, viimeisin treeni, yhdessä, AI */
+  if(sync.enabled && sync.status === 'signedout' && !sync.promptHidden){
+    h += '<button type="button" class="lastbtn signinbtn" data-signin="1">' +
+      '<span class="lbico" aria-hidden="true">☁️</span><span style="min-width:0"><b>Kirjaudu synkronointiin</b>' +
+      '<small>Treenit tallentuvat palvelimelle ja näkyvät molempien puhelimissa</small></span>' +
+      '<span class="chev" aria-hidden="true">›</span></button>';
+  }
+  h += lastSessionButton(person);
+  if(togetherPair()){
+    const tp = togetherPair();
+    h += '<button type="button" class="lastbtn togbtn" data-view="together">' +
+      '<span class="lbico" aria-hidden="true">👥</span><span style="min-width:0"><b>Yhdessä · ' + esc(personName(tp[0])) + ' &amp; ' + esc(personName(tp[1])) + '</b>' +
+      '<small>Yhteiset treenipäivät ja yhteisten liikkeiden kehitys</small></span>' +
+      '<span class="chev" aria-hidden="true">›</span></button>';
+  }else if(sync.enabled && sync.user && sync.me && sync.profileReady){
+    h += '<button type="button" class="lastbtn togbtn" data-invite="1">' +
+      '<span class="lbico" aria-hidden="true">👥</span><span style="min-width:0"><b>Kutsu treenikaveri</b>' +
+      '<small>Näette toistenne treenit ja yhteisen kehityksen</small></span>' +
+      '<span class="chev" aria-hidden="true">›</span></button>';
+  }
+  h += aiCardHtml();
+
+  h += '<div class="homefoot"><button type="button" class="linkbtn" data-view="guide">Ohjeet, synkronointi ja varmuuskopio</button>' +
+    '<p class="muted" id="save-note">' + esc(homeSaveText()) + '</p></div>';
+
+  views.home.innerHTML = h;
+}
+function aiCardHtml(){
+  return '<button type="button" class="lastbtn aibtn" data-ai="1">' +
+    '<span class="lbico" aria-hidden="true">✨</span><span style="min-width:0"><b>AI-kehitysanalyysi</b>' +
+    '<small>Vie treenidata ja analyysiohje tekoälylle</small></span>' +
     '<span class="chev" aria-hidden="true">›</span></button>';
+}
 
-  /* ohjelmat */
-  h += '<div style="margin-top:22px"><p class="eyebrow">Ohjelmat · ' + personName(person) + '</p>';
+/* ---------------- OHJELMAT ---------------- */
+function renderPrograms(){
+  const person = state.person;
+  const rec = recommend(person);
+  let h = '<div class="phead"><h1>Ohjelmat</h1>' +
+    '<p class="muted" style="font-size:13.5px;margin:4px 0 0">' + esc(personName(person)) + ' · neljän treenin kierto</p></div>';
   h += '<div class="grid">';
   progsFor(person).forEach(function(p){
     const last = strengthSessions(person).filter(function(s){ return s.pid === p.id; })[0];
@@ -2752,8 +2936,7 @@ function renderHome(){
     const sets = p.ex.reduce(function(a,e){ return a + e.sets; }, 0);
     h += '<button class="pcard' + (isRec ? ' rec' : '') + '" style="--acc:' + accentOf(p) + '" data-open="' + p.id + '">';
     if(isRec) h += '<span class="recflag">Suositus tänään</span>';
-    h += '<div class="top"><div><span class="day">' + p.day + '</span><h3>' + esc(p.name) + '</h3></div>';
-    h += '<span class="chip ' + (p.type === 'ala' ? 'low' : 'up') + '">' + (p.type === 'ala' ? 'Alavartalo' : 'Ylävartalo') + '</span></div>';
+    h += '<div class="top"><div><span class="day">' + p.day + '</span><h3>' + esc(p.name) + '</h3></div></div>';
     h += '<p class="sub">' + esc(p.sub) + '</p>';
     const sh = sharedKeys(p.id);
     let shCount = 0;
@@ -2771,22 +2954,21 @@ function renderHome(){
     }
     h += '</button>';
   });
-  h += '</div></div>';
-
-  /* alapalkki: historia + tallennustila */
-  h += '<div class="row spread" style="margin-top:22px;flex-wrap:wrap;gap:8px">';
-  h += '<button class="btn ghost" data-view="calendar">Kalenteri</button>';
-  h += '<button class="btn ghost" data-view="history">Historia ja kehitys</button>';
-  h += '<button class="btn ghost" data-view="guide">Ohjelman ohjeet</button>';
   h += '</div>';
-  h += '<p class="muted" id="save-note" style="font-size:12px;margin-top:14px">' + esc(homeSaveText()) + '</p>';
-
-  views.home.innerHTML = h;
+  h += '<button type="button" class="lastbtn" data-pickprog="1" style="margin-top:16px">' +
+    '<span class="lbico" aria-hidden="true">＋</span><span style="min-width:0"><b>Aloita muu ohjelma</b>' +
+    '<small>Valitse mikä tahansa ohjelma suosituksesta riippumatta</small></span><span class="chev" aria-hidden="true">›</span></button>';
+  h += '<button type="button" class="lastbtn" data-view="guide">' +
+    '<span class="lbico" aria-hidden="true">📘</span><span style="min-width:0"><b>Ohjelman ohjeet</b>' +
+    '<small>Periaatteet, synkronointi, treenikaverit ja varmuuskopio</small></span><span class="chev" aria-hidden="true">›</span></button>';
+  views.programs.innerHTML = h;
 }
 
 /* ---------------- OHJELMANÄKYMÄ ---------------- */
 
 let progDom = null; // {pid, nodes}
+let progShowAll = false;
+try{ progShowAll = localStorage.getItem('salikirja-showall') === '1'; }catch(e){}
 
 function ensureActive(pid){
   const person = state.person;
@@ -2823,21 +3005,19 @@ function renderProgram(pid){
   views.program.innerHTML = '';
 
   const head = document.createElement('div');
-  head.className = 'phead';
+  head.className = 'phead ptop';
+  let warmOpen = false;
+  try{ warmOpen = !localStorage.getItem('salikirja-warm-seen'); localStorage.setItem('salikirja-warm-seen', '1'); }catch(e){}
   head.innerHTML =
-    '<div class="row spread"><button class="back" type="button" data-view="home">← Kaikki ohjelmat</button>' +
-    '<button class="minibtn" type="button" data-abort="1">Keskeytä</button></div>' +
-    '<h1>' + esc(p.name) + '</h1>' +
-    '<div class="row" style="flex-wrap:wrap;gap:6px">' +
-      '<span class="chip ' + (p.type === 'ala' ? 'low' : 'up') + '">' + p.day + '</span>' +
-      '<span class="chip">' + esc(p.sub) + '</span>' +
-      '<span class="chip">' + personName(person) + '</span>' +
-    '</div>' +
-    editBanner(a) +
-    (p.note ? '<div class="note">' + esc(p.note) + '</div>' : '') +
-    '<div class="note" style="border-left-color:var(--line-2)">Lämmittely: noin 5 min kevyttä liikkumista ja ' +
-      '1–3 kevyempää noususarjaa päivän ensimmäiseen liikkeeseen.</div>' +
-    otherActiveBanner(pid);
+    '<div class="ptop-row"><button class="iconback" type="button" data-view="home" aria-label="Takaisin etusivulle">‹</button>' +
+    '<div class="ptitle"><h1>' + esc(p.name) + '</h1><p class="psub">' + esc(personName(person)) + ' · ' + p.ex.length + ' liikettä · ' + p.day + '</p></div>' +
+    '<button class="iconbtn kebab" type="button" data-abort="1" aria-label="Keskeytä tai tyhjennä treeni" title="Keskeytä tai tyhjennä">⋮</button></div>' +
+    editBanner(a) + otherActiveBanner(pid) +
+    '<details class="warm"' + (warmOpen ? ' open' : '') + '><summary>Lämmittely ja päivän ohjeet</summary><div class="warmbody">' +
+      '<p><b>Lämmittely:</b> noin 5 min kevyttä liikkumista ja 1–3 kevyempää noususarjaa päivän ensimmäiseen liikkeeseen.</p>' +
+      '<p>' + esc(p.sub) + '</p>' + (p.note ? '<p>' + esc(p.note) + '</p>' : '') + '</div></details>' +
+    '<div class="progwrap"><span class="pcount mono" id="prog-count"></span><span class="pbar"><i id="prog-bar"></i></span>' +
+    '<button type="button" class="minibtn" id="toggle-all">' + (progShowAll ? 'Yksi kerrallaan' : 'Näytä kaikki') + '</button></div>';
   views.program.appendChild(head);
 
   const list = document.createElement('div');
@@ -2867,9 +3047,21 @@ function renderProgram(pid){
             ? '<span class="chip pair">' + esc(partnerName) + ': ' + esc(partnerAt[idx].name.split(',')[0]) + '</span>'
             : '')) +
       '<span class="advice hold" data-adv></span></div>' +
+      '<span class="ex-mini mono" data-mini></span>' +
       '<div class="prbadge" data-pr hidden></div></div>' +
       (def.tip ? '<button class="infobtn" type="button" aria-label="Tekniikkavinkki">i</button>' : '');
     card.appendChild(hd);
+    card.setAttribute('data-exkey', def.key);
+    hd.addEventListener('click', function(ev){
+      if(ev.target.closest('.infobtn')) return;
+      if(card.classList.contains('collapsed')) setActiveEx(def.key, true);
+    });
+    if(!prev){
+      const np = document.createElement('p');
+      np.className = 'noprev';
+      np.textContent = 'Ensimmäinen kirjaus – valitse maltillinen paino.';
+      card.appendChild(np);
+    }
 
     if(def.tip){
       const tip = document.createElement('p');
@@ -2913,14 +3105,11 @@ function renderProgram(pid){
         drawSets();
         save(person);
       });
-    }else{
-      prevChip.textContent = 'Ei aiempaa kirjausta';
-      prevChip.disabled = true;
     }
-    foot.appendChild(prevChip);
+    if(prev) foot.appendChild(prevChip);
 
     const addBtn = document.createElement('button');
-    addBtn.type = 'button'; addBtn.className = 'minibtn'; addBtn.textContent = '+ sarja';
+    addBtn.type = 'button'; addBtn.className = 'minibtn'; addBtn.textContent = '+ Lisää sarja';
     addBtn.addEventListener('click', function(){
       const arr = a.entries[def.key];
       const lastSet = arr[arr.length-1];
@@ -2930,7 +3119,7 @@ function renderProgram(pid){
     foot.appendChild(addBtn);
 
     const delBtn = document.createElement('button');
-    delBtn.type = 'button'; delBtn.className = 'minibtn'; delBtn.textContent = '− sarja';
+    delBtn.type = 'button'; delBtn.className = 'minibtn'; delBtn.textContent = '− Poista sarja';
     delBtn.addEventListener('click', function(){
       const arr = a.entries[def.key];
       if(arr.length > 1){ arr.pop(); drawSets(); save(person); }
@@ -2995,26 +3184,46 @@ function renderProgram(pid){
         const tgt = document.createElement('span');
         tgt.className = 'tgt mono';
         const pv = prevAll ? (prevAll.sets[si] || prevAll.sets[prevAll.sets.length-1]) : null;
-        tgt.textContent = setTargetText(def, pv) || 'Ei aiempaa kirjausta – valitse maltillinen paino';
-        meta.appendChild(tgt);
-
-        block.appendChild(meta);
+        const tt = setTargetText(def, pv);
+        if(tt){
+          tgt.textContent = tt;
+          meta.appendChild(tgt);
+          block.appendChild(meta);
+        }
 
         setsWrap.appendChild(block);
       });
+      markSets();
+    }
+    function markSets(){
+      const arr = a.entries[def.key];
+      let cur = -1;
+      arr.forEach(function(x, i){ if(cur < 0 && !x.done) cur = i; });
+      Array.prototype.forEach.call(setsWrap.children, function(bl, i){
+        bl.classList.toggle('is-done', !!(arr[i] && arr[i].done));
+        bl.classList.toggle('is-cur', i === cur && card.classList.contains('is-active'));
+      });
+      const n = arr.filter(function(x){ return x.done || num(x.reps) > 0; }).length;
+      const mini = hd.querySelector('[data-mini]');
+      if(mini) mini.textContent = n + ' / ' + arr.length + ' sarjaa' + (arr.length && n >= arr.length ? ' ✓' : '');
+      updateProgress();
     }
     function focusNext(def, si){
+      let target = null;
       const arr = a.entries[def.key];
-      let id = null;
-      if(si + 1 < arr.length) id = 'rep-' + pid + '-' + def.key + '-' + (si+1);
-      else {
+      for(let i = 0; i < arr.length; i++){ if(!arr[i].done){ target = {key:def.key, i:i}; break; } }
+      if(!target){
         let idx = -1;
         p.ex.forEach(function(e, i){ if(e.key === def.key) idx = i; });
-        if(idx >= 0 && idx + 1 < p.ex.length) id = 'rep-' + pid + '-' + p.ex[idx+1].key + '-0';
+        for(let j = idx + 1; j < p.ex.length && !target; j++){
+          const ar = a.entries[p.ex[j].key] || [];
+          for(let i = 0; i < ar.length; i++){ if(!ar[i].done){ target = {key:p.ex[j].key, i:i}; break; } }
+        }
       }
-      if(!id) return;
+      if(!target) return;
+      if(target.key !== def.key) setActiveEx(target.key, false);
       setTimeout(function(){
-        const el = document.getElementById(id);
+        const el = document.getElementById('rep-' + pid + '-' + target.key + '-' + target.i);
         if(el){ el.focus({preventScroll:true}); el.scrollIntoView({block:'center', behavior:'smooth'}); }
       }, 60);
     }
@@ -3052,7 +3261,7 @@ function renderProgram(pid){
         el.classList.add('pop');
       }
     }
-    function touch(){ updateAdvice(); updateMedal(def, false); updateFinishState(); save(person); }
+    function touch(){ updateAdvice(); updateMedal(def, false); updateFinishState(); markSets(); save(person); }
     function updateAdvice(){
       const el = hd.querySelector('[data-adv]');
       const prevA = lastFor(person, pid, def.key);
@@ -3065,7 +3274,7 @@ function renderProgram(pid){
     drawSets();
     updateAdvice();
     updateMedal(def, false);
-    nodes[def.key] = {card:card, update:updateAdvice, draw:drawSets};
+    nodes[def.key] = {card:card, update:updateAdvice, draw:drawSets, mark:markSets};
     list.appendChild(card);
   });
 
@@ -3112,6 +3321,43 @@ function renderProgram(pid){
   views.program.appendChild(hist);
 
   progDom = {pid:pid, person:person, nodes:nodes};
+  let activeKey = null;
+  function setActiveEx(key, scroll){
+    activeKey = key;
+    p.ex.forEach(function(e){
+      const n = nodes[e.key];
+      if(!n) return;
+      n.card.classList.toggle('is-active', e.key === key);
+      n.card.classList.toggle('collapsed', !progShowAll && e.key !== key);
+      n.mark();
+    });
+    if(scroll && nodes[key]){
+      const c = nodes[key].card;
+      setTimeout(function(){ c.scrollIntoView({block:'start', behavior:'smooth'}); }, 30);
+    }
+  }
+  progDom.setActive = setActiveEx;
+  function updateProgress(){
+    let n = 0, t = 0;
+    p.ex.forEach(function(e){ (a.entries[e.key] || []).forEach(function(x){ t++; if(x.done || num(x.reps) > 0) n++; }); });
+    const c = document.getElementById('prog-count'), bar = document.getElementById('prog-bar');
+    if(c) c.textContent = n + ' / ' + t + ' sarjaa';
+    if(bar) bar.style.width = (t ? Math.round(n / t * 100) : 0) + '%';
+  }
+  let firstOpen = null;
+  p.ex.forEach(function(e){
+    if(firstOpen) return;
+    if((a.entries[e.key] || []).some(function(x){ return !x.done; })) firstOpen = e.key;
+  });
+  setActiveEx(firstOpen || p.ex[0].key, false);
+  updateProgress();
+  const tgl = document.getElementById('toggle-all');
+  if(tgl) tgl.addEventListener('click', function(){
+    progShowAll = !progShowAll;
+    try{ localStorage.setItem('salikirja-showall', progShowAll ? '1' : '0'); }catch(e){}
+    tgl.textContent = progShowAll ? 'Yksi kerrallaan' : 'Näytä kaikki';
+    setActiveEx(activeKey, false);
+  });
   drawProgChart();
 }
 let progChartKey = null;
@@ -3323,7 +3569,11 @@ function renderHistory(){
   const sess = store[person].sessions.slice().sort(function(a,b){ return (a.end||'') < (b.end||'') ? 1 : -1; });
   let h = '';
   h += '<div class="phead"><button class="back" type="button" data-view="home">← Kaikki ohjelmat</button>' +
-       '<h1>Historia ja kehitys</h1></div>';
+       '<h1>Kehitys</h1></div>';
+  h += aiCardHtml();
+  if(togetherPair()) h += '<button type="button" class="lastbtn togbtn" data-view="together" style="margin-bottom:14px">' +
+    '<span class="lbico" aria-hidden="true">👥</span><span style="min-width:0"><b>Yhdessä</b>' +
+    '<small>Yhteiset treenipäivät ja yhteisten liikkeiden kehitys</small></span><span class="chev" aria-hidden="true">›</span></button>';
   h += '<div class="tabs">' +
     '<button type="button" data-tab="historia" aria-pressed="' + (state.tab === 'historia') + '">Treenit</button>' +
     '<button type="button" data-tab="kehitys" aria-pressed="' + (state.tab === 'kehitys') + '">Kehitys</button>' +
@@ -4415,7 +4665,7 @@ function renderBottom(){
   if(bottomHidden && !running){ bottomEl.innerHTML = ''; return; }
 
   let h = '<div class="bottom"><div class="bottom-in">';
-  if(inProgram) h += '<button class="btn ghost backbtn" data-view="home">← Alkuvalikko</button>';
+
   if(running){
     const left = Math.max(0, Math.ceil((timer.end - Date.now())/1000));
     h += '<div class="timer' + (left <= 0 ? ' zero' : '') + '" id="t-box">' +
@@ -4429,12 +4679,17 @@ function renderBottom(){
   if(inProgram){
     h += '<button class="barhide" type="button" data-hidebar="1" aria-label="Piilota alapalkki">✕</button>';
     const logged = active ? countLogged(active) : 0;
-    h += '<button class="btn primary" data-finish="1"' + (logged ? '' : ' disabled') + '>' +
+    h += '<span class="savestate" id="finish-note">' + esc(saveStateText(logged)) + '</span>';
+    h += '<button class="btn primary barfinish" data-finish="1"' + (logged ? '' : ' disabled') + '>' +
          (active && active.editId ? 'Tallenna muutokset' : 'Päätä treeni') + '</button>';
-    if(!running) h += '<span class="muted" id="finish-note" style="font-size:12px">' + (logged ? logged + ' sarjaa kirjattu' : 'Kirjaa vähintään yksi sarja') + '</span>';
   }
   h += '</div></div>';
   bottomEl.innerHTML = h;
+}
+/* kesken oleva treeni on aina tässä laitteessa; pilveen se menee vasta tallennettaessa */
+function saveStateText(logged){
+  if(!logged) return 'Kirjaa vähintään yksi sarja';
+  return (sync.enabled && sync.user) ? 'Tallentuu tälle laitteelle · pilveen kun päätät' : 'Tallentuu tälle laitteelle';
 }
 function updateFinishState(){
   const a = store[state.person].active;
@@ -4444,7 +4699,7 @@ function updateFinishState(){
   Array.prototype.forEach.call(btns, function(b){ b.disabled = !logged; });
   const txt = logged ? logged + ' sarjaa kirjattu' : 'Kirjaa vähintään yksi sarja ennen tallennusta';
   const n1 = document.getElementById('finish-note');
-  if(n1) n1.textContent = logged ? logged + ' sarjaa kirjattu' : 'Kirjaa vähintään yksi sarja';
+  if(n1) n1.textContent = saveStateText(logged);
   const n2 = document.getElementById('finish-note-inline');
   if(n2) n2.textContent = txt;
 }
@@ -5877,7 +6132,18 @@ document.getElementById('btn-cal').addEventListener('click', function(){
   const n = new Date(); state.calY = n.getFullYear(); state.calM = n.getMonth();
   progDom = null; setView('calendar');
 });
-document.getElementById('btn-guide').addEventListener('click', function(){ progDom = null; setView('guide'); });
+
+
+document.addEventListener('focusin', function(ev){
+  const t = ev.target;
+  if(t && t.matches && t.matches('#view-program input, #view-program textarea')) document.body.classList.add('typing');
+});
+document.addEventListener('focusout', function(){
+  setTimeout(function(){
+    const ae = document.activeElement;
+    if(!(ae && ae.matches && ae.matches('#view-program input, #view-program textarea'))) document.body.classList.remove('typing');
+  }, 60);
+});
 
 let rsz;
 window.addEventListener('resize', function(){
