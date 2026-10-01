@@ -8,12 +8,12 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Saliohjelma">
-<link rel="manifest" href="manifest.json?v=11.6.0">
-<link rel="icon" type="image/x-icon" href="favicon.ico?v=11.6.0">
-<link rel="icon" type="image/png" sizes="48x48" href="icon-48.png?v=11.6.0">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=11.6.0">
-<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=11.6.0">
-<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=11.6.0">
+<link rel="manifest" href="manifest.json?v=11.7.0">
+<link rel="icon" type="image/x-icon" href="favicon.ico?v=11.7.0">
+<link rel="icon" type="image/png" sizes="48x48" href="icon-48.png?v=11.7.0">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=11.7.0">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=11.7.0">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=11.7.0">
 <style>
   :root{
     color-scheme: light dark;
@@ -26,7 +26,7 @@
 </style>
 </head>
 <body>
-<title>Saliohjelma 11.6</title>
+<title>Saliohjelma 11.7</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Josefin+Sans:wght@400;600;700&family=Poiret+One&display=swap">
@@ -866,8 +866,11 @@
   .setlabels{padding:0 14px 2px}
   .setrow .sn{font-size:14px;font-weight:600;color:var(--ink-2)}
   .kgfield{border-radius:12px}
-  .kgfield button{width:44px;height:48px;font-size:21px;color:var(--ink-2)}
-  .kgfield input{height:48px;font-size:17px}
+  .kgfield button{width:40px;height:48px;font-size:21px;color:var(--ink-2)}
+  .kgfield input{height:48px;font-size:17px;padding:0;letter-spacing:-.01em}
+  /* yksikkö on sarakeotsikossa, jotta puolikkaat kilot (esim. 127,5) mahtuvat kenttään */
+  .kgfield .unit{display:none}
+  .kgfield{min-width:0}
   .numfield{height:48px;border-radius:12px}
   .numfield input{height:46px;font-size:17px}
   .donebtn{width:48px;height:48px;border-radius:50%;font-size:19px;border-width:1.5px;border-color:var(--line-2);background:var(--surface)}
@@ -876,9 +879,14 @@
   .setmeta .tgt{font-size:12px;color:var(--ink-2)}
   .ex-f .minibtn{min-height:40px;padding:8px 12px}
   @media (max-width:380px){
-    .setrow,.setlabels{grid-template-columns:18px minmax(0,1fr) 70px 46px;gap:6px}
-    .kgfield button{width:36px}
+    .setrow,.setlabels{grid-template-columns:18px minmax(0,1fr) 68px 48px;gap:6px}
+    .kgfield button{width:34px}
     .setmeta{padding-left:24px}
+  }
+  @media (max-width:340px){
+    .setrow,.setlabels{grid-template-columns:14px minmax(0,1fr) 58px 42px;gap:4px}
+    .kgfield button{width:30px}
+    .donebtn{width:42px;height:42px}
   }
   /* toimintopalkki treenissä */
   .bottom-in{flex-wrap:nowrap}
@@ -901,7 +909,7 @@
     .hello h1{font-size:36px}
   }
 </style>
-<link rel="stylesheet" href="themes.css?v=11.6.0">
+<link rel="stylesheet" href="themes.css?v=11.7.0">
 
 <header class="topbar">
   <div class="topbar-in">
@@ -3481,7 +3489,7 @@ function renderProgram(pid){
 
     const labels = document.createElement('div');
     labels.className = 'setlabels';
-    labels.innerHTML = '<span></span><span>Paino</span><span>Toistot</span><span></span>';
+    labels.innerHTML = '<span></span><span>Paino, kg</span><span>Toistot</span><span></span>';
     card.appendChild(labels);
 
     const setsWrap = document.createElement('div');
