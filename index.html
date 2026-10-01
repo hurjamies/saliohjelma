@@ -8,12 +8,12 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Saliohjelma">
-<link rel="manifest" href="manifest.json?v=11.3.0">
-<link rel="icon" type="image/x-icon" href="favicon.ico?v=11.3.0">
-<link rel="icon" type="image/png" sizes="48x48" href="icon-48.png?v=11.3.0">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=11.3.0">
-<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=11.3.0">
-<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=11.3.0">
+<link rel="manifest" href="manifest.json?v=11.4.0">
+<link rel="icon" type="image/x-icon" href="favicon.ico?v=11.4.0">
+<link rel="icon" type="image/png" sizes="48x48" href="icon-48.png?v=11.4.0">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=11.4.0">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=11.4.0">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=11.4.0">
 <style>
   :root{
     color-scheme: light dark;
@@ -26,7 +26,7 @@
 </style>
 </head>
 <body>
-<title>Saliohjelma 11.3</title>
+<title>Saliohjelma 11.4</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Josefin+Sans:wght@400;600;700&family=Poiret+One&display=swap">
@@ -889,7 +889,7 @@
     .hello h1{font-size:36px}
   }
 </style>
-<link rel="stylesheet" href="themes.css?v=11.3.0">
+<link rel="stylesheet" href="themes.css?v=11.4.0">
 
 <header class="topbar">
   <div class="topbar-in">
@@ -6792,7 +6792,22 @@ function updTyping(){
   }
   document.body.classList.toggle('typing', open);
 }
-document.addEventListener('focusin', function(){ setTimeout(updTyping, 60); setTimeout(updTyping, 450); });
+/* Kentän ollessa aktiivinen tila tarkistetaan myös säännöllisesti: kaikki puhelimet eivät
+   ilmoita näppäimistön sulkeutumisesta (tai ilmoittavat ennen kuin korkeus on palautunut),
+   ja kenttä voi jäädä aktiiviseksi, vaikka näppäimistö suljetaan. Silloin laskuri palaa alas. */
+let typingPoll = null;
+function startTypingPoll(){
+  if(typingPoll) return;
+  typingPoll = setInterval(function(){
+    updTyping();
+    if(!inProgField()){ clearInterval(typingPoll); typingPoll = null; }
+  }, 250);
+}
+document.addEventListener('focusin', function(){
+  setTimeout(updTyping, 60); setTimeout(updTyping, 450);
+  if(inProgField()) startTypingPoll();
+});
+if(window.visualViewport) window.visualViewport.addEventListener('scroll', updTyping);
 document.addEventListener('focusout', function(){ setTimeout(updTyping, 60); });
 if(window.visualViewport) window.visualViewport.addEventListener('resize', updTyping);
 window.addEventListener('resize', updTyping);
