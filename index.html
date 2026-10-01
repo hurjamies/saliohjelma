@@ -8,12 +8,12 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Saliohjelma">
-<link rel="manifest" href="manifest.json?v=11.2.0">
-<link rel="icon" type="image/x-icon" href="favicon.ico?v=11.2.0">
-<link rel="icon" type="image/png" sizes="48x48" href="icon-48.png?v=11.2.0">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=11.2.0">
-<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=11.2.0">
-<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=11.2.0">
+<link rel="manifest" href="manifest.json?v=11.3.0">
+<link rel="icon" type="image/x-icon" href="favicon.ico?v=11.3.0">
+<link rel="icon" type="image/png" sizes="48x48" href="icon-48.png?v=11.3.0">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=11.3.0">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=11.3.0">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=11.3.0">
 <style>
   :root{
     color-scheme: light dark;
@@ -26,7 +26,7 @@
 </style>
 </head>
 <body>
-<title>Saliohjelma 11.2</title>
+<title>Saliohjelma 11.3</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Josefin+Sans:wght@400;600;700&family=Poiret+One&display=swap">
@@ -811,6 +811,7 @@
   .aibtn{margin-top:10px}
   .homefoot{margin-top:18px;text-align:center}
   .homefoot p{font-size:12.5px;margin:6px 0 0}
+  .homefoot .appver{font-size:11px;opacity:.8}
 
   /* treenin kirjaaminen */
   .ptop{margin-top:10px}
@@ -888,7 +889,7 @@
     .hello h1{font-size:36px}
   }
 </style>
-<link rel="stylesheet" href="themes.css?v=11.2.0">
+<link rel="stylesheet" href="themes.css?v=11.3.0">
 
 <header class="topbar">
   <div class="topbar-in">
@@ -2871,7 +2872,8 @@ function renderHome(){
     '<span class="lbico" aria-hidden="true">📘</span><span style="min-width:0"><b>Ohjeet, synkronointi ja varmuuskopio</b>' +
     '<small>Käyttöohje, kirjautuminen, treenikaverit, varmuuskopio ja tuonti</small></span>' +
     '<span class="chev" aria-hidden="true">›</span></button>';
-  h += '<div class="homefoot"><p class="muted" id="save-note">' + esc(homeSaveText()) + '</p></div>';
+  h += '<div class="homefoot"><p class="muted" id="save-note">' + esc(homeSaveText()) + '</p>' +
+    '<p class="muted appver">' + esc(document.title) + '</p></div>';
 
   views.home.innerHTML = h;
 }
@@ -3613,9 +3615,11 @@ function renderProgram(pid){
       }
       if(!target) return;
       if(target.key !== def.key) setActiveEx(target.key, false);
+      /* seuraava sarja vain näkyviin: ohjelmallinen kohdistus jättäisi puhelimessa
+         kentän aktiiviseksi ilman näppäimistöä ja piilottaisi lepolaskurin ja alavalikon */
       setTimeout(function(){
         const el = document.getElementById('rep-' + pid + '-' + target.key + '-' + target.i);
-        if(el){ el.focus({preventScroll:true}); el.scrollIntoView({block:'center', behavior:'smooth'}); }
+        if(el) el.scrollIntoView({block:'center', behavior:'smooth'});
       }, 60);
     }
     function updateMedal(def, animate){
@@ -6766,20 +6770,32 @@ document.getElementById('btn-cal').addEventListener('click', function(){
 });
 
 
-document.addEventListener('focusin', function(ev){
-  const t = ev.target;
-  if(t && t.matches && t.matches('#view-program input, #view-program textarea')){
-    const tb = document.querySelector('.topbar');
-    if(tb) document.documentElement.style.setProperty('--topbar-h', Math.round(tb.getBoundingClientRect().bottom) + 'px');
-    document.body.classList.add('typing');
+/* Kirjoitustila: treenin kenttä on aktiivinen JA näppäimistö on oikeasti auki
+   (näkyvä alue on selvästi matalampi kuin ilman näppäimistöä). Pelkkä aktiivinen
+   kenttä ei riitä, koska iPhonessa kenttä voi jäädä aktiiviseksi ilman näppäimistöä. */
+let kbBaseH = Math.max(window.innerHeight, window.visualViewport ? window.visualViewport.height : 0);
+function inProgField(){
+  const ae = document.activeElement;
+  return !!(ae && ae.matches && ae.matches('#view-program input, #view-program textarea'));
+}
+function viewH(){ return window.visualViewport ? window.visualViewport.height : window.innerHeight; }
+function updTyping(){
+  if(!inProgField()){
+    kbBaseH = Math.max(window.innerHeight, viewH());
+    document.body.classList.remove('typing');
+    return;
   }
-});
-document.addEventListener('focusout', function(){
-  setTimeout(function(){
-    const ae = document.activeElement;
-    if(!(ae && ae.matches && ae.matches('#view-program input, #view-program textarea'))) document.body.classList.remove('typing');
-  }, 60);
-});
+  const open = viewH() < kbBaseH * 0.8;
+  if(open){
+    const tb = document.querySelector('.topbar');
+    if(tb) document.documentElement.style.setProperty('--topbar-h', Math.max(0, Math.round(tb.getBoundingClientRect().bottom)) + 'px');
+  }
+  document.body.classList.toggle('typing', open);
+}
+document.addEventListener('focusin', function(){ setTimeout(updTyping, 60); setTimeout(updTyping, 450); });
+document.addEventListener('focusout', function(){ setTimeout(updTyping, 60); });
+if(window.visualViewport) window.visualViewport.addEventListener('resize', updTyping);
+window.addEventListener('resize', updTyping);
 
 let rsz;
 window.addEventListener('resize', function(){
