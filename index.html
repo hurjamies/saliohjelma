@@ -8,12 +8,12 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Saliohjelma">
-<link rel="manifest" href="manifest.json?v=11.1.0">
-<link rel="icon" type="image/x-icon" href="favicon.ico?v=11.1.0">
-<link rel="icon" type="image/png" sizes="48x48" href="icon-48.png?v=11.1.0">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=11.1.0">
-<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=11.1.0">
-<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=11.1.0">
+<link rel="manifest" href="manifest.json?v=11.2.0">
+<link rel="icon" type="image/x-icon" href="favicon.ico?v=11.2.0">
+<link rel="icon" type="image/png" sizes="48x48" href="icon-48.png?v=11.2.0">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=11.2.0">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=11.2.0">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=11.2.0">
 <style>
   :root{
     color-scheme: light dark;
@@ -26,7 +26,7 @@
 </style>
 </head>
 <body>
-<title>Saliohjelma 11.1</title>
+<title>Saliohjelma 11.2</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Josefin+Sans:wght@400;600;700&family=Poiret+One&display=swap">
@@ -734,7 +734,9 @@
   .tabbar button[aria-current="page"]{color:var(--up)}
   .tabbar button[aria-current="page"] svg path,.tabbar button[aria-current="page"] svg rect{stroke-width:2.3}
   .tabbar button:active{background:var(--surface-2)}
-  body.view-program .tabbar{display:none}
+  /* treenissä toimintopalkki (lepolaskuri ja Päätä treeni) on alavalikon yläpuolella */
+  body.view-program .bottom{bottom:calc(62px + env(safe-area-inset-bottom, 0px));padding-bottom:10px}
+  body.view-program .wrap{padding-bottom:calc(240px + env(safe-area-inset-bottom, 0px))}
   /* ajastin muissa näkymissä: alavalikon yläpuolelle */
   body:not(.view-program) .bottom{bottom:calc(62px + env(safe-area-inset-bottom, 0px));background:transparent;border-top:0;
     backdrop-filter:none;padding-bottom:8px}
@@ -874,12 +876,19 @@
   .savestate{flex:1;min-width:0;font-size:12.5px;color:var(--ink-2);line-height:1.35}
   .savestate::before{content:"✓ ";color:var(--ok);font-weight:700}
   .barfinish{min-height:48px;padding:12px 18px;font-size:15px;white-space:nowrap}
-  @media (pointer:coarse){ body.typing .bottom{display:none} }
+  /* kirjoittaessa (näppäimistö auki) alavalikko ja tallennusrivi väistyvät,
+     mutta lepolaskuri siirtyy yläpalkin alle ja pysyy näkyvissä */
+  @media (pointer:coarse){
+    body.typing .tabbar{display:none}
+    body.typing .bottom .savestate,body.typing .bottom .barfinish,body.typing .bottom .barhide{display:none}
+    body.typing .bottom:not(:has(.timer)){display:none}
+    body.typing .bottom{top:var(--topbar-h, 58px);bottom:auto;padding:6px 16px;border-top:0;border-bottom:1px solid var(--line)}
+  }
   @media (min-width:900px){
     .hello h1{font-size:36px}
   }
 </style>
-<link rel="stylesheet" href="themes.css?v=11.1.0">
+<link rel="stylesheet" href="themes.css?v=11.2.0">
 
 <header class="topbar">
   <div class="topbar-in">
@@ -2307,7 +2316,7 @@ function setView(v, pid){
 }
 function renderAll(){
   document.body.className = document.body.className.replace(/\bview-\S+/g, '').trim() + ' view-' + state.view;
-  const NAV = {home:'home', together:'home', programs:'programs', editor:'programs', guide:'programs', history:'history', calendar:'calendar'};
+  const NAV = {home:'home', together:'home', program:'programs', programs:'programs', editor:'programs', guide:'programs', history:'history', calendar:'calendar'};
   Array.prototype.forEach.call(document.querySelectorAll('#tabbar [data-nav]'), function(b){
     if(b.dataset.nav === NAV[state.view]) b.setAttribute('aria-current', 'page'); else b.removeAttribute('aria-current');
   });
@@ -6759,7 +6768,11 @@ document.getElementById('btn-cal').addEventListener('click', function(){
 
 document.addEventListener('focusin', function(ev){
   const t = ev.target;
-  if(t && t.matches && t.matches('#view-program input, #view-program textarea')) document.body.classList.add('typing');
+  if(t && t.matches && t.matches('#view-program input, #view-program textarea')){
+    const tb = document.querySelector('.topbar');
+    if(tb) document.documentElement.style.setProperty('--topbar-h', Math.round(tb.getBoundingClientRect().bottom) + 'px');
+    document.body.classList.add('typing');
+  }
 });
 document.addEventListener('focusout', function(){
   setTimeout(function(){
