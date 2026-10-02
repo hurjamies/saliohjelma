@@ -3,8 +3,8 @@
    Versionumeroa nostamalla vanha välimuisti korvautuu.
    Firebasen yhteyksiin (kirjautuminen, Firestore) ei kosketa: ne kulkevat
    aina suoraan verkkoon, jotta reaaliaikainen synkronointi toimii. */
-const CACHE = 'saliohjelma-v11.9.0';
-const SHELL = ['./', './index.html', './themes.css?v=11.9.0', './assets/hero-neon.webp', './assets/hero-deco.webp', './assets/hero-mono.webp', './assets/hero-nature.webp', './assets/hero-dark.webp', './assets/hero-light.webp', './assets/hero-frost.webp', './assets/hero-berserk.webp', './assets/rune-frost.svg', './assets/rune-berserk.svg', './manifest.json?v=11.9.0', './favicon.ico?v=11.9.0', './icon-48.png?v=11.9.0', './icon-192.png?v=11.9.0', './icon-512.png?v=11.9.0', './icon-180.png?v=11.9.0', './icon-maskable-512.png?v=11.9.0',
+const CACHE = 'saliohjelma-v11.10.0';
+const SHELL = ['./', './index.html', './themes.css?v=11.10.0', './assets/hero-neon.webp', './assets/hero-deco.webp', './assets/hero-mono.webp', './assets/hero-nature.webp', './assets/hero-dark.webp', './assets/hero-light.webp', './assets/hero-frost.webp', './assets/hero-berserk.webp', './assets/rune-frost.svg', './assets/rune-berserk.svg', './manifest.json?v=11.10.0', './favicon.ico?v=11.10.0', './icon-48.png?v=11.10.0', './icon-192.png?v=11.10.0', './icon-512.png?v=11.10.0', './icon-180.png?v=11.10.0', './icon-maskable-512.png?v=11.10.0',
   './firebase/firebase-app.js', './firebase/firebase-auth.js', './firebase/firebase-firestore.js'];
 const FONT_HOSTS = ['fonts.googleapis.com', 'fonts.gstatic.com'];
 

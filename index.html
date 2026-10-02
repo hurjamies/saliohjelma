@@ -8,12 +8,12 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Saliohjelma">
-<link rel="manifest" href="manifest.json?v=11.9.0">
-<link rel="icon" type="image/x-icon" href="favicon.ico?v=11.9.0">
-<link rel="icon" type="image/png" sizes="48x48" href="icon-48.png?v=11.9.0">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=11.9.0">
-<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=11.9.0">
-<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=11.9.0">
+<link rel="manifest" href="manifest.json?v=11.10.0">
+<link rel="icon" type="image/x-icon" href="favicon.ico?v=11.10.0">
+<link rel="icon" type="image/png" sizes="48x48" href="icon-48.png?v=11.10.0">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=11.10.0">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=11.10.0">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=11.10.0">
 <style>
   :root{
     color-scheme: light dark;
@@ -26,7 +26,7 @@
 </style>
 </head>
 <body>
-<title>Saliohjelma 11.9</title>
+<title>Saliohjelma 11.10</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Josefin+Sans:wght@400;600;700&family=Poiret+One&display=swap">
@@ -902,7 +902,7 @@
     .hello h1{font-size:36px}
   }
 </style>
-<link rel="stylesheet" href="themes.css?v=11.9.0">
+<link rel="stylesheet" href="themes.css?v=11.10.0">
 
 <header class="topbar">
   <div class="topbar-in">
@@ -1922,14 +1922,26 @@ function sharedKeys(pid){
 }
 function accentOf(p){ return p && p.type === 'ala' ? 'var(--low)' : 'var(--up)'; }
 
-/* edellisen kerran sarjat tälle liikkeelle */
+/* Liike on kahdessa ohjelmassa vertailukelpoinen, kun se tehdään molemmissa samassa
+   kohdassa järjestystä (esim. Ylä A ja Ylä B). Jos järjestys eroaa (Ala A ja Ala B),
+   painot eivät ole suoraan vertailtavissa. */
+function samePlace(pidA, pidB, key){
+  if(pidA === pidB) return true;
+  const a = progById(pidA), b = progById(pidB);
+  if(!a || !b) return false;
+  const pos = function(p){ for(let i=0;i<p.ex.length;i++) if(p.ex[i].key === key) return i; return -1; };
+  const i = pos(a);
+  return i >= 0 && i === pos(b);
+}
+/* edellisen kerran sarjat tälle liikkeelle: uusin vertailukelpoinen kerta, myös
+   toisesta ohjelmasta, jotta B-päivän painonnosto näkyy seuraavana A-päivänä */
 function lastFor(person, pid, key){
   const list = strengthSessions(person);
   let fallback = null;
   for(const s of list){
     const e = s.entries && s.entries[key];
-    if(e && e.length && e.some(function(x){ return num(x.kg) > 0 || num(x.reps) > 0; })){
-      if(s.pid === pid) return {sets:e, end:s.end, same:true, pid:s.pid};
+    if(e && e.length && e.some(function(x){ return num(x.reps) > 0; })){
+      if(samePlace(pid, s.pid, key)) return {sets:e, end:s.end, same:s.pid === pid, pid:s.pid};
       if(!fallback) fallback = {sets:e, end:s.end, same:false, pid:s.pid};
     }
   }
