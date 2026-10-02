@@ -8,12 +8,12 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Saliohjelma">
-<link rel="manifest" href="manifest.json?v=11.7.0">
-<link rel="icon" type="image/x-icon" href="favicon.ico?v=11.7.0">
-<link rel="icon" type="image/png" sizes="48x48" href="icon-48.png?v=11.7.0">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=11.7.0">
-<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=11.7.0">
-<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=11.7.0">
+<link rel="manifest" href="manifest.json?v=11.8.1">
+<link rel="icon" type="image/x-icon" href="favicon.ico?v=11.8.1">
+<link rel="icon" type="image/png" sizes="48x48" href="icon-48.png?v=11.8.1">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=11.8.1">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=11.8.1">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=11.8.1">
 <style>
   :root{
     color-scheme: light dark;
@@ -26,7 +26,7 @@
 </style>
 </head>
 <body>
-<title>Saliohjelma 11.7</title>
+<title>Saliohjelma 11.8.1</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Josefin+Sans:wght@400;600;700&family=Poiret+One&display=swap">
@@ -909,7 +909,7 @@
     .hello h1{font-size:36px}
   }
 </style>
-<link rel="stylesheet" href="themes.css?v=11.7.0">
+<link rel="stylesheet" href="themes.css?v=11.8.1">
 
 <header class="topbar">
   <div class="topbar-in">
@@ -5033,6 +5033,8 @@ const SKINS = [
   {id:'deco', name:'Art Deco', desc:'Norsunluu, kultainen kehys ja klubin eleganssi'},
   {id:'mono', name:'Mustavalkopunainen', desc:'Mustaa ja valkoista, punainen päätoiminto'},
   {id:'nature', name:'Luonto', desc:'Pellava, metsänvihreä ja rauhalliset mattapinnat'},
+  {id:'frost', name:'Nordic Rune', desc:'Hopea, jäätynyt lasi ja sähkönsiniset riimut'},
+  {id:'berserk', name:'Viking Berserk', desc:'Hiilenmusta, teräs ja punahehkuinen uhrimerkki'},
   {id:'dark', name:'Tumma', desc:'Grafiitti ja teräksensininen, ilman hehkua'},
   {id:'light', name:'Vaalea', desc:'Luonnonvalkoinen, savensininen ja salvia'},
   {id:'auto', name:'Laitteen mukaan', desc:'Vaihtuu laitteen vaalean tai tumman tilan mukana'}
@@ -5057,7 +5059,7 @@ function applySkin(id){
   document.body.setAttribute('data-skin', resolvedSkin(skin));
   const hs = heroSrc();
   document.querySelectorAll('.hero-art').forEach(function(img){ img.src = hs; });
-  document.documentElement.style.colorScheme = ['dark','neon'].indexOf(resolvedSkin(skin)) >= 0 ? 'dark' : 'light';
+  document.documentElement.style.colorScheme = ['dark','neon','berserk'].indexOf(resolvedSkin(skin)) >= 0 ? 'dark' : 'light';
   const color = getComputedStyle(document.body).getPropertyValue('--bg').trim();
   const meta = document.querySelector('meta[name="theme-color"]');
   if(meta && color) meta.setAttribute('content', color);

@@ -1,4 +1,4 @@
-/* Six distinct palettes; shared dimensions keep the workout controls familiar. */
+/* Eight distinct palettes; shared dimensions keep the workout controls familiar. */
 :is(body, .theme-preview)[data-skin="light"] {
   color-scheme:light;
   --bg:#F4F2EE;--surface:#FFFFFF;--surface-2:#F7F6F2;--line:#E7E5DF;--line-2:#C8C7BF;
@@ -60,7 +60,52 @@
   --shadow:0 2px 5px #3A322208,0 10px 24px -16px #3A322245;
   --hero-image:url('assets/hero-nature.webp');
 }
+:is(body, .theme-preview)[data-skin="frost"] {
+  color-scheme:light;
+  --bg:#F5F6F8;--surface:#FFFFFF;--surface-2:#EDF2F8;--line:#DCE3EC;--line-2:#9AAABD;
+  --ink:#242B35;--ink-2:#536173;--ink-3:#5F6D7E;
+  --up:#1768D5;--up-soft:#E7F0FC;--low:#49647E;--low-soft:#E8EEF4;
+  --ok:#3C6576;--ok-soft:#E3EFF3;--warn:#805D26;--warn-soft:#F5EDDE;--bad:#AD4054;
+  --on-acc:#FFFFFF;--rest:#5F6D7E;--cardio:#6855A2;--cardio-soft:#EEEAF7;
+  --silver:#8797AB;--rune-glow:#3989EE;--rune-mark:url('assets/rune-frost.svg');
+  --shadow:0 2px 4px #25364C05,0 16px 40px -28px #25364C33;
+  --hero-image:url('assets/hero-frost.webp');
+}
+:is(body, .theme-preview)[data-skin="berserk"] {
+  color-scheme:dark;
+  --bg:#0B0D10;--surface:#171B20;--surface-2:#232A32;--line:#3C4652;--line-2:#758291;
+  --ink:#F2F4F7;--ink-2:#C3CCD7;--ink-3:#A6B2C2;
+  --up:#FF777E;--up-soft:#3B1C24;--low:#B5C0CF;--low-soft:#2A333F;
+  --ok:#A8D6BA;--ok-soft:#203B30;--warn:#F3C68E;--warn-soft:#3B3022;--bad:#FF9399;
+  --on-acc:#0B0D10;--rest:#A6B2C2;--cardio:#FFB79A;--cardio-soft:#3D2823;
+  --silver:#B5C0CF;--rune-glow:#FF3548;--rune-mark:url('assets/rune-berserk.svg');
+  --shadow:0 8px 26px -16px #000D;
+  --hero-image:url('assets/hero-berserk.webp');
+}
 body {--font-d:'Archivo','Helvetica Neue',Arial,sans-serif;--r:14px}
+body[data-skin="frost"] {background-image:radial-gradient(ellipse at 90% 0,#3989EE12,transparent 60%)}
+body[data-skin="berserk"] {background-image:radial-gradient(ellipse at 90% 0,#FF354812,transparent 60%)}
+/* Rune artwork remains decorative, with glow reserved for the main action and timer. */
+body:is([data-skin="frost"],[data-skin="berserk"]) :is(.today.hero,.workout-hero) {border-color:var(--silver)}
+body:is([data-skin="frost"],[data-skin="berserk"]) .today.hero::after,
+.theme-preview:is([data-skin="frost"],[data-skin="berserk"])::after {
+  content:"";position:absolute;z-index:3;right:14px;top:14px;width:34px;height:34px;
+  background:var(--rune-mark) center/contain no-repeat;filter:drop-shadow(0 0 6px var(--rune-glow));pointer-events:none;
+}
+body:is([data-skin="frost"],[data-skin="berserk"]) .hero .primaryact:not(:disabled) {
+  border:1px solid var(--up);box-shadow:0 0 22px -12px var(--rune-glow);
+}
+body:is([data-skin="frost"],[data-skin="berserk"]) .donebtn[aria-pressed="true"] {color:var(--on-acc)}
+body:is([data-skin="frost"],[data-skin="berserk"]) .timer {border-color:var(--up);box-shadow:0 0 18px -12px var(--rune-glow)}
+body[data-skin="berserk"] :is(.brand,.hero h2,.phead h1) {letter-spacing:.015em}
+body[data-skin="berserk"] :is(.btn,.pickchip,.theme-preview) {border-radius:6px}
+body[data-skin="berserk"] .prlabel {color:var(--m1)}
+body[data-skin="berserk"] .prbox-h {color:var(--gold-1)}
+body[data-skin="frost"] .prlabel {color:var(--m3)}
+body[data-skin="frost"] .prbox-h {color:var(--gold-3)}
+.theme-preview:is([data-skin="frost"],[data-skin="berserk"])::after {width:19px;height:19px;top:7px;right:7px}
+.theme-preview:is([data-skin="frost"],[data-skin="berserk"]) .mini-brand {padding-right:18px}
+.theme-preview[data-skin="berserk"] .mini-action {box-shadow:0 0 12px -6px var(--rune-glow)}
 body[data-skin="neon"] {background-image:radial-gradient(ellipse at 85% 0,#5B298322,transparent 60%);background-attachment:fixed}
 body[data-skin="nature"] {background-image:repeating-linear-gradient(35deg,#78603A05 0 1px,transparent 1px 7px)}
 body[data-skin="deco"] {background-image:none}

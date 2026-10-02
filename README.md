@@ -21,7 +21,8 @@ kirjaukset tallentuvat puhelimeen ja synkronoituvat Firebaseen.
   treenin, cardion (Hyrox / jumppa / juoksu / muu) tai lepopäivän.
 - **Kehityskäyrät** – liikkeen paras työsarja ensisijaisena mittarina, kokonaiskuorma sekundäärisenä.
   A- ja B-päivien historia pidetään erillään.
-- **Kuusi väriteemaa** – Neon Synth, Art Deco, Mustavalkopunainen, Luonto, Tumma, Vaalea.
+- **Kahdeksan väriteemaa** – Neon Synth, Art Deco, Mustavalkopunainen, Luonto, Nordic Rune,
+  Viking Berserk, Tumma, Vaalea.
   **Laitteen mukaan** seuraa järjestelmän vaaleaa tai tummaa tilaa myös käytön aikana.
   Teemavalitsin näyttää pienet käyttöliittymäesikatselut. Selaimen yläpalkin väri
   seuraa valittua teemaa sitä tukevissa selaimissa.
@@ -64,12 +65,16 @@ Kuvat vaihtuvat myös laitteen vaalean/tumman asetuksen mukana:
 - Art Deco: lämmin norsunluu, messinki ja vanhan urheiluklubin tunnelma.
 - Mustavalkopunainen: mustavalkoinen sali ja punainen saliteline.
 - Luonto: puu, kasvit ja lämmin luonnonvalo.
+- Nordic Rune: Nettobrutto-projektin hopea- ja lasipaletista sovitettu vaalea teema,
+  teräksinen käsipaino ja sähkönsiniset riimut.
+- Viking Berserk: hiilenmusta sali, teräs ja punahehkuiset riimut.
+  Käsipainon keskusmerkki ja teeman koriste ovat Berserk-sarjan uhrimerkki.
 - Tumma: grafiitinharmaa sali ja hillitty teräksensininen valo.
 - Vaalea: valoisa sali ja kevyet salvianvihreät yksityiskohdat.
 
 Kuvat sijaitsevat `assets/hero-{teema}.webp`-tiedostoissa. Ne on luotu
 OpenAI ImageGenillä käyttäjän antaman tyyliviitteen pohjalta. Teematyylit
-ja kaikki kuusi kuvataustaa kuuluvat service workerin offline-välimuistiin.
+ja kaikki kahdeksan kuvataustaa sekä riimukoristeet kuuluvat service workerin offline-välimuistiin.
 Kuvat ovat koristeita; tekstien luettavuus säilytetään erillisellä pehmeällä häivytyksellä.
 
 ## Ohjelmien tausta
