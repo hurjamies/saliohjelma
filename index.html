@@ -8,12 +8,12 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Saliohjelma">
-<link rel="manifest" href="manifest.json?v=11.8.1">
-<link rel="icon" type="image/x-icon" href="favicon.ico?v=11.8.1">
-<link rel="icon" type="image/png" sizes="48x48" href="icon-48.png?v=11.8.1">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=11.8.1">
-<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=11.8.1">
-<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=11.8.1">
+<link rel="manifest" href="manifest.json?v=11.9.0">
+<link rel="icon" type="image/x-icon" href="favicon.ico?v=11.9.0">
+<link rel="icon" type="image/png" sizes="48x48" href="icon-48.png?v=11.9.0">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=11.9.0">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=11.9.0">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=11.9.0">
 <style>
   :root{
     color-scheme: light dark;
@@ -26,7 +26,7 @@
 </style>
 </head>
 <body>
-<title>Saliohjelma 11.8.1</title>
+<title>Saliohjelma 11.9</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Josefin+Sans:wght@400;600;700&family=Poiret+One&display=swap">
@@ -402,14 +402,6 @@
   .setrow{display:grid;grid-template-columns:20px 1fr 74px 38px;gap:6px;align-items:center}
   .setmeta{display:flex;flex-wrap:wrap;align-items:center;gap:6px;padding:4px 0 0 26px}
   .setmeta .tgt{font-size:11px;color:var(--ink-3);flex:1;min-width:150px;line-height:1.35}
-  .rirrow{display:flex;align-items:center;gap:3px}
-  .rirrow .rlab{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-3);
-    font-family:var(--font-d);font-weight:700;margin-right:3px}
-  .rirbtn{
-    border:1px solid var(--line);background:var(--surface-2);border-radius:7px;min-width:28px;height:28px;
-    font-family:var(--font-m);font-size:12px;font-weight:600;color:var(--ink-2);padding:0 5px;
-  }
-  .rirbtn[aria-pressed="true"]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
   /* ennätysmerkintä liikkeen kohdalla – aina kultainen */
   :root{
     --gold-1:#E7C867;--gold-2:#C9A227;--gold-3:#8C6D14;
@@ -641,6 +633,7 @@
     position:fixed;inset:0;z-index:60;background:rgba(10,13,18,.5);display:flex;padding:16px;
     overflow-y:auto;overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
   }
+  .sheet:focus{outline:none}
   .sheet{
     background:var(--surface);border:1px solid var(--line);border-radius:18px;width:100%;max-width:440px;
     padding:18px;box-shadow:0 20px 60px -20px rgba(0,0,0,.6);
@@ -874,7 +867,7 @@
   .numfield{height:48px;border-radius:12px}
   .numfield input{height:46px;font-size:17px}
   .donebtn{width:48px;height:48px;border-radius:50%;font-size:19px;border-width:1.5px;border-color:var(--line-2);background:var(--surface)}
-  .donebtn[aria-pressed="true"]{background:var(--ok);border-color:var(--ok);color:#fff}
+  .donebtn[aria-pressed="true"]{background:var(--ok);border-color:var(--ok);color:var(--on-acc)}
   .setmeta{padding:5px 0 1px 30px}
   .setmeta .tgt{font-size:12px;color:var(--ink-2)}
   .ex-f .minibtn{min-height:40px;padding:8px 12px}
@@ -909,7 +902,7 @@
     .hello h1{font-size:36px}
   }
 </style>
-<link rel="stylesheet" href="themes.css?v=11.8.1">
+<link rel="stylesheet" href="themes.css?v=11.9.0">
 
 <header class="topbar">
   <div class="topbar-in">
@@ -1962,7 +1955,7 @@ function fmtKg(n){
 }
 
 /* Progressio-ohje:
-   - kaikki määrätyt sarjat ylärajassa ja varasto 0-2 -> lisää painoa
+   - kaikki määrätyt sarjat ylärajassa -> lisää painoa
    - alueen sisällä -> pidä paino, hae lisää toistoja
    - yksi sarja alarajan alle -> pidä paino, yritä uudelleen
    - kaksi sarjaa tai toistuvasti alle -> kevennä                         */
@@ -2126,7 +2119,9 @@ function medalText(m){
 }
 
 /* sarjakohtainen "viimeksi / tavoite" */
-function setTargetText(def, prevSet){
+/* up = edellisen kerran yhteenveto (advice) kehotti lisäämään painoa. Sarjakohtainen
+   tavoite seuraa samaa päätöstä, jotta ne eivät ole ristiriidassa. */
+function setTargetText(def, prevSet, up){
   if(!prevSet) return '';
   const kg = num(prevSet.kg), reps = num(prevSet.reps);
   if(reps <= 0 && kg <= 0) return '';
@@ -2134,7 +2129,7 @@ function setTargetText(def, prevSet){
   const last = 'Viimeksi ' + (kg ? fmtKg(kg) + ' kg' : 'oma paino') + ' × ' + (reps || '–') +
                (rir !== null ? ' @' + rir : '');
   let target;
-  if(reps >= def.hi && (rir === null || rir <= 2)){
+  if(up){
     target = kg ? fmtKg(kg + 2.5) + ' kg × ' + def.lo + '–' + def.hi : 'lisää toistoja';
   }else if(reps > 0){
     target = (kg ? fmtKg(kg) + ' kg × ' : '') + Math.min(def.hi, reps + 1);
@@ -3307,9 +3302,43 @@ function setPersonMenu(open){
 document.addEventListener('keydown', function(ev){
   if(ev.key === 'Escape'){
     const seg = document.getElementById('personseg');
-    if(seg && seg.classList.contains('open')){ setPersonMenu(false); const b = seg.querySelector('.pmenu-btn'); if(b) b.focus(); }
+    if(seg && seg.classList.contains('open')){ setPersonMenu(false); const b = seg.querySelector('.pmenu-btn'); if(b) b.focus(); return; }
+    const closer = overlayEl.querySelector('[data-close]');
+    if(closer){ ev.preventDefault(); closer.click(); }
+    return;
+  }
+  /* Tab pysyy avoimessa dialogissa */
+  if(ev.key === 'Tab' && overlayEl.firstChild){
+    const f = Array.prototype.filter.call(
+      overlayEl.querySelectorAll('button,a[href],input,select,textarea,summary,[tabindex]:not([tabindex="-1"])'),
+      function(el){ return !el.disabled && el.getClientRects().length; });
+    if(!f.length){ ev.preventDefault(); return; }
+    const first = f[0], last = f[f.length - 1], act = document.activeElement;
+    if(!overlayEl.contains(act) || act === overlayEl.querySelector('.sheet')){ ev.preventDefault(); (ev.shiftKey ? last : first).focus(); }
+    else if(ev.shiftKey && act === first){ ev.preventDefault(); last.focus(); }
+    else if(!ev.shiftKey && act === last){ ev.preventDefault(); first.focus(); }
   }
 });
+/* Dialogin avautuessa kohdistus siirtyy siihen ja sulkeutuessa palaa avaajaan. */
+let overlayOpener = null, overlayWasOpen = false, lastOutside = null;
+document.addEventListener('click', function(ev){
+  const t = ev.target.closest ? ev.target.closest('button,a[href],[tabindex]') : null;
+  if(t && !overlayEl.contains(t)) lastOutside = t;
+}, true);
+new MutationObserver(function(){
+  const sheet = overlayEl.querySelector('.sheet');
+  if(sheet){
+    if(!overlayWasOpen) overlayOpener = lastOutside;
+    overlayWasOpen = true;
+    sheet.setAttribute('aria-modal', 'true');
+    sheet.tabIndex = -1;
+    if(!overlayEl.contains(document.activeElement)) sheet.focus({preventScroll:true});
+  }else if(overlayWasOpen){
+    overlayWasOpen = false;
+    const o = overlayOpener; overlayOpener = null;
+    if(o && o !== document.body && document.contains(o)) o.focus({preventScroll:true});
+  }
+}).observe(overlayEl, {childList:true});
 
 /* ---------------- KOKONAISKEHITYS ----------------
    Ketjutettu indeksi kaikista kirjatuista liikkeistä ja treeneistä. Jokaisessa treenissä
@@ -3599,7 +3628,8 @@ function renderProgram(pid){
         const tgt = document.createElement('span');
         tgt.className = 'tgt mono';
         const pv = prevAll ? (prevAll.sets[si] || prevAll.sets[prevAll.sets.length-1]) : null;
-        const tt = setTargetText(def, pv);
+        const prevAd = prevAll ? advice(def, prevAll.sets, null) : null;
+        const tt = setTargetText(def, pv, !!(prevAd && prevAd.k === 'up'));
         if(tt){
           tgt.textContent = tt;
           meta.appendChild(tgt);
@@ -3740,6 +3770,7 @@ function renderProgram(pid){
   foot.appendChild(saveWrap);
   foot.appendChild(discard);
   views.program.appendChild(foot);
+  updateFinishState();
 
   const chart = document.createElement('div');
   chart.style.marginTop = '24px';
@@ -5085,6 +5116,8 @@ function showSkins(){
   });
   h += '</div><div class="sticky-cta"><button class="btn primary" data-close="1">Valmis</button></div></div></div>';
   overlayEl.innerHTML = h;
+  const cur = overlayEl.querySelector('[data-setskin][aria-pressed="true"]');
+  if(cur && !overlayEl.contains(document.activeElement)){ cur.focus({preventScroll:true}); cur.scrollIntoView({block:'center'}); }
 }
 
 /* ============================================================
@@ -5185,9 +5218,12 @@ function updateFinishState(){
   const n2 = document.getElementById('finish-note-inline');
   if(n2) n2.textContent = txt;
 }
+/* Sarja on kirjattu vasta, kun siinä on toistoja. Pelkkä esitäytetty paino tai
+   ✓ ilman toistoja ei ole työsarja; oman painon liike kelpaa ilman kiloja. */
+function isLogged(s){ return num(s.reps) > 0; }
 function countLogged(a){
   let c = 0;
-  for(const k in a.entries) a.entries[k].forEach(function(s){ if(num(s.reps) > 0 || num(s.kg) > 0) c++; });
+  for(const k in a.entries) a.entries[k].forEach(function(s){ if(isLogged(s)) c++; });
   return c;
 }
 
@@ -5195,14 +5231,14 @@ function countLogged(a){
 function finishSession(){
   const person = state.person;
   const a = store[person].active;
-  if(!a) return;
+  if(!a || !countLogged(a)) return;
   const p = progById(a.pid);
   const prevSess = strengthSessions(person).filter(function(x){
     return x.pid === a.pid && (!a.editId || x.id !== a.editId);
   })[0];
   const entries = {};
   for(const k in a.entries){
-    const kept = a.entries[k].filter(function(s){ return num(s.reps) > 0 || num(s.kg) > 0; })
+    const kept = a.entries[k].filter(isLogged)
       .map(function(s){ return {kg:num(s.kg), reps:num(s.reps), rir:s.rir || ''}; });
     if(kept.length) entries[k] = kept;
   }

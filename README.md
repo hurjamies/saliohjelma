@@ -6,15 +6,17 @@ kirjaukset tallentuvat puhelimeen ja synkronoituvat Firebaseen.
 
 **Sovellus:** https://hurjamies.github.io/saliohjelma/
 
+**Havaitut virheet ja korjausohjeet:** [BUGS.md](BUGS.md) — priorisoitu lista, toisto-ohjeet ja hyväksymiskriteerit Clauden tarkistusta varten.
+
 ## Mitä se tekee
 
 - **Päivän suositus** – kierto Ylä A → Ala A → Ylä B → Ala B jatkuu siitä mihin jäätiin.
   Viikko ei nollaudu maanantaina; saman alueen kovien treenien väliin jää vähintään 2 vrk.
 - **Kolme viikkoriviä** – runko (ohjelman perusta), suositus (mukautuu kirjauksiin) ja toteutunut.
-- **Sarjakohtainen kirjaus** – paino, toistot ja varasto (RIR) pikapainikkeilla. Jokaisessa sarjassa
-  näkyy edellisen kerran tulos ja tavoite, esim. *Viimeksi 80 kg × 12 @1 · tavoite 80 kg × 13*.
+- **Sarjakohtainen kirjaus** – paino ja toistot. Jokaisessa sarjassa
+  näkyy edellisen kerran tulos ja tavoite, esim. *Viimeksi 80 kg × 11 · tavoite 80 kg × 12*.
 - **Progressio-ohje** – painon lisäystä ehdotetaan vasta kun kaikki sarjat ovat toistoalueen
-  ylärajassa ja varasto on merkitty 0–2.
+  ylärajassa. Sarjakohtainen tavoite noudattaa samaa sääntöä.
 - **Ennätykset ja yhteenveto** – kesto, työsarjat, montako liikettä parani, PR:t ja vertailu
   edelliseen samaan treeniin.
 - **Kalenteri** – menneitä päiviä voi muokata: vaihtaa ohjelman, siirtää päivää, poistaa tai lisätä
