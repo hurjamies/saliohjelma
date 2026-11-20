@@ -8,12 +8,12 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Saliohjelma">
-<link rel="manifest" href="manifest.json?v=11.10.0">
-<link rel="icon" type="image/x-icon" href="favicon.ico?v=11.10.0">
-<link rel="icon" type="image/png" sizes="48x48" href="icon-48.png?v=11.10.0">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=11.10.0">
-<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=11.10.0">
-<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=11.10.0">
+<link rel="manifest" href="manifest.json?v=11.11.0">
+<link rel="icon" type="image/x-icon" href="favicon.ico?v=11.11.0">
+<link rel="icon" type="image/png" sizes="48x48" href="icon-48.png?v=11.11.0">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png?v=11.11.0">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=11.11.0">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-180.png?v=11.11.0">
 <style>
   :root{
     color-scheme: light dark;
@@ -26,7 +26,7 @@
 </style>
 </head>
 <body>
-<title>Saliohjelma 11.10</title>
+<title>Saliohjelma 11.11</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@600;700&family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600&family=Josefin+Sans:wght@400;600;700&family=Poiret+One&display=swap">
@@ -795,6 +795,13 @@
   .wkmore summary::after{content:"→";margin-left:6px;transition:transform .15s}
   .wkmore[open] summary::after{transform:rotate(90deg)}
   .wkmore .week{margin-top:4px}
+  .wkcal{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;margin-top:8px;padding:10px 12px;
+    border:1px solid var(--line);border-radius:12px;background:var(--surface-2);color:var(--ink);font:inherit;text-align:left;cursor:pointer}
+  .wkcal svg{color:var(--up);flex:none}
+  .wkcal b{display:block;font-family:var(--font-d);font-size:14.5px;font-weight:700}
+  .wkcal small{display:block;font-size:12px;color:var(--ink-2);margin-top:1px}
+  .wkcal .chev{margin-left:auto;color:var(--ink-3);font-size:20px;font-weight:700;line-height:1}
+  .wkcal:active{background:var(--line)}
 
   /* kortit */
   .lastbtn{min-height:64px;padding:13px 14px;gap:12px;margin-top:10px}
@@ -902,7 +909,7 @@
     .hello h1{font-size:36px}
   }
 </style>
-<link rel="stylesheet" href="themes.css?v=11.10.0">
+<link rel="stylesheet" href="themes.css?v=11.11.0">
 
 <header class="topbar">
   <div class="topbar-in">
@@ -2877,7 +2884,11 @@ function renderHome(){
   });
   h += '</div><p class="muted" style="font-size:12px;margin:8px 2px 0;line-height:1.45">' +
     'Kierto ratkaisee, ei kalenteri: Ylä A → Ala A → Ylä B → Ala B jatkuu siitä mihin jäit, eikä viikko nollaudu ' +
-    'maanantaina. Runko ehdottaa päivän, saman alueen treenien väliin jää vähintään 2 vrk.</p></details></section>';
+    'maanantaina. Runko ehdottaa päivän, saman alueen treenien väliin jää vähintään 2 vrk.</p></details>' +
+    '<button type="button" class="wkcal" data-opencal="1">' +
+      '<svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="3" fill="none" stroke="currentColor" stroke-width="1.9"/>' +
+      '<path d="M3.5 10h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/></svg>' +
+      '<span><b>Avaa kalenteri</b><small>Kaikki päivät ja treenit</small></span><span class="chev" aria-hidden="true">›</span></button></section>';
 
   /* kirjautuminen, viimeisin treeni, yhdessä, AI */
   if(sync.enabled && sync.status === 'signedout' && !sync.promptHidden){
@@ -6478,7 +6489,7 @@ function aiCopy(btn){
    ============================================================ */
 
 document.addEventListener('click', function(ev){
-  const t = ev.target.closest('[data-person],[data-open],[data-view],[data-tab],[data-cardio],[data-finish],[data-close],[data-savecardio],[data-discard],[data-discard-ask],[data-setskin],[data-rest],[data-ckind],[data-cmin],[data-ckindfilter],[data-timer],[data-calmove],[data-calday],[data-editsets],[data-del],[data-delok],[data-backtoday],[data-addcardio],[data-addrest],[data-abort],[data-clearsets],[data-weekday],[data-active],[data-pickprog],[data-hidebar],[data-showbar],[data-export],[data-import],[data-importtext],[data-copybk],[data-bkselect],[data-signin],[data-signout],[data-togkey],[data-cmp],[data-pmenu],[data-editprog],[data-editlist],[data-edcancel],[data-edsave],[data-edadd],[data-edmove],[data-edrm],[data-edreset],[data-edarchive],[data-edconfirm],[data-invite],[data-joincode],[data-acceptinv],[data-unshare],[data-unshareok],[data-resetpw],[data-syncsheet],[data-whatsapp],[data-wacopy],[data-washare],[data-importclip],[data-bkshare],[data-bkdl],[data-session],[data-replaceok],[data-ai],[data-airange],[data-aicopy],[data-aitxt],[data-aijson]');
+  const t = ev.target.closest('[data-person],[data-open],[data-view],[data-tab],[data-cardio],[data-finish],[data-close],[data-savecardio],[data-discard],[data-discard-ask],[data-setskin],[data-rest],[data-ckind],[data-cmin],[data-ckindfilter],[data-timer],[data-calmove],[data-calday],[data-editsets],[data-del],[data-delok],[data-backtoday],[data-addcardio],[data-addrest],[data-abort],[data-clearsets],[data-weekday],[data-active],[data-pickprog],[data-hidebar],[data-showbar],[data-export],[data-import],[data-importtext],[data-copybk],[data-bkselect],[data-signin],[data-signout],[data-togkey],[data-cmp],[data-opencal],[data-pmenu],[data-editprog],[data-editlist],[data-edcancel],[data-edsave],[data-edadd],[data-edmove],[data-edrm],[data-edreset],[data-edarchive],[data-edconfirm],[data-invite],[data-joincode],[data-acceptinv],[data-unshare],[data-unshareok],[data-resetpw],[data-syncsheet],[data-whatsapp],[data-wacopy],[data-washare],[data-importclip],[data-bkshare],[data-bkdl],[data-session],[data-replaceok],[data-ai],[data-airange],[data-aicopy],[data-aitxt],[data-aijson]');
   const segOpen = document.getElementById('personseg');
   if(segOpen && segOpen.classList.contains('open') && !ev.target.closest('[data-pmenu]')) setPersonMenu(false);
   if(!t) return;
@@ -6673,6 +6684,7 @@ document.addEventListener('click', function(ev){
     return;
   }
   if(t.dataset.calday){ showDay(t.dataset.calday); return; }
+  if(t.dataset.opencal){ const n = new Date(); state.calY = n.getFullYear(); state.calM = n.getMonth(); progDom = null; setView('calendar'); return; }
   if(t.dataset.weekday){
     const b = t.dataset.weekday.split('-');
     state.calY = +b[0]; state.calM = +b[1] - 1;
